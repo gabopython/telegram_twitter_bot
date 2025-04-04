@@ -1,72 +1,43 @@
-import logging
 import x_bot
 from dotenv import load_dotenv
 import os
-
-from telegram import ForceReply, Update
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters, CallbackContext
-
+import re
+from aiogram import Bot, Dispatcher, types
+from aiogram.utils import executor
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 load_dotenv()
 token = os.getenv("TELEGRAM_TOKEN")
+bot = Bot(token=token)
+dp = Dispatcher(bot)
 
-# Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-# set higher logging level for httpx to avoid all GET and POST requests being logged
-logging.getLogger("httpx").setLevel(logging.WARNING)
-
-logger = logging.getLogger(__name__)
+TWITTER_LINK_PATTERN = re.compile(r'https?://(www\.)?(twitter\.com|x\.com)/[A-Za-z0-9_]+/status/\d+')
 
 
-# Define a few command handlers. These usually take the two arguments update and
-# context.
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is issued."""
-    user = update.effective_user
-    await update.message.reply_html(
-        rf"gabo bot {user.mention_html()}!",
-        reply_markup=ForceReply(selective=True),
-    )
-
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /help is issued."""
-    await update.message.reply_text("Help! gabo bot")
-
-
-async def link_command(update: Update, context: CallbackContext) -> None:
+@dp.message_handler()
+async def handle_message(message: types.Message):
     """conection btw telegram and x bot"""
-    if context.args:
-        link = context.args[0]
-        x_data = x_bot.get_tweet_data(link)
-        await update.message.reply_text(x_data)
-    else:
-        await update.message.reply_text("Please provide a link after the /link command.")
+    message_text = message.text
+
+    if message_text:
+        match = TWITTER_LINK_PATTERN.search(message_text)
+        if match:
+            x_data = x_bot.get_tweet_data(message_text)
+            keyboard = InlineKeyboardMarkup(row_width=2)
+            btn1 = InlineKeyboardButton("Option 1", callback_data="option_1")
+            btn2 = InlineKeyboardButton("Option 2", callback_data="option_2")
+            btn3 = InlineKeyboardButton("Option 3", callback_data="option_3")
+            keyboard.add(btn1, btn2, btn3)            
+            await message.answer(x_data, reply_markup=keyboard)
+        else:
+            return
 
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Echo the user message."""
-    await update.message.reply_text(update.message.text)
-
-
-def main() -> None:
-    """Start the bot."""
-    # Create the Application and pass it your bot's token.
-    application = Application.builder().token(token).build()
-
-    # on different commands - answer in Telegram
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))    
-    application.add_handler(CommandHandler("link", link_command))
-
-    # on non command i.e message - echo the message on Telegram
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-
-    # Run the bot until the user presses Ctrl-C
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
-
+@dp.callback_query_handler(lambda c: c.data.startswith("option"))
+async def process_callback(callback_query: types.CallbackQuery):
+    option = callback_query.data.replace("option_", "")
+    await bot.answer_callback_query(callback_query.id)
+    await bot.send_message(callback_query.from_user.id, f"You chose Option {option}!")
 
 if __name__ == "__main__":
-    main()
+    executor.start_polling(dp, skip_updates=True)
