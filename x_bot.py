@@ -1,8 +1,13 @@
 import tweepy
 import re
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+token = os.getenv("X_TOKEN")
 
 # Twitter API credentials (replace with your own keys)
-BEARER_TOKEN = "token"
+BEARER_TOKEN = token
 
 # Authenticate with Twitter API
 client = tweepy.Client(bearer_token=BEARER_TOKEN)
