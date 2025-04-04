@@ -2,7 +2,7 @@ import tweepy
 import re
 
 # Twitter API credentials (replace with your own keys)
-BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAIV60QEAAAAAOtT%2FvT1EayiMoPGW%2BN%2F3kDUf0RM%3Djk1DrdMtdg9HqvFR28Vr8EDAtjmpKG07MRMjeGXbh3jVgA4KMx"
+BEARER_TOKEN = "token"
 
 # Authenticate with Twitter API
 client = tweepy.Client(bearer_token=BEARER_TOKEN)
