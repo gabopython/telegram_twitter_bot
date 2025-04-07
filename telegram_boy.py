@@ -23,12 +23,23 @@ async def handle_message(message: types.Message):
         match = TWITTER_LINK_PATTERN.search(message_text)
         if match:
             x_data = x_bot.get_tweet_data(message_text)
-            keyboard = InlineKeyboardMarkup(row_width=2)
-            btn1 = InlineKeyboardButton("Option 1", callback_data="option_1")
-            btn2 = InlineKeyboardButton("Option 2", callback_data="option_2")
-            btn3 = InlineKeyboardButton("Option 3", callback_data="option_3")
+            link = message_text
+            views = 0
+            bookmarks = 0
+            formatted = (
+                f"🔗 Link: {link}\n"
+                f"❤️ Likes: {x_data.get('Likes', None)}\n"
+                f"🔄 Retweets: {x_data.get('Retweets', None)}\n"
+                f"💬 Replies: {x_data.get('Replies', None)}\n"
+                f"👀 Views: {views}\n"
+                f"🔖 Bookmarks: {bookmarks}"
+            )
+            keyboard = InlineKeyboardMarkup(row_width=1)
+            btn1 = InlineKeyboardButton("💥Start Raid💥", callback_data="option_1")
+            btn2 = InlineKeyboardButton("🎯targets", callback_data="option_2")
+            btn3 = InlineKeyboardButton("🚪Close", callback_data="option_3")
             keyboard.add(btn1, btn2, btn3)            
-            await message.answer(x_data, reply_markup=keyboard)
+            await message.answer(formatted, reply_markup=keyboard)
         else:
             return
 

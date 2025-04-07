@@ -38,10 +38,10 @@ def get_tweet_data(tweet_url):
                 "Quotes": metrics["quote_count"]
             }
         else:
-            return "Tweet not found or API restrictions applied."
+            return {"Tweet not found or API restrictions applied.": None}
     
     except Exception as e:
-        return f"Error: {e}"
+        return {f"Error: {e}": None}
 
 
 if __name__ == "__main__":
