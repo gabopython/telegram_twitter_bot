@@ -23,14 +23,21 @@ async def handle_message(message: types.Message):
         match = TWITTER_LINK_PATTERN.search(message_text)
         if match:
             x_data = x_bot.get_tweet_data(message_text)
+            global link
+            global likes
+            global retweets
+            global replies
             link = message_text
+            likes = x_data.get("Likes", None)
+            retweets = x_data.get("Retweets", None)
+            replies = x_data.get("Replies", None)
             views = 0
             bookmarks = 0
             formatted = (
                 f"🔗 Link: {link}\n"
-                f"❤️ Likes: {x_data.get('Likes', None)}\n"
-                f"🔄 Retweets: {x_data.get('Retweets', None)}\n"
-                f"💬 Replies: {x_data.get('Replies', None)}\n"
+                f"❤️ Likes: {likes}\n"
+                f"🔄 Retweets: {retweets}\n"
+                f"💬 Replies: {replies}\n"
                 f"👀 Views: {views}\n"
                 f"🔖 Bookmarks: {bookmarks}"
             )
@@ -47,9 +54,24 @@ async def handle_message(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data.startswith("option"))
 async def process_callback(callback_query: types.CallbackQuery):
     option = callback_query.data.replace("option_", "")
+    
     await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
     await bot.answer_callback_query(callback_query.id)
-    await bot.send_message(callback_query.from_user.id, f"You chose Option {option}!")
+
+    if option == "1":
+        await bot.send_message(callback_query.message.chat.id, 
+            "🎊 Raid Ended - Targets Reached!\n\n"
+            f"🟩 Likes {likes} | 10 [💯%]\n"
+            f"🟩 Retweets {retweets} | 5 [💯%]\n"
+            f"🟩 Replies {replies} | 3 [💯%]\n\n"
+            f"{link}\n\n"
+            "⏰ Duration: 0 minutes"
+        )
+    elif option == "2":
+        await bot.send_message(callback_query.message.chat.id, "Targets")
+    elif option == "3":
+        await bot.send_message(callback_query.message.chat.id, "Close")
+
 
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
