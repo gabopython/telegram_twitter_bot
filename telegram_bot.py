@@ -35,7 +35,7 @@ async def handle_message(message: types.Message):
             bookmarks = 0
             formatted = (
                 f"🔗 Link: {link}\n"
-                f"❤️ Likes: {likes}\n"
+                f"💙 Likes: {likes}\n"
                 f"🔄 Retweets: {retweets}\n"
                 f"💬 Replies: {replies}\n"
                 f"👀 Views: {views}\n"
@@ -43,7 +43,7 @@ async def handle_message(message: types.Message):
             )
             keyboard = InlineKeyboardMarkup(row_width=1)
             btn1 = InlineKeyboardButton("💥 Start Raid 💥", callback_data="option_1")
-            btn2 = InlineKeyboardButton("🎯 targets", callback_data="option_2")
+            btn2 = InlineKeyboardButton("🎯 Targets", callback_data="option_2")
             btn3 = InlineKeyboardButton("🚪 Close", callback_data="option_3")
             keyboard.add(btn1, btn2, btn3)            
             await message.answer(formatted, reply_markup=keyboard)
