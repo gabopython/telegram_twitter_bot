@@ -47,6 +47,7 @@ async def handle_message(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data.startswith("option"))
 async def process_callback(callback_query: types.CallbackQuery):
     option = callback_query.data.replace("option_", "")
+    await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
     await bot.answer_callback_query(callback_query.id)
     await bot.send_message(callback_query.from_user.id, f"You chose Option {option}!")
 
