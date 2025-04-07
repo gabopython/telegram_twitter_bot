@@ -61,9 +61,9 @@ async def process_callback(callback_query: types.CallbackQuery):
     if option == "1":
         await bot.send_message(callback_query.message.chat.id, 
             "🎊 Raid Ended - Targets Reached!\n\n"
-            f"🟩 Likes {likes} | 10 [💯%]\n"
-            f"🟩 Retweets {retweets} | 5 [💯%]\n"
-            f"🟩 Replies {replies} | 3 [💯%]\n\n"
+            f"🟦 Likes {likes} | 10 [💯%]\n"
+            f"🟦 Retweets {retweets} | 5 [💯%]\n"
+            f"🟦 Replies {replies} | 3 [💯%]\n\n"
             f"{link}\n\n"
             "⏰ Duration: 0 minutes"
         )
