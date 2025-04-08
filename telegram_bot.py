@@ -42,9 +42,9 @@ async def handle_message(message: types.Message):
             global views_target
             global bookmarks_target
             link = message_text
-            likes_target = 2
-            retweets_target = 4
-            replies_target = 2
+            likes_target = 10
+            retweets_target = 3
+            replies_target = 5
             views_target = 0
             bookmarks_target = 0
             formatted = (
