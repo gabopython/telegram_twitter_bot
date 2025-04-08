@@ -201,7 +201,7 @@ async def process_callback(callback_query: types.CallbackQuery):
 
 
     elif option == "3":
-        await bot.send_message(callback_query.message.chat.id, "Close")
+        await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
 
 
 if __name__ == "__main__":
