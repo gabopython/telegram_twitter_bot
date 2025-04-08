@@ -42,9 +42,9 @@ async def handle_message(message: types.Message):
             global views_target
             global bookmarks_target
             link = message_text
-            likes_target = 10
-            retweets_target = 5
-            replies_target = 3
+            likes_target = 2
+            retweets_target = 4
+            replies_target = 2
             views_target = 0
             bookmarks_target = 0
             formatted = (
@@ -160,24 +160,25 @@ async def process_callback(callback_query: types.CallbackQuery):
     option = callback_query.data.replace("option_", "")      
 
     if option == "1":
-        #x_data = x_bot.get_tweet_data(message_text)
-        x_data = {'1':0}
-        likes = x_data.get("Likes", 0)
+        x_data = x_bot.get_tweet_data(link)
+        #x_data = {'1':0}
+        likes = x_data.get("Likes", 2)
         retweets = x_data.get("Retweets", 4)
         replies = x_data.get("Replies", 2)
         likes_percentage = calculate_percentage(likes, likes_target)
         retweets_percentage = calculate_percentage(retweets, retweets_target)
         replies_percentage = calculate_percentage(replies, replies_target)
+
+        percentages = f"{get_emoji(likes_percentage)} Likes {likes} | {likes_target}  [{'💯' if likes_percentage==100 else likes_percentage }%]\n" + f"{get_emoji(retweets_percentage)} Retweets {retweets} | {retweets_target}  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n" + f"{get_emoji(replies_percentage)} Replies {replies} | {replies_target}  [{'💯' if replies_percentage==100 else replies_percentage}%]\n\n" + f"{link}\n\n"
+
+        if likes_percentage == 100 and retweets_percentage == 100 and replies_percentage == 100:
+            raid_message =  "🎊 Raid Ended - Targets Reached!\n\n" + percentages + "⏰ Duration: 0 minutes"
+        else:
+            raid_message =  "⚡️ Raid Started!\n\n" + percentages 
+
         await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
         await bot.answer_callback_query(callback_query.id)
-        await bot.send_message(callback_query.message.chat.id, 
-            "🎊 Raid Ended - Targets Reached!\n\n"
-            f"{get_emoji(likes_percentage)} Likes {likes} | {likes_target}  [{'💯' if likes_percentage==100 else likes_percentage }%]\n"
-            f"{get_emoji(retweets_percentage)} Retweets {retweets} | {retweets_target}  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n"
-            f"{get_emoji(replies_percentage)} Replies {replies} | {replies_target}  [{'💯' if replies_percentage==100 else replies_percentage}%]\n\n" 
-            f"{link}\n\n"
-            "⏰ Duration: 0 minutes"
-        )
+        await bot.send_message(callback_query.message.chat.id, raid_message)
     elif option == "2":
         global keyboard_target
         keyboard_target = InlineKeyboardMarkup(row_width=1)
