@@ -3,13 +3,16 @@ from dotenv import load_dotenv
 import os
 import re
 from aiogram import Bot, Dispatcher, types
-from aiogram.utils import executor
+import asyncio
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram import F
+from aiogram.enums import ParseMode
+from aiogram.client.default import DefaultBotProperties
 
 load_dotenv()
 token = os.getenv("TELEGRAM_TOKEN")
-bot = Bot(token=token)
-dp = Dispatcher(bot)
+bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+dp = Dispatcher()
 
 TWITTER_LINK_PATTERN = re.compile(r'https?://(www\.)?(twitter\.com|x\.com)/[A-Za-z0-9_]+/status/\d+')
 
@@ -27,7 +30,7 @@ def get_emoji(percentage):
         return "🟦"  # Blue square emoji for >= 100%
 
 
-@dp.message_handler()
+@dp.message()
 async def handle_message(message: types.Message):
     """conection btw telegram and x bot"""
     message_text = message.text
@@ -56,21 +59,25 @@ async def handle_message(message: types.Message):
                 f"🔖 Bookmarks: {bookmarks_target}"
             )
             global keyboard_message
-            keyboard_message = InlineKeyboardMarkup(row_width=1)
-            btn1 = InlineKeyboardButton("💥 Start Raid 💥", callback_data="option_1")
-            btn2 = InlineKeyboardButton("🎯 Targets", callback_data="option_2")
-            btn3 = InlineKeyboardButton("🚪 Close", callback_data="option_3")
-            keyboard_message.add(btn1, btn2, btn3)            
+            keyboard_message = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="💥 Start Raid 💥", callback_data="option_1")],
+                    [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
+                    [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
+                ]
+            )          
             await message.answer(formatted, reply_markup=keyboard_message)
         else:
             return
         
-@dp.callback_query_handler(lambda c: c.data.startswith("target_"))
+@dp.callback_query(lambda c: c.data.startswith("target_"))
 async def handle_target(callback_query: types.CallbackQuery):
     target = callback_query.data.replace("target_", "")
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    back = InlineKeyboardButton("🔙 Back", callback_data="target_7")
-    keyboard.add(back)
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text = "🔙 Back", callback_data="target_7")]
+        ]
+    )
 
     if target == "1":
         await bot.edit_message_text(
@@ -155,13 +162,13 @@ async def handle_target(callback_query: types.CallbackQuery):
 
 
 
-@dp.callback_query_handler(lambda c: c.data.startswith("option"))
+@dp.callback_query(lambda c: c.data.startswith("option"))
 async def process_callback(callback_query: types.CallbackQuery):
     option = callback_query.data.replace("option_", "")      
 
     if option == "1":
-        x_data = x_bot.get_tweet_data(link)
-        #x_data = {'1':0}
+        #x_data = x_bot.get_tweet_data(link)
+        x_data = {'1':0}
         likes = x_data.get("Likes", 2)
         retweets = x_data.get("Retweets", 4)
         replies = x_data.get("Replies", 2)
@@ -181,14 +188,18 @@ async def process_callback(callback_query: types.CallbackQuery):
         await bot.send_message(callback_query.message.chat.id, raid_message)
     elif option == "2":
         global keyboard_target
-        keyboard_target = InlineKeyboardMarkup(row_width=1)
-        target1 = InlineKeyboardButton(f"💙 Likes ({likes_target})", callback_data="target_1")
-        target2 = InlineKeyboardButton(f"🔄 Retweets ({retweets_target})", callback_data="target_2")
-        target3 = InlineKeyboardButton(f"💬 Replies ({replies_target})", callback_data="target_3")
-        target4 = InlineKeyboardButton(f"👀 Views ({views_target})", callback_data="target_4")
-        target5 = InlineKeyboardButton(f"🔖 Bookmarks ({bookmarks_target})", callback_data="target_5")
-        target6 = InlineKeyboardButton("🔙 Back", callback_data="target_6")
-        keyboard_target.add(target1, target2, target3, target4, target5, target6)
+        keyboard_target = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text=f"💙 Likes ({likes_target})", callback_data="target_1")],
+                [InlineKeyboardButton(text=f"🔄 Retweets ({retweets_target})", callback_data="target_2")],
+                [InlineKeyboardButton(text=f"💬 Replies ({replies_target})", callback_data="target_3")],
+                [InlineKeyboardButton(text=f"👀 Views ({views_target})", callback_data="target_4")],
+                [InlineKeyboardButton(text=f"🔖 Bookmarks ({bookmarks_target})", callback_data="target_5")],
+                [InlineKeyboardButton(text="🔙 Back", callback_data="target_6")],
+            ]
+        )
+
+
 
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
@@ -203,6 +214,19 @@ async def process_callback(callback_query: types.CallbackQuery):
     elif option == "3":
         await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
 
+@dp.message(F.reply_to_message)
+async def reply_handler(message: types.Message):
+    # Check if the original message was from the bot
+    if message.reply_to_message.from_user.id == (await bot.me()).id:
+        await message.answer("I see you replied to me 👀")
+    else:
+        await message.answer("You're replying to someone else, not me.")
+
+
+async def main():
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
+    asyncio.run(main())
