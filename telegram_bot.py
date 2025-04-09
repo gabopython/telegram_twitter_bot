@@ -51,12 +51,13 @@ async def handle_message(message: types.Message):
             views_target = 0
             bookmarks_target = 0
             formatted = (
-                f"🔗 Link: {link}\n"
-                f"💙 Likes: {likes_target}\n"
-                f"🔄 Retweets: {retweets_target}\n"
-                f"💬 Replies: {replies_target}\n"
-                f"👀 Views: {views_target}\n"
-                f"🔖 Bookmarks: {bookmarks_target}"
+                "⚙️ <b>Raid Options</b>\n\n"
+                f"🔗 <b>Link:</b> {link}\n"
+                f"💙 <b>Likes:</b> {likes_target}\n"
+                f"🔄 <b>Retweets:</b> {retweets_target}\n"
+                f"💬 <b>Replies:</b> {replies_target}\n"
+                f"👀 <b>Views:</b> {views_target}\n"
+                f"🔖 <b>Bookmarks:</b> {bookmarks_target}"
             )
             global keyboard_message
             keyboard_message = InlineKeyboardMarkup(
@@ -66,7 +67,7 @@ async def handle_message(message: types.Message):
                     [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
                 ]
             )          
-            await message.answer(formatted, reply_markup=keyboard_message)
+            await message.answer(formatted, reply_markup=keyboard_message, parse_mode=ParseMode.HTML)
         else:
             return
         
