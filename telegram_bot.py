@@ -232,6 +232,7 @@ async def handle_target(callback_query: types.CallbackQuery):
                 [InlineKeyboardButton(text=f"💬 Replies ({replies_target})", callback_data="target_3")],
                 [InlineKeyboardButton(text=f"👀 Views ({views_target})", callback_data="target_4")],
                 [InlineKeyboardButton(text=f"🔖 Bookmarks ({bookmarks_target})", callback_data="target_5")],
+                [InlineKeyboardButton(text=f"🎯 Change Default Targets", callback_data="target_8")],
                 [InlineKeyboardButton(text="🔙 Back", callback_data="target_6")],
             ]
         )
@@ -241,6 +242,13 @@ async def handle_target(callback_query: types.CallbackQuery):
             text="⚙️ Raid Options > Targets\n\n"
                 "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target below.",
             reply_markup=keyboard_target
+        )
+        await callback_query.answer()
+
+    if target == "8":
+        await bot.send_message(
+            chat_id=callback_query.message.chat.id,
+            text="Change_Default_Targets"
         )
         await callback_query.answer()
 
@@ -283,6 +291,7 @@ async def process_callback(callback_query: types.CallbackQuery):
                 [InlineKeyboardButton(text=f"💬 Replies ({replies_target})", callback_data="target_3")],
                 [InlineKeyboardButton(text=f"👀 Views ({views_target})", callback_data="target_4")],
                 [InlineKeyboardButton(text=f"🔖 Bookmarks ({bookmarks_target})", callback_data="target_5")],
+                [InlineKeyboardButton(text=f"🎯 Change Default Targets", callback_data="target_8")],
                 [InlineKeyboardButton(text="🔙 Back", callback_data="target_6")],
             ]
         )
