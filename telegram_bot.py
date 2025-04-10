@@ -28,16 +28,8 @@ def get_emoji(percentage):
     elif percentage < 100:
         return "🟨"  # Yellow square emoji for < 100%
     else:
-        return "🟦"  # Blue square emoji for >= 100%
-    
-@dp.message(F.text == "/stop")
-async def stop_command(message: types.Message):
-    chat_id = message.chat.id
-    if raid_status.get(chat_id):
-        raid_status[chat_id] = False
-        await message.answer("🛑 Raid Ended - Stopped by admin")
-    else:
-        await message.answer("❌ There is no ongoing raid in this group.")
+        return "🟦"  # Blue square emoji for >= 100%   
+
 
 @dp.message()
 async def handle_message(message: types.Message):
@@ -76,7 +68,7 @@ async def handle_message(message: types.Message):
                     [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
                 ]
             )          
-            await message.answer(formatted, reply_markup=keyboard_message, parse_mode=ParseMode.HTML)
+            await message.answer(formatted, reply_markup=keyboard_message,)
         else:
             return
         
@@ -93,7 +85,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text='⚙️ Raid Options > Targets > Likes\n\n'
+            text='⚙️ <b>Raid Options</b> > Targets > Likes\n\n'
                 'Please reply to this message with the new number of likes that a tweet must have to be considered a valid target.\n\n'
                 f'Current Likes: {likes_target}',
             reply_markup=keyboard
