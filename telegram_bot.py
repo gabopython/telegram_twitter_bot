@@ -30,6 +30,78 @@ def get_emoji(percentage):
     else:
         return "🟦"  # Blue square emoji for >= 100%   
 
+@dp.message(F.text == "/stop")
+async def stop_command(message: types.Message):
+    chat_id = message.chat.id
+    if raid_status.get(chat_id):
+        raid_status[chat_id] = False
+        await message.answer("🛑 <b>Raid Ended - Stopped by admin</b>\n\n"+percentages)
+    else:
+        await message.answer("❌ <b>There is no ongoing raid in this group</b>")
+    
+@dp.message(F.reply_to_message)
+async def reply_handler(message: types.Message):
+    bot_id = (await bot.me()).id
+    message_reply = message.reply_to_message.text
+    if message.reply_to_message.from_user.id == bot_id:
+        if 'Likes' in message_reply:
+            global likes_target
+            try:
+                likes_target = int(message.text)
+                bot_message = await message.answer(f"💙 <b>Likes</b> updated to {likes_target}")
+                await asyncio.sleep(3)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text='⚙️ <b>Raid Options</b> > Targets > Likes\n\n'
+                        'Please reply to this message with the new number of likes that a tweet must have to be considered a valid target.\n\n'
+                        f'Current Likes: {likes_target}',
+                    reply_markup=keyboard_back
+                    )
+            except ValueError:
+                bot_message = await message.answer("❌ <b>Invalid input. Please enter a valid number.</b>")
+                await asyncio.sleep(5)
+        elif 'Retweets' in message_reply:
+            global retweets_target
+            try:
+                retweets_target = int(message.text)
+                bot_message = await message.answer(f"🔄 <b>Retweets</b> updated to {retweets_target}")
+                await asyncio.sleep(3)
+            except ValueError:
+                bot_message = await message.answer("❌ <b>Invalid input. Please enter a valid number.</b>")
+                await asyncio.sleep(5)
+        elif 'Replies' in message_reply:
+            global replies_target
+            try:
+                replies_target = int(message.text)
+                bot_message = await message.answer(f"💬 <b>Replies</b> updated to {replies_target}")
+                await asyncio.sleep(3)
+            except ValueError:
+                bot_message = await message.answer("❌ <b>Invalid input. Please enter a valid number.</b>")
+                await asyncio.sleep(5)
+        elif 'Views' in message_reply:
+            global views_target
+            try:
+                views_target = int(message.text)
+                bot_message = await message.answer(f"👀 <b>Views</b> updated to {views_target}")
+                await asyncio.sleep(3)
+            except ValueError:
+                bot_message = await message.answer("❌ <b>Invalid input. Please enter a valid number.</b>")
+                await asyncio.sleep(5)
+        elif 'Bookmarks' in message_reply:
+            global bookmarks_target
+            try:
+                bookmarks_target = int(message.text)
+                bot_message = await message.answer(f"🔖 <b>Bookmarks</b> updated to {bookmarks_target}")
+                await asyncio.sleep(3)
+            except ValueError:
+                bot_message = await message.answer("❌ <b>Invalid input. Please enter a valid number.</b>")
+                await asyncio.sleep(5)
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        await bot_message.delete()
+        
+
+
 
 @dp.message()
 async def handle_message(message: types.Message):
@@ -75,7 +147,8 @@ async def handle_message(message: types.Message):
 @dp.callback_query(lambda c: c.data.startswith("target_"))
 async def handle_target(callback_query: types.CallbackQuery):
     target = callback_query.data.replace("target_", "")
-    keyboard = InlineKeyboardMarkup(
+    global keyboard_back
+    keyboard_back = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text = "🔙 Back", callback_data="target_7")]
         ]
@@ -88,7 +161,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             text='⚙️ <b>Raid Options</b> > Targets > Likes\n\n'
                 'Please reply to this message with the new number of likes that a tweet must have to be considered a valid target.\n\n'
                 f'Current Likes: {likes_target}',
-            reply_markup=keyboard
+            reply_markup=keyboard_back
         )
         await callback_query.answer()
     
@@ -99,7 +172,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             text='⚙️ Raid Options > Targets > Retweets\n\n'
                 'Please reply to this message with the new number of retweets that a tweet must have to be considered a valid target.\n\n'
                 f'Current Retweets: {retweets_target}',
-            reply_markup=keyboard
+            reply_markup=keyboard_back
         )
         await callback_query.answer()
 
@@ -110,7 +183,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             text='⚙️ Raid Options > Targets > Replies\n\n'
                 'Please reply to this message with the new number of replies that a tweet must have to be considered a valid target.\n\n'
                 f'Current Replies: {replies_target}',
-            reply_markup=keyboard
+            reply_markup=keyboard_back
         )
         await callback_query.answer()
     
@@ -121,7 +194,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             text='⚙️ Raid Options > Targets > Views\n\n'
                 'Please reply to this message with the new number of views that a tweet must have to be considered a valid target.\n\n'
                 f'Current Views: {views_target}',
-            reply_markup=keyboard
+            reply_markup=keyboard_back
         )
         await callback_query.answer()
     
@@ -132,7 +205,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             text='⚙️ Raid Options > Targets > Bookmarks\n\n'
                 'Please reply to this message with the new number of bookmarks that a tweet must have to be considered a valid target.\n\n'
                 f'Current Bookmarks: {bookmarks_target}',
-            reply_markup=keyboard
+            reply_markup=keyboard_back
         )
         await callback_query.answer()
 
@@ -152,6 +225,16 @@ async def handle_target(callback_query: types.CallbackQuery):
         await callback_query.answer()
     
     if target == "7":
+        keyboard_target = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text=f"💙 Likes ({likes_target})", callback_data="target_1")],
+                [InlineKeyboardButton(text=f"🔄 Retweets ({retweets_target})", callback_data="target_2")],
+                [InlineKeyboardButton(text=f"💬 Replies ({replies_target})", callback_data="target_3")],
+                [InlineKeyboardButton(text=f"👀 Views ({views_target})", callback_data="target_4")],
+                [InlineKeyboardButton(text=f"🔖 Bookmarks ({bookmarks_target})", callback_data="target_5")],
+                [InlineKeyboardButton(text="🔙 Back", callback_data="target_6")],
+            ]
+        )
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
@@ -176,15 +259,15 @@ async def process_callback(callback_query: types.CallbackQuery):
         likes_percentage = calculate_percentage(likes, likes_target)
         retweets_percentage = calculate_percentage(retweets, retweets_target)
         replies_percentage = calculate_percentage(replies, replies_target)
-
-        percentages = f"{get_emoji(likes_percentage)} Likes {likes} | {likes_target}  [{'💯' if likes_percentage==100 else likes_percentage }%]\n" + f"{get_emoji(retweets_percentage)} Retweets {retweets} | {retweets_target}  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n" + f"{get_emoji(replies_percentage)} Replies {replies} | {replies_target}  [{'💯' if replies_percentage==100 else replies_percentage}%]\n\n" + f"{link}\n\n"
+        global percentages
+        percentages = f"{get_emoji(likes_percentage)} Likes <b>{likes} | {likes_target}</b>  [{'💯' if likes_percentage==100 else likes_percentage }%]\n" + f"{get_emoji(retweets_percentage)} Retweets <b>{retweets} | {retweets_target}</b>  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n" + f"{get_emoji(replies_percentage)} Replies <b>{replies} | {replies_target}</b>  [{'💯' if replies_percentage==100 else replies_percentage}%]\n\n" + f"{link}\n\n"
 
         if likes_percentage == 100 and retweets_percentage == 100 and replies_percentage == 100:
             raid_message =  "🎊 Raid Ended - Targets Reached!\n\n" + percentages + "⏰ Duration: 0 minutes"
         else:        
             chat_id = callback_query.message.chat.id
             raid_status[chat_id] = True
-            raid_message =  "⚡️ Raid Started!\n\n" + percentages 
+            raid_message =  "⚡️ <b>Raid Started!</b>\n\n" + percentages 
 
         await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
         await bot.send_message(callback_query.message.chat.id, raid_message)
