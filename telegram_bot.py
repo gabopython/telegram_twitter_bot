@@ -13,6 +13,7 @@ load_dotenv()
 token = os.getenv("TELEGRAM_TOKEN")
 bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
+raid_status = {}
 
 TWITTER_LINK_PATTERN = re.compile(r'https?://(www\.)?(twitter\.com|x\.com)/[A-Za-z0-9_]+/status/\d+')
 
@@ -28,7 +29,15 @@ def get_emoji(percentage):
         return "🟨"  # Yellow square emoji for < 100%
     else:
         return "🟦"  # Blue square emoji for >= 100%
-
+    
+@dp.message(F.text == "/stop")
+async def stop_command(message: types.Message):
+    chat_id = message.chat.id
+    if raid_status.get(chat_id):
+        raid_status[chat_id] = False
+        await message.answer("🛑 Raid Ended - Stopped by admin")
+    else:
+        await message.answer("❌ There is no ongoing raid in this group.")
 
 @dp.message()
 async def handle_message(message: types.Message):
@@ -89,7 +98,7 @@ async def handle_target(callback_query: types.CallbackQuery):
                 f'Current Likes: {likes_target}',
             reply_markup=keyboard
         )
-        await bot.answer_callback_query(callback_query.id)
+        await callback_query.answer()
     
     if target == "2":
         await bot.edit_message_text(
@@ -100,7 +109,7 @@ async def handle_target(callback_query: types.CallbackQuery):
                 f'Current Retweets: {retweets_target}',
             reply_markup=keyboard
         )
-        await bot.answer_callback_query(callback_query.id)
+        await callback_query.answer()
 
     if target == "3":
         await bot.edit_message_text(
@@ -111,7 +120,7 @@ async def handle_target(callback_query: types.CallbackQuery):
                 f'Current Replies: {replies_target}',
             reply_markup=keyboard
         )
-        await bot.answer_callback_query(callback_query.id)
+        await callback_query.answer()
     
     if target == "4":
         await bot.edit_message_text(
@@ -122,7 +131,7 @@ async def handle_target(callback_query: types.CallbackQuery):
                 f'Current Views: {views_target}',
             reply_markup=keyboard
         )
-        await bot.answer_callback_query(callback_query.id)
+        await callback_query.answer()
     
     if target == "5":
         await bot.edit_message_text(
@@ -133,9 +142,7 @@ async def handle_target(callback_query: types.CallbackQuery):
                 f'Current Bookmarks: {bookmarks_target}',
             reply_markup=keyboard
         )
-        await bot.answer_callback_query(callback_query.id)
-    
-
+        await callback_query.answer()
 
     if target == "6":
         await bot.edit_message_text(
@@ -149,7 +156,7 @@ async def handle_target(callback_query: types.CallbackQuery):
                 f"🔖 Bookmarks: {bookmarks_target}",
             reply_markup=keyboard_message
         )
-        await bot.answer_callback_query(callback_query.id)
+        await callback_query.answer()
     
     if target == "7":
         await bot.edit_message_text(
@@ -159,7 +166,7 @@ async def handle_target(callback_query: types.CallbackQuery):
                 "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target below.",
             reply_markup=keyboard_target
         )
-        await bot.answer_callback_query(callback_query.id)
+        await callback_query.answer()
 
 
 
@@ -181,12 +188,16 @@ async def process_callback(callback_query: types.CallbackQuery):
 
         if likes_percentage == 100 and retweets_percentage == 100 and replies_percentage == 100:
             raid_message =  "🎊 Raid Ended - Targets Reached!\n\n" + percentages + "⏰ Duration: 0 minutes"
-        else:
+        else:        
+            chat_id = callback_query.message.chat.id
+            raid_status[chat_id] = True
             raid_message =  "⚡️ Raid Started!\n\n" + percentages 
 
         await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
-        await bot.answer_callback_query(callback_query.id)
         await bot.send_message(callback_query.message.chat.id, raid_message)
+        await callback_query.answer()
+
+
     elif option == "2":
         global keyboard_target
         keyboard_target = InlineKeyboardMarkup(
@@ -199,9 +210,6 @@ async def process_callback(callback_query: types.CallbackQuery):
                 [InlineKeyboardButton(text="🔙 Back", callback_data="target_6")],
             ]
         )
-
-
-
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
@@ -209,19 +217,11 @@ async def process_callback(callback_query: types.CallbackQuery):
                 "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target below.",
             reply_markup=keyboard_target
         )
-        await bot.answer_callback_query(callback_query.id)
+        await callback_query.answer()
 
 
     elif option == "3":
         await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
-
-@dp.message(F.reply_to_message)
-async def reply_handler(message: types.Message):
-    # Check if the original message was from the bot
-    if message.reply_to_message.from_user.id == (await bot.me()).id:
-        await message.answer("I see you replied to me 👀")
-    else:
-        await message.answer("You're replying to someone else, not me.")
 
 
 async def main():
