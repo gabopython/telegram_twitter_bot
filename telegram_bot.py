@@ -140,12 +140,13 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=f"🔗 Link: {link}\n"
-                f"💙 Likes: {likes_target}\n"
-                f"🔄 Retweets: {retweets_target}\n"
-                f"💬 Replies: {replies_target}\n"
-                f"👀 Views: {views_target}\n"
-                f"🔖 Bookmarks: {bookmarks_target}",
+            text="⚙️ <b>Raid Options</b>\n\n"
+                f"🔗 <b>Link:</b> {link}\n"
+                f"💙 <b>Likes:</b> {likes_target}\n"
+                f"🔄 <b>Retweets:</b> {retweets_target}\n"
+                f"💬 <b>Replies:</b> {replies_target}\n"
+                f"👀 <b>Views:</b> {views_target}\n"
+                f"🔖 <b>Bookmarks:</b> {bookmarks_target}",
             reply_markup=keyboard_message
         )
         await callback_query.answer()
