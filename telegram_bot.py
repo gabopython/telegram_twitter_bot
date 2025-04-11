@@ -1,7 +1,14 @@
 import x_bot
+from utils import (
+    TWITTER_LINK_PATTERN,
+    raid_status,
+    targets_text,
+    targets_reply,
+    calculate_percentage,
+    get_emoji,
+)
 from dotenv import load_dotenv
 import os
-import re
 from aiogram import Bot, Dispatcher, types
 import asyncio
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -13,25 +20,6 @@ load_dotenv()
 token = os.getenv("TELEGRAM_TOKEN")
 bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
-raid_status = {}
-
-TWITTER_LINK_PATTERN = re.compile(
-    r"https?://(www\.)?(twitter\.com|x\.com)/[A-Za-z0-9_]+/status/\d+"
-)
-
-
-def calculate_percentage(actual, target):
-    percentage = round((actual / target) * 100, 2)
-    return min(percentage, 100)
-
-
-def get_emoji(percentage):
-    if percentage <= 50:
-        return "🟥"  # Red square emoji for <= 50%
-    elif percentage < 100:
-        return "🟨"  # Yellow square emoji for < 100%
-    else:
-        return "🟦"  # Blue square emoji for >= 100%
 
 
 @dp.message(F.text == "/stop")
@@ -62,9 +50,9 @@ async def reply_handler(message: types.Message):
                 await bot.edit_message_text(
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
-                    text="⚙️ <b>Raid Options</b> > Targets > Likes\n\n"
-                    "Please reply to this message with the new number of likes that a tweet must have to be considered a valid target.\n\n"
-                    f"Current Likes: {likes_target}",
+                    text=targets_reply.format(
+                        "Likes", "likes", "Likes", likes_target
+                    ),
                     reply_markup=keyboard_back,
                 )
             except ValueError:
@@ -80,6 +68,14 @@ async def reply_handler(message: types.Message):
                     f"🔄 <b>Retweets</b> updated to {retweets_target}"
                 )
                 await asyncio.sleep(3)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text=targets_reply.format(
+                        "Retweets", "retweets", "Retweets", retweets_target
+                    ),
+                    reply_markup=keyboard_back,
+                )
             except ValueError:
                 bot_message = await message.answer(
                     "❌ <b>Invalid input. Please enter a valid number.</b>"
@@ -93,6 +89,14 @@ async def reply_handler(message: types.Message):
                     f"💬 <b>Replies</b> updated to {replies_target}"
                 )
                 await asyncio.sleep(3)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text=targets_reply.format(
+                        "Replies", "replies", "Replies", replies_target
+                    ),
+                    reply_markup=keyboard_back,
+                )
             except ValueError:
                 bot_message = await message.answer(
                     "❌ <b>Invalid input. Please enter a valid number.</b>"
@@ -106,6 +110,14 @@ async def reply_handler(message: types.Message):
                     f"👀 <b>Views</b> updated to {views_target}"
                 )
                 await asyncio.sleep(3)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text=targets_reply.format(
+                        "Views", "views", "Views", views_target
+                    ),
+                    reply_markup=keyboard_back,
+                )
             except ValueError:
                 bot_message = await message.answer(
                     "❌ <b>Invalid input. Please enter a valid number.</b>"
@@ -119,6 +131,14 @@ async def reply_handler(message: types.Message):
                     f"🔖 <b>Bookmarks</b> updated to {bookmarks_target}"
                 )
                 await asyncio.sleep(3)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text=targets_reply.format(
+                        "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
+                    ),
+                    reply_markup=keyboard_back,
+                )
             except ValueError:
                 bot_message = await message.answer(
                     "❌ <b>Invalid input. Please enter a valid number.</b>"
@@ -189,9 +209,9 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text="⚙️ <b>Raid Options</b> > Targets > Likes\n\n"
-            "Please reply to this message with the new number of likes that a tweet must have to be considered a valid target.\n\n"
-            f"Current Likes: {likes_target}",
+            text=targets_reply.format(
+                "Likes", "likes", "Likes", likes_target
+            ),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -199,9 +219,9 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text="⚙️ Raid Options > Targets > Retweets\n\n"
-            "Please reply to this message with the new number of retweets that a tweet must have to be considered a valid target.\n\n"
-            f"Current Retweets: {retweets_target}",
+            text=targets_reply.format(
+                "Retweets", "retweets", "Retweets", retweets_target
+            ),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -209,9 +229,9 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text="⚙️ Raid Options > Targets > Replies\n\n"
-            "Please reply to this message with the new number of replies that a tweet must have to be considered a valid target.\n\n"
-            f"Current Replies: {replies_target}",
+            text=targets_reply.format(
+                "Replies", "replies", "Replies", replies_target
+            ),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -219,9 +239,9 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text="⚙️ Raid Options > Targets > Views\n\n"
-            "Please reply to this message with the new number of views that a tweet must have to be considered a valid target.\n\n"
-            f"Current Views: {views_target}",
+            text=targets_reply.format(
+                "Views", "views", "Views", views_target
+            ),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -229,9 +249,9 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text="⚙️ Raid Options > Targets > Bookmarks\n\n"
-            "Please reply to this message with the new number of bookmarks that a tweet must have to be considered a valid target.\n\n"
-            f"Current Bookmarks: {bookmarks_target}",
+            text=targets_reply.format(
+                "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
+            ),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -290,8 +310,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text="⚙️ Raid Options > Targets\n\n"
-            "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target below.",
+            text=targets_text,
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
@@ -384,8 +403,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text="⚙️ Raid Options > Targets\n\n"
-            "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target below.",
+            text=targets_text,
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
