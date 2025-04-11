@@ -6,6 +6,8 @@ from utils import (
     targets_reply,
     calculate_percentage,
     get_emoji,
+    write_values,
+    read_values,
 )
 from dotenv import load_dotenv
 import os
@@ -310,13 +312,18 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text,
+            text=targets_text.format(),
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
     elif target == "8":
-        await bot.send_message(
-            chat_id=callback_query.message.chat.id, text="Change_Default_Targets"
+        await bot.edit_message_text(
+            chat_id=callback_query.message.chat.id, 
+            message_id=callback_query.message.message_id,
+            text=targets_text.format(
+                "Default"
+            ),
+            #reply_markup=keyboard_target,
         )
         await callback_query.answer()
 
