@@ -1,15 +1,19 @@
-
 import re
 
 TWITTER_LINK_PATTERN = re.compile(
     r"https?://(www\.)?(twitter\.com|x\.com)/[A-Za-z0-9_]+/status/\d+"
 )
 raid_status = {}
-targets_text = ("⚙️ <b>Raid Options > {} Targets</b>\n\n"
-            "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target either for each raid or as a default setting.")
-targets_reply = ("⚙️ <b>Raid Options > {} Targets > {}</b>\n\n"
-            "Please reply to this message with the new number of {} that a tweet must have to be considered a valid target.\n\n"
-            "<b>Current {}:</b> {}")
+targets_text = (
+    "⚙️ <b>Raid Options > {} Targets</b>\n\n"
+    "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target either for each raid or as a default setting."
+)
+targets_reply = (
+    "⚙️ <b>Raid Options > {} Targets > {}</b>\n\n"
+    "Please reply to this message with the new number of {} that a tweet must have to be considered a valid target.\n\n"
+    "<b>Current {}:</b> {}"
+)
+
 
 def read_values():
     with open("values.txt", "r") as file:
@@ -20,9 +24,22 @@ def read_values():
         views_target_default = lines[3].strip()
         bookmarks_target_default = lines[4].strip()
 
-    return likes_target_default, retweets_target_default, replies_target_default, views_target_default, bookmarks_target_default
+    return (
+        likes_target_default,
+        retweets_target_default,
+        replies_target_default,
+        views_target_default,
+        bookmarks_target_default,
+    )
 
-def write_values(likes_target_default, retweets_target_default, replies_target_default, views_target_default, bookmarks_target_default):
+
+def write_values(
+    likes_target_default,
+    retweets_target_default,
+    replies_target_default,
+    views_target_default,
+    bookmarks_target_default,
+):
     with open("values.txt", "w") as file:
         file.write(f"{likes_target_default}\n")
         file.write(f"{retweets_target_default}\n")

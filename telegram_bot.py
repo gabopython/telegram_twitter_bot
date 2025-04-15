@@ -23,13 +23,20 @@ token = os.getenv("TELEGRAM_TOKEN")
 bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
-likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target = read_values()
+(
+    likes_default_target,
+    retweets_default_target,
+    replies_default_target,
+    views_default_target,
+    bookmarks_default_target,
+) = read_values()
 global likes_target, retweets_target, replies_target, views_target, bookmarks_target
 likes_target = likes_default_target
 retweets_target = retweets_default_target
 replies_target = replies_default_target
 views_target = views_default_target
 bookmarks_target = bookmarks_default_target
+
 
 @dp.message(F.text == "/stop")
 async def stop_command(message: types.Message):
@@ -61,7 +68,7 @@ async def reply_handler(message: types.Message):
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            '', "Likes", "likes", "Likes", likes_target
+                            "", "Likes", "likes", "Likes", likes_target
                         ),
                         reply_markup=keyboard_back,
                     )
@@ -69,8 +76,14 @@ async def reply_handler(message: types.Message):
                     bot_message = await message.answer(
                         "❌ <b>Invalid input. Please enter a valid number.</b>"
                     )
-                    await asyncio.sleep(5)    
-            write_values(likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target)
+                    await asyncio.sleep(5)
+            write_values(
+                likes_default_target,
+                retweets_default_target,
+                replies_default_target,
+                views_default_target,
+                bookmarks_default_target,
+            )
         elif "Likes" in message_reply:
             try:
                 likes_target = int(message.text)
@@ -81,9 +94,7 @@ async def reply_handler(message: types.Message):
                 await bot.edit_message_text(
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
-                    text=targets_reply.format(
-                        "Likes", "likes", "Likes", likes_target
-                    ),
+                    text=targets_reply.format("Likes", "likes", "Likes", likes_target),
                     reply_markup=keyboard_back,
                 )
             except ValueError:
@@ -144,9 +155,7 @@ async def reply_handler(message: types.Message):
                 await bot.edit_message_text(
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
-                    text=targets_reply.format(
-                        "Views", "views", "Views", views_target
-                    ),
+                    text=targets_reply.format("Views", "views", "Views", views_target),
                     reply_markup=keyboard_back,
                 )
             except ValueError:
@@ -230,9 +239,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_reply.format(
-                '', "Likes", "likes", "Likes", likes_target
-            ),
+            text=targets_reply.format("", "Likes", "likes", "Likes", likes_target),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -250,9 +257,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_reply.format(
-                "Replies", "replies", "Replies", replies_target
-            ),
+            text=targets_reply.format("Replies", "replies", "Replies", replies_target),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -260,9 +265,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_reply.format(
-                "Views", "views", "Views", views_target
-            ),
+            text=targets_reply.format("Views", "views", "Views", views_target),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -331,7 +334,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text.format(''),
+            text=targets_text.format(""),
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
@@ -365,19 +368,13 @@ async def handle_target(callback_query: types.CallbackQuery):
                         callback_data="target_5",
                     )
                 ],
-                [
-                    InlineKeyboardButton(
-                        text=f"🔙 Back", callback_data="target_8"
-                    )
-                ],
+                [InlineKeyboardButton(text=f"🔙 Back", callback_data="target_8")],
             ]
         )
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id, 
+            chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text.format(
-                "Default"
-            ),
+            text=targets_text.format("Default"),
             reply_markup=keyboard_default_target,
         )
         await callback_query.answer()
@@ -386,7 +383,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                'Default', 'Likes', "likes", "likes", likes_target
+                "Default", "Likes", "likes", "likes", likes_target
             ),
             reply_markup=keyboard_back,
         )
@@ -475,7 +472,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text.format(''),
+            text=targets_text.format(""),
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
