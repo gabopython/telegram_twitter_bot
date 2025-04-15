@@ -22,7 +22,14 @@ load_dotenv()
 token = os.getenv("TELEGRAM_TOKEN")
 bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
-
+global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
+likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target = read_values()
+global likes_target, retweets_target, replies_target, views_target, bookmarks_target
+likes_target = likes_default_target
+retweets_target = retweets_default_target
+replies_target = replies_default_target
+views_target = views_default_target
+bookmarks_target = bookmarks_default_target
 
 @dp.message(F.text == "/stop")
 async def stop_command(message: types.Message):
@@ -41,8 +48,30 @@ async def reply_handler(message: types.Message):
     bot_id = (await bot.me()).id
     message_reply = message.reply_to_message.text
     if message.reply_to_message.from_user.id == bot_id:
-        if "Likes" in message_reply:
-            global likes_target
+        if "Default" in message_reply:
+            if "Likes" in message_reply:
+                try:
+                    likes_default_target = int(message.text)
+                    likes_target = likes_default_target
+                    bot_message = await message.answer(
+                        f"💙 <b>Default Likes</b> updated to {likes_target}"
+                    )
+                    await asyncio.sleep(3)
+                    await bot.edit_message_text(
+                        chat_id=message.reply_to_message.chat.id,
+                        message_id=message.reply_to_message.message_id,
+                        text=targets_reply.format(
+                            '', "Likes", "likes", "Likes", likes_target
+                        ),
+                        reply_markup=keyboard_back,
+                    )
+                except ValueError:
+                    bot_message = await message.answer(
+                        "❌ <b>Invalid input. Please enter a valid number.</b>"
+                    )
+                    await asyncio.sleep(5)    
+            write_values(likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target)
+        elif "Likes" in message_reply:
             try:
                 likes_target = int(message.text)
                 bot_message = await message.answer(
@@ -158,17 +187,7 @@ async def handle_message(message: types.Message):
         match = TWITTER_LINK_PATTERN.search(message_text)
         if match:
             global link
-            global likes_target
-            global retweets_target
-            global replies_target
-            global views_target
-            global bookmarks_target
             link = message_text
-            likes_target = 10
-            retweets_target = 3
-            replies_target = 5
-            views_target = 0
-            bookmarks_target = 0
             formatted = (
                 "⚙️ <b>Raid Options</b>\n\n"
                 f"🔗 <b>Link:</b> {link}\n"
@@ -212,7 +231,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Likes", "likes", "Likes", likes_target
+                '', "Likes", "likes", "Likes", likes_target
             ),
             reply_markup=keyboard_back,
         )
@@ -312,18 +331,64 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text.format(),
+            text=targets_text.format(''),
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
     elif target == "8":
+        keyboard_default_target = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text=f"💙 Likes ({likes_target})", callback_data="target_9"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text=f"🔄 Retweets ({retweets_target})",
+                        callback_data="target_2",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text=f"💬 Replies ({replies_target})", callback_data="target_3"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text=f"👀 Views ({views_target})", callback_data="target_4"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text=f"🔖 Bookmarks ({bookmarks_target})",
+                        callback_data="target_5",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text=f"🔙 Back", callback_data="target_8"
+                    )
+                ],
+            ]
+        )
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id, 
             message_id=callback_query.message.message_id,
             text=targets_text.format(
                 "Default"
             ),
-            #reply_markup=keyboard_target,
+            reply_markup=keyboard_default_target,
+        )
+        await callback_query.answer()
+    elif target == "9":
+        await bot.edit_message_text(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            text=targets_reply.format(
+                'Default', 'Likes', "likes", "likes", likes_target
+            ),
+            reply_markup=keyboard_back,
         )
         await callback_query.answer()
 
@@ -410,7 +475,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text,
+            text=targets_text.format(''),
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
