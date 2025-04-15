@@ -399,14 +399,20 @@ async def process_callback(callback_query: types.CallbackQuery):
         likes = x_data.get("Likes", 2)
         retweets = x_data.get("Retweets", 4)
         replies = x_data.get("Replies", 2)
+        views = x_data.get("Views", 2)
+        bookmarks = x_data.get("Bookmarks", 2)
         likes_percentage = calculate_percentage(likes, likes_target)
         retweets_percentage = calculate_percentage(retweets, retweets_target)
         replies_percentage = calculate_percentage(replies, replies_target)
+        views_percentage = calculate_percentage(views, views_target)
+        bookmarks_percentage = calculate_percentage(bookmarks, bookmarks_target)
         global percentages
         percentages = (
             f"{get_emoji(likes_percentage)} Likes <b>{likes} | {likes_target}</b>  [{'💯' if likes_percentage==100 else likes_percentage }%]\n"
             + f"{get_emoji(retweets_percentage)} Retweets <b>{retweets} | {retweets_target}</b>  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n"
             + f"{get_emoji(replies_percentage)} Replies <b>{replies} | {replies_target}</b>  [{'💯' if replies_percentage==100 else replies_percentage}%]\n\n"
+            + f"'' if views_target==0 else f'{get_emoji(views_percentage)} Views <b>{views} | {views_target}</b>  [{'💯' if views_percentage==100 else views_percentage}%]\n\n'"
+            + f"'' if bookmarks_target==0 else f'{get_emoji(bookmarks_percentage)} Bookmarks <b>{bookmarks} | {bookmarks_target}</b>  [{'💯' if bookmarks_percentage==100 else bookmarks_percentage}%]\n\n'"
             + f"{link}\n\n"
         )
         if (

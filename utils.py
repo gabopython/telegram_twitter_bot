@@ -18,11 +18,11 @@ targets_reply = (
 def read_values():
     with open("values.txt", "r") as file:
         lines = file.readlines()
-        likes_target_default = lines[0].strip()
-        retweets_target_default = lines[1].strip()
-        replies_target_default = lines[2].strip()
-        views_target_default = lines[3].strip()
-        bookmarks_target_default = lines[4].strip()
+        likes_target_default = int(lines[0].strip())
+        retweets_target_default = int(lines[1].strip())
+        replies_target_default = int(lines[2].strip())
+        views_target_default = int(lines[3].strip())
+        bookmarks_target_default = int(lines[4].strip())
 
     return (
         likes_target_default,
@@ -49,6 +49,8 @@ def write_values(
 
 
 def calculate_percentage(actual, target):
+    if target == 0:
+        return 0  # Avoid division by zero
     percentage = round((actual / target) * 100, 2)
     return min(percentage, 100)
 
