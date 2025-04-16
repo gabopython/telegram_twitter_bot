@@ -67,9 +67,9 @@ async def reply_handler(message: types.Message):
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            "", "Likes", "likes", "Likes", likes_target
+                            "Default", "Likes", "likes", "Likes", likes_target
                         ),
-                        reply_markup=keyboard_back,
+                        reply_markup=keyboard_default_back,
                     )
                 except ValueError:
                     bot_message = await message.answer(
@@ -90,9 +90,9 @@ async def reply_handler(message: types.Message):
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            "", "Retweets", "retweets", "Retweets", retweets_target
+                            "Default", "Retweets", "retweets", "Retweets", retweets_target
                         ),
-                        reply_markup=keyboard_back,
+                        reply_markup=keyboard_default_back,
                     )
                 except ValueError:
                     bot_message = await message.answer(
@@ -113,9 +113,9 @@ async def reply_handler(message: types.Message):
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            "", "Replies", "replies", "Replies", replies_target
+                            "Default", "Replies", "replies", "Replies", replies_target
                         ),
-                        reply_markup=keyboard_back,
+                        reply_markup=keyboard_default_back,
                     )
                 except ValueError:
                     bot_message = await message.answer(
@@ -136,9 +136,9 @@ async def reply_handler(message: types.Message):
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            "", "Views", "views", "Views", views_target
+                            "Default", "Views", "views", "Views", views_target
                         ),
-                        reply_markup=keyboard_back,
+                        reply_markup=keyboard_default_back,
                     )
                 except ValueError:
                     bot_message = await message.answer(
@@ -159,9 +159,9 @@ async def reply_handler(message: types.Message):
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            "", "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
+                            "Default", "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
                         ),
-                        reply_markup=keyboard_back,
+                        reply_markup=keyboard_default_back,
                     )
                 except ValueError:
                     bot_message = await message.answer(
@@ -325,10 +325,15 @@ async def handle_message(message: types.Message):
 @dp.callback_query(lambda c: c.data.startswith("target_"))
 async def handle_target(callback_query: types.CallbackQuery):
     target = callback_query.data.replace("target_", "")
-    global keyboard_back
+    global keyboard_back, keyboard_default_back
     keyboard_back = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="🔙 Back", callback_data="target_7")]
+        ]
+    )
+    keyboard_default_back = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🔙 Back", callback_data="target_8")]
         ]
     )
     if target == "1":
@@ -466,7 +471,7 @@ async def handle_target(callback_query: types.CallbackQuery):
                         callback_data="target_13",
                     )
                 ],
-                [InlineKeyboardButton(text=f"🔙 Back", callback_data="target_8")],
+                [InlineKeyboardButton(text=f"🔙 Back", callback_data="target_7")],
             ]
         )
         await bot.edit_message_text(
@@ -483,7 +488,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             text=targets_reply.format(
                 "Default", "Likes", "likes", "likes", likes_target
             ),
-            reply_markup=keyboard_back,
+            reply_markup=keyboard_default_back,
         )
         await callback_query.answer()
     elif target == "10":
@@ -493,7 +498,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             text=targets_reply.format(
                 "Default", "Retweets", "retweets", "retweets", retweets_target
             ),
-            reply_markup=keyboard_back,
+            reply_markup=keyboard_default_back,
         )
         await callback_query.answer()
     elif target == "11":
@@ -503,7 +508,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             text=targets_reply.format(
                 "Default", "Replies", "replies", "replies", replies_target
             ),
-            reply_markup=keyboard_back,
+            reply_markup=keyboard_default_back,
         )
         await callback_query.answer()
     elif target == "12":
@@ -513,7 +518,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             text=targets_reply.format(
                 "Default", "Views", "views", "views", views_target
             ),
-            reply_markup=keyboard_back,
+            reply_markup=keyboard_default_back,
         )
         await callback_query.answer()
     elif target == "13":
@@ -523,7 +528,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             text=targets_reply.format(
                 "Default", "Bookmarks", "bookmarks", "bookmarks", bookmarks_target
             ),
-            reply_markup=keyboard_back,
+            reply_markup=keyboard_default_back,
         )
         await callback_query.answer()
 
