@@ -9,20 +9,18 @@ from utils import (
     write_values,
     read_values,
 )
-from dotenv import load_dotenv
-import os
+from config import BOT_TOKEN
 from aiogram import Bot, Dispatcher, types
 import asyncio
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram import F
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 
-load_dotenv()
-token = os.getenv("TELEGRAM_TOKEN")
-bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
-global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
+router = Router()
 (
     likes_default_target,
     retweets_default_target,
@@ -30,7 +28,6 @@ global likes_default_target, retweets_default_target, replies_default_target, vi
     views_default_target,
     bookmarks_default_target,
 ) = read_values()
-global likes_target, retweets_target, replies_target, views_target, bookmarks_target
 likes_target = likes_default_target
 retweets_target = retweets_default_target
 replies_target = replies_default_target
@@ -58,6 +55,8 @@ async def reply_handler(message: types.Message):
         if "Default" in message_reply:
             if "Likes" in message_reply:
                 try:
+                    global likes_target
+                    global likes_default_target
                     likes_default_target = int(message.text)
                     likes_target = likes_default_target
                     bot_message = await message.answer(
@@ -69,6 +68,98 @@ async def reply_handler(message: types.Message):
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
                             "", "Likes", "likes", "Likes", likes_target
+                        ),
+                        reply_markup=keyboard_back,
+                    )
+                except ValueError:
+                    bot_message = await message.answer(
+                        "❌ <b>Invalid input. Please enter a valid number.</b>"
+                    )
+                    await asyncio.sleep(5)
+            elif "Retweets" in message_reply:
+                try:
+                    global retweets_target
+                    global retweets_default_target
+                    retweets_default_target = int(message.text)
+                    retweets_target = retweets_default_target
+                    bot_message = await message.answer(
+                        f"🔄 <b>Default Retweets</b> updated to {retweets_target}"
+                    )
+                    await asyncio.sleep(3)
+                    await bot.edit_message_text(
+                        chat_id=message.reply_to_message.chat.id,
+                        message_id=message.reply_to_message.message_id,
+                        text=targets_reply.format(
+                            "", "Retweets", "retweets", "Retweets", retweets_target
+                        ),
+                        reply_markup=keyboard_back,
+                    )
+                except ValueError:
+                    bot_message = await message.answer(
+                        "❌ <b>Invalid input. Please enter a valid number.</b>"
+                    )
+                    await asyncio.sleep(5)
+            elif "Replies" in message_reply:
+                try:
+                    global replies_target
+                    global replies_default_target
+                    replies_default_target = int(message.text)
+                    replies_target = replies_default_target
+                    bot_message = await message.answer(
+                        f"💬 <b>Default Replies</b> updated to {replies_target}"
+                    )
+                    await asyncio.sleep(3)
+                    await bot.edit_message_text(
+                        chat_id=message.reply_to_message.chat.id,
+                        message_id=message.reply_to_message.message_id,
+                        text=targets_reply.format(
+                            "", "Replies", "replies", "Replies", replies_target
+                        ),
+                        reply_markup=keyboard_back,
+                    )
+                except ValueError:
+                    bot_message = await message.answer(
+                        "❌ <b>Invalid input. Please enter a valid number.</b>"
+                    )
+                    await asyncio.sleep(5)
+            elif "Views" in message_reply:
+                try:
+                    global views_target
+                    global views_default_target
+                    views_default_target = int(message.text)
+                    views_target = views_default_target
+                    bot_message = await message.answer(
+                        f"👀 <b>Default Views</b> updated to {views_target}"
+                    )
+                    await asyncio.sleep(3)
+                    await bot.edit_message_text(
+                        chat_id=message.reply_to_message.chat.id,
+                        message_id=message.reply_to_message.message_id,
+                        text=targets_reply.format(
+                            "", "Views", "views", "Views", views_target
+                        ),
+                        reply_markup=keyboard_back,
+                    )
+                except ValueError:
+                    bot_message = await message.answer(
+                        "❌ <b>Invalid input. Please enter a valid number.</b>"
+                    )
+                    await asyncio.sleep(5)
+            elif "Bookmarks" in message_reply:
+                try:
+                    global bookmarks_target
+                    global bookmarks_default_target
+                    bookmarks_default_target = int(message.text)
+                    bookmarks_target = bookmarks_default_target
+                    bot_message = await message.answer(
+                        f"🔖 <b>Default Bookmarks</b> updated to {bookmarks_target}"
+                    )
+                    await asyncio.sleep(3)
+                    await bot.edit_message_text(
+                        chat_id=message.reply_to_message.chat.id,
+                        message_id=message.reply_to_message.message_id,
+                        text=targets_reply.format(
+                            "", "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
                         ),
                         reply_markup=keyboard_back,
                     )
@@ -94,7 +185,9 @@ async def reply_handler(message: types.Message):
                 await bot.edit_message_text(
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
-                    text=targets_reply.format("Likes", "likes", "Likes", likes_target),
+                    text=targets_reply.format(
+                        "", "Likes", "likes", "Likes", likes_target
+                    ),
                     reply_markup=keyboard_back,
                 )
             except ValueError:
@@ -103,7 +196,6 @@ async def reply_handler(message: types.Message):
                 )
                 await asyncio.sleep(5)
         elif "Retweets" in message_reply:
-            global retweets_target
             try:
                 retweets_target = int(message.text)
                 bot_message = await message.answer(
@@ -114,7 +206,7 @@ async def reply_handler(message: types.Message):
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
                     text=targets_reply.format(
-                        "Retweets", "retweets", "Retweets", retweets_target
+                        "", "Retweets", "retweets", "Retweets", retweets_target
                     ),
                     reply_markup=keyboard_back,
                 )
@@ -124,7 +216,6 @@ async def reply_handler(message: types.Message):
                 )
                 await asyncio.sleep(5)
         elif "Replies" in message_reply:
-            global replies_target
             try:
                 replies_target = int(message.text)
                 bot_message = await message.answer(
@@ -135,7 +226,7 @@ async def reply_handler(message: types.Message):
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
                     text=targets_reply.format(
-                        "Replies", "replies", "Replies", replies_target
+                        "", "Replies", "replies", "Replies", replies_target
                     ),
                     reply_markup=keyboard_back,
                 )
@@ -145,7 +236,6 @@ async def reply_handler(message: types.Message):
                 )
                 await asyncio.sleep(5)
         elif "Views" in message_reply:
-            global views_target
             try:
                 views_target = int(message.text)
                 bot_message = await message.answer(
@@ -155,7 +245,9 @@ async def reply_handler(message: types.Message):
                 await bot.edit_message_text(
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
-                    text=targets_reply.format("Views", "views", "Views", views_target),
+                    text=targets_reply.format(
+                        "", "Views", "views", "Views", views_target
+                    ),
                     reply_markup=keyboard_back,
                 )
             except ValueError:
@@ -164,7 +256,6 @@ async def reply_handler(message: types.Message):
                 )
                 await asyncio.sleep(5)
         elif "Bookmarks" in message_reply:
-            global bookmarks_target
             try:
                 bookmarks_target = int(message.text)
                 bot_message = await message.answer(
@@ -175,7 +266,7 @@ async def reply_handler(message: types.Message):
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
                     text=targets_reply.format(
-                        "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
+                        "", "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
                     ),
                     reply_markup=keyboard_back,
                 )
@@ -190,13 +281,18 @@ async def reply_handler(message: types.Message):
 
 @dp.message()
 async def handle_message(message: types.Message):
-    """conection btw telegram and x bot"""
     message_text = message.text
     if message_text:
         match = TWITTER_LINK_PATTERN.search(message_text)
         if match:
             global link
             link = message_text
+            global likes_target, retweets_target, replies_target, views_target, bookmarks_target
+            likes_target = likes_default_target
+            retweets_target = retweets_default_target
+            replies_target = replies_default_target
+            views_target = views_default_target
+            bookmarks_target = bookmarks_default_target
             formatted = (
                 "⚙️ <b>Raid Options</b>\n\n"
                 f"🔗 <b>Link:</b> {link}\n"
@@ -211,7 +307,7 @@ async def handle_message(message: types.Message):
                 inline_keyboard=[
                     [
                         InlineKeyboardButton(
-                            text="💥 Start Raid 💥", callback_data="option_1"
+                            text="💥 Start Raid 💥", callback_data="start raid"
                         )
                     ],
                     [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
@@ -248,7 +344,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Retweets", "retweets", "Retweets", retweets_target
+                "", "Retweets", "retweets", "Retweets", retweets_target
             ),
             reply_markup=keyboard_back,
         )
@@ -257,7 +353,9 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_reply.format("Replies", "replies", "Replies", replies_target),
+            text=targets_reply.format(
+                "", "Replies", "replies", "Replies", replies_target
+            ),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -265,7 +363,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_reply.format("Views", "views", "Views", views_target),
+            text=targets_reply.format("", "Views", "views", "Views", views_target),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -274,7 +372,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
+                "", "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
             ),
             reply_markup=keyboard_back,
         )
@@ -349,23 +447,23 @@ async def handle_target(callback_query: types.CallbackQuery):
                 [
                     InlineKeyboardButton(
                         text=f"🔄 Retweets ({retweets_target})",
-                        callback_data="target_2",
+                        callback_data="target_10",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"💬 Replies ({replies_target})", callback_data="target_3"
+                        text=f"💬 Replies ({replies_target})", callback_data="target_11"
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"👀 Views ({views_target})", callback_data="target_4"
+                        text=f"👀 Views ({views_target})", callback_data="target_12"
                     )
                 ],
                 [
                     InlineKeyboardButton(
                         text=f"🔖 Bookmarks ({bookmarks_target})",
-                        callback_data="target_5",
+                        callback_data="target_13",
                     )
                 ],
                 [InlineKeyboardButton(text=f"🔙 Back", callback_data="target_8")],
@@ -388,63 +486,104 @@ async def handle_target(callback_query: types.CallbackQuery):
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
+    elif target == "10":
+        await bot.edit_message_text(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            text=targets_reply.format(
+                "Default", "Retweets", "retweets", "retweets", retweets_target
+            ),
+            reply_markup=keyboard_back,
+        )
+        await callback_query.answer()
+    elif target == "11":
+        await bot.edit_message_text(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            text=targets_reply.format(
+                "Default", "Replies", "replies", "replies", replies_target
+            ),
+            reply_markup=keyboard_back,
+        )
+        await callback_query.answer()
+    elif target == "12":
+        await bot.edit_message_text(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            text=targets_reply.format(
+                "Default", "Views", "views", "views", views_target
+            ),
+            reply_markup=keyboard_back,
+        )
+        await callback_query.answer()
+    elif target == "13":
+        await bot.edit_message_text(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            text=targets_reply.format(
+                "Default", "Bookmarks", "bookmarks", "bookmarks", bookmarks_target
+            ),
+            reply_markup=keyboard_back,
+        )
+        await callback_query.answer()
+
+
+@router.callback_query(F.data == "start raid")
+async def star_raid_callback(callback: CallbackQuery):
+    # x_data = x_bot.get_tweet_data(link)
+    x_data = {"1": 0}
+    likes = x_data.get("Likes", 2)
+    retweets = x_data.get("Retweets", 4)
+    replies = x_data.get("Replies", 2)
+    views = x_data.get("Views", 2)
+    bookmarks = x_data.get("Bookmarks", 2)
+    likes_percentage = calculate_percentage(likes, likes_target)
+    retweets_percentage = calculate_percentage(retweets, retweets_target)
+    replies_percentage = calculate_percentage(replies, replies_target)
+    views_percentage = calculate_percentage(views, views_target)
+    bookmarks_percentage = calculate_percentage(bookmarks, bookmarks_target)
+    global percentages
+    percentages = (
+        f"{get_emoji(likes_percentage)} Likes <b>{likes} | {likes_target}</b>  [{'💯' if likes_percentage==100 else likes_percentage }%]\n"
+        + f"{get_emoji(retweets_percentage)} Retweets <b>{retweets} | {retweets_target}</b>  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n"
+        + f"{get_emoji(replies_percentage)} Replies <b>{replies} | {replies_target}</b>  [{'💯' if replies_percentage==100 else replies_percentage}%]\n"
+        + (
+            ""
+            if views_target == 0
+            else f"{get_emoji(views_percentage)} Views <b>{views} | {views_target}</b>  [{'💯' if views_percentage==100 else views_percentage}%]\n"
+        )
+        + (
+            ""
+            if bookmarks_target == 0
+            else f"{get_emoji(bookmarks_percentage)} Bookmarks <b>{bookmarks} | {bookmarks_target}</b>  [{'💯' if bookmarks_percentage==100 else bookmarks_percentage}%]\n"
+        )
+        + f"\n{link}\n\n"
+    )
+    if (
+        likes_percentage == 100
+        and retweets_percentage == 100
+        and replies_percentage == 100
+    ):
+        raid_message = (
+            "🎊 Raid Ended - Targets Reached!\n\n"
+            + percentages
+            + "⏰ Duration: 0 minutes"
+        )
+    else:
+        chat_id = callback.message.chat.id
+        raid_status[chat_id] = True
+        raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
+
+    await callback.message.delete()
+    await callback.message.answer(raid_message)
+    await callback.answer()
 
 
 @dp.callback_query(lambda c: c.data.startswith("option"))
 async def process_callback(callback_query: types.CallbackQuery):
     option = callback_query.data.replace("option_", "")
-    if option == "1":
-        # x_data = x_bot.get_tweet_data(link)
-        x_data = {"1": 0}
-        likes = x_data.get("Likes", 2)
-        retweets = x_data.get("Retweets", 4)
-        replies = x_data.get("Replies", 2)
-        views = x_data.get("Views", 2)
-        bookmarks = x_data.get("Bookmarks", 2)
-        likes_percentage = calculate_percentage(likes, likes_target)
-        retweets_percentage = calculate_percentage(retweets, retweets_target)
-        replies_percentage = calculate_percentage(replies, replies_target)
-        views_percentage = calculate_percentage(views, views_target)
-        bookmarks_percentage = calculate_percentage(bookmarks, bookmarks_target)
-        global percentages
-        percentages = (
-            f"{get_emoji(likes_percentage)} Likes <b>{likes} | {likes_target}</b>  [{'💯' if likes_percentage==100 else likes_percentage }%]\n"
-            + f"{get_emoji(retweets_percentage)} Retweets <b>{retweets} | {retweets_target}</b>  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n"
-            + f"{get_emoji(replies_percentage)} Replies <b>{replies} | {replies_target}</b>  [{'💯' if replies_percentage==100 else replies_percentage}%]\n"
-            + (
-                ""
-                if views_target == 0
-                else f"{get_emoji(views_percentage)} Views <b>{views} | {views_target}</b>  [{'💯' if views_percentage==100 else views_percentage}%]\n"
-            )
-            + (
-                ""
-                if bookmarks_target == 0
-                else f"{get_emoji(bookmarks_percentage)} Bookmarks <b>{bookmarks} | {bookmarks_target}</b>  [{'💯' if bookmarks_percentage==100 else bookmarks_percentage}%]\n"
-            )
-            + f"\n{link}\n\n"
-        )
-        if (
-            likes_percentage == 100
-            and retweets_percentage == 100
-            and replies_percentage == 100
-        ):
-            raid_message = (
-                "🎊 Raid Ended - Targets Reached!\n\n"
-                + percentages
-                + "⏰ Duration: 0 minutes"
-            )
-        else:
-            chat_id = callback_query.message.chat.id
-            raid_status[chat_id] = True
-            raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
 
-        await bot.delete_message(
-            chat_id=callback_query.message.chat.id,
-            message_id=callback_query.message.message_id,
-        )
-        await bot.send_message(callback_query.message.chat.id, raid_message)
-        await callback_query.answer()
-    elif option == "2":
+    if option == "2":
         global keyboard_target
         keyboard_target = InlineKeyboardMarkup(
             inline_keyboard=[
@@ -498,7 +637,7 @@ async def process_callback(callback_query: types.CallbackQuery):
 
 
 async def main():
-    await bot.delete_webhook(drop_pending_updates=True)
+    dp.include_router(router)
     await dp.start_polling(bot)
 
 

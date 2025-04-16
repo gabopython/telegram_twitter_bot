@@ -50,7 +50,7 @@ def write_values(
 
 def calculate_percentage(actual, target):
     if target == 0:
-        return 0  # Avoid division by zero
+        return 100  # Avoid division by zero
     percentage = round((actual / target) * 100, 2)
     return min(percentage, 100)
 
