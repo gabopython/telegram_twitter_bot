@@ -6,7 +6,7 @@ TWITTER_LINK_PATTERN = re.compile(
 raid_status = {}
 targets_text = (
     "⚙️ <b>Raid Options > {} Targets</b>\n\n"
-    "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target either for each raid or as a default setting."
+    "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target {}."
 )
 targets_reply = (
     "⚙️ <b>Raid Options > {} Targets > {}</b>\n\n"

@@ -437,7 +437,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text.format(""),
+            text=targets_text.format("", 'either for each raid or as a default setting'), 
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
@@ -477,7 +477,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text.format("Default"),
+            text=targets_text.format("Default",'in the default settings'),
             reply_markup=keyboard_default_target,
         )
         await callback_query.answer()
@@ -630,7 +630,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text.format(""),
+            text=targets_text.format("", 'either for each raid or as a default setting'),
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
