@@ -311,6 +311,9 @@ async def handle_message(message: types.Message):
                         )
                     ],
                     [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
+                    [
+                        InlineKeyboardButton(text="🎨  Customization", callback_data="option_4")
+                    ],
                     [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
                 ]
             )
@@ -639,6 +642,40 @@ async def process_callback(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
         )
+    elif option == "4":
+        keyboard_customization = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🚀  Start Media", callback_data="option_5"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="🖼  Raid Media", callback_data="option_6"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="🏁  End Media", callback_data="option_7",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="📝  Custom Text", callback_data="option_8",
+                    )
+                ],
+                [InlineKeyboardButton(text="🔙 Back", callback_data="target_6")],
+            ]
+        )
+        await bot.edit_message_text(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            text="⚙️ <b>Raid Options > Customization</b>\n\n"
+            'You can set custom media for ongoing raids and end media for when a raid is completed.',
+            reply_markup=keyboard_customization,
+        )
+        await callback_query.answer()    
 
 
 async def main():
