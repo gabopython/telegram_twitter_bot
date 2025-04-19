@@ -318,7 +318,7 @@ async def handle_message(message: types.Message):
             views_target = views_default_target
             bookmarks_target = bookmarks_default_target
             formatted = (
-                "⚙️ <b>Raid Options</b>\n\n"
+                "⚙️ <b> Raid Options</b>\n\n"
                 f"🔗 <b>Link:</b> {link}\n"
                 f"💙 <b>Likes:</b> {likes_target}\n"
                 f"🔄 <b>Retweets:</b> {retweets_target}\n"
