@@ -13,6 +13,7 @@ from config import BOT_TOKEN
 from aiogram import Bot, Dispatcher, types
 import asyncio
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.enums.chat_member_status import ChatMemberStatus
 from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
@@ -37,6 +38,13 @@ bookmarks_target = bookmarks_default_target
 
 @dp.message(F.text == "/stop")
 async def stop_command(message: types.Message):
+    # Check if the sender is an admin
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    member = await message.bot.get_chat_member(chat_id, user_id)
+    if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
+        return  # User is not an admin, ignore message
     chat_id = message.chat.id
     if raid_status.get(chat_id):
         raid_status[chat_id] = False
@@ -49,6 +57,13 @@ async def stop_command(message: types.Message):
 
 @dp.message(F.reply_to_message)
 async def reply_handler(message: types.Message):
+    # Check if the sender is an admin
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    member = await message.bot.get_chat_member(chat_id, user_id)
+    if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
+        return  # User is not an admin, ignore message
     bot_id = (await bot.me()).id
     message_reply = message.reply_to_message.text
     if message.reply_to_message.from_user.id == bot_id:
@@ -90,7 +105,11 @@ async def reply_handler(message: types.Message):
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            "Default", "Retweets", "retweets", "Retweets", retweets_target
+                            "Default",
+                            "Retweets",
+                            "retweets",
+                            "Retweets",
+                            retweets_target,
                         ),
                         reply_markup=keyboard_default_back,
                     )
@@ -159,7 +178,11 @@ async def reply_handler(message: types.Message):
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            "Default", "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
+                            "Default",
+                            "Bookmarks",
+                            "bookmarks",
+                            "Bookmarks",
+                            bookmarks_target,
                         ),
                         reply_markup=keyboard_default_back,
                     )
@@ -281,45 +304,57 @@ async def reply_handler(message: types.Message):
 
 @dp.message()
 async def handle_message(message: types.Message):
+    # Check if message has text
     message_text = message.text
-    if message_text:
-        match = TWITTER_LINK_PATTERN.search(message_text)
-        if match:
-            global link
-            link = message_text
-            global likes_target, retweets_target, replies_target, views_target, bookmarks_target
-            likes_target = likes_default_target
-            retweets_target = retweets_default_target
-            replies_target = replies_default_target
-            views_target = views_default_target
-            bookmarks_target = bookmarks_default_target
-            formatted = (
-                "⚙️ <b>Raid Options</b>\n\n"
-                f"🔗 <b>Link:</b> {link}\n"
-                f"💙 <b>Likes:</b> {likes_target}\n"
-                f"🔄 <b>Retweets:</b> {retweets_target}\n"
-                f"💬 <b>Replies:</b> {replies_target}\n"
-                f"👀 <b>Views:</b> {views_target}\n"
-                f"🔖 <b>Bookmarks:</b> {bookmarks_target}"
-            )
-            global keyboard_message
-            keyboard_message = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text="💥 Start Raid 💥", callback_data="start raid"
-                        )
-                    ],
-                    [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
-                    [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
-                ]
-            )
-            await message.answer(
-                formatted,
-                reply_markup=keyboard_message,
-            )
-        else:
-            return
+    if not message_text:
+        return
+
+    # Search for Twitter link
+    match = TWITTER_LINK_PATTERN.search(message_text)
+    if not match:
+        return
+
+    # Check if the sender is an admin
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    member = await message.bot.get_chat_member(chat_id, user_id)
+    # if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
+    # return  # User is not an admin, ignore message
+
+    # Process Twitter link
+    global link
+    link = message_text
+    global likes_target, retweets_target, replies_target, views_target, bookmarks_target
+    likes_target = likes_default_target
+    retweets_target = retweets_default_target
+    replies_target = replies_default_target
+    views_target = views_default_target
+    bookmarks_target = bookmarks_default_target
+
+    formatted = (
+        "⚙️ <b>Raid Options</b>\n\n"
+        f"🔗 <b>Link:</b> {link}\n"
+        f"💙 <b>Likes:</b> {likes_target}\n"
+        f"🔄 <b>Retweets:</b> {retweets_target}\n"
+        f"💬 <b>Replies:</b> {replies_target}\n"
+        f"👀 <b>Views:</b> {views_target}\n"
+        f"🔖 <b>Bookmarks:</b> {bookmarks_target}"
+    )
+
+    global keyboard_message
+    keyboard_message = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="💥 Start Raid 💥", callback_data="start raid")],
+            [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
+            [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
+        ]
+    )
+
+    await message.answer(
+        formatted,
+        reply_markup=keyboard_message,
+    )
 
 
 @dp.callback_query(lambda c: c.data.startswith("target_"))
@@ -437,7 +472,9 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text.format("", 'either for each raid or as a default setting'), 
+            text=targets_text.format(
+                "", "either for each raid or as a default setting"
+            ),
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
@@ -477,7 +514,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text.format("Default",'in the default settings'),
+            text=targets_text.format("Default", "in the default settings"),
             reply_markup=keyboard_default_target,
         )
         await callback_query.answer()
@@ -630,7 +667,9 @@ async def process_callback(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_text.format("", 'either for each raid or as a default setting'),
+            text=targets_text.format(
+                "", "either for each raid or as a default setting"
+            ),
             reply_markup=keyboard_target,
         )
         await callback_query.answer()
