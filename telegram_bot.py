@@ -575,53 +575,64 @@ async def handle_target(callback_query: types.CallbackQuery):
 
 @router.callback_query(F.data == "start raid")
 async def star_raid_callback(callback: CallbackQuery):
-    # x_data = x_bot.get_tweet_data(link)
-    x_data = {"1": 0}
-    likes = x_data.get("Likes", 2)
-    retweets = x_data.get("Retweets", 4)
-    replies = x_data.get("Replies", 2)
-    views = x_data.get("Views", 2)
-    bookmarks = x_data.get("Bookmarks", 2)
-    likes_percentage = calculate_percentage(likes, likes_target)
-    retweets_percentage = calculate_percentage(retweets, retweets_target)
-    replies_percentage = calculate_percentage(replies, replies_target)
-    views_percentage = calculate_percentage(views, views_target)
-    bookmarks_percentage = calculate_percentage(bookmarks, bookmarks_target)
-    global percentages
-    percentages = (
-        f"{get_emoji(likes_percentage)} Likes <b>{likes} | {likes_target}</b>  [{'💯' if likes_percentage==100 else likes_percentage }%]\n"
-        + f"{get_emoji(retweets_percentage)} Retweets <b>{retweets} | {retweets_target}</b>  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n"
-        + f"{get_emoji(replies_percentage)} Replies <b>{replies} | {replies_target}</b>  [{'💯' if replies_percentage==100 else replies_percentage}%]\n"
-        + (
-            ""
-            if views_target == 0
-            else f"{get_emoji(views_percentage)} Views <b>{views} | {views_target}</b>  [{'💯' if views_percentage==100 else views_percentage}%]\n"
-        )
-        + (
-            ""
-            if bookmarks_target == 0
-            else f"{get_emoji(bookmarks_percentage)} Bookmarks <b>{bookmarks} | {bookmarks_target}</b>  [{'💯' if bookmarks_percentage==100 else bookmarks_percentage}%]\n"
-        )
-        + f"\n{link}\n\n"
-    )
-    if (
-        likes_percentage == 100
-        and retweets_percentage == 100
-        and replies_percentage == 100
-    ):
-        raid_message = (
-            "🎊 Raid Ended - Targets Reached!\n\n"
-            + percentages
-            + "⏰ Duration: 0 minutes"
-        )
-    else:
-        chat_id = callback.message.chat.id
-        raid_status[chat_id] = True
-        raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
 
-    await callback.message.delete()
-    await callback.message.answer(raid_message)
-    await callback.answer()
+    # Get chat member status
+    member = await bot.get_chat_member(chat_id, user_id)
+
+    if member.status in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
+        # x_data = x_bot.get_tweet_data(link)
+        x_data = {"1": 0}
+        likes = x_data.get("Likes", 2)
+        retweets = x_data.get("Retweets", 4)
+        replies = x_data.get("Replies", 2)
+        views = x_data.get("Views", 2)
+        bookmarks = x_data.get("Bookmarks", 2)
+        likes_percentage = calculate_percentage(likes, likes_target)
+        retweets_percentage = calculate_percentage(retweets, retweets_target)
+        replies_percentage = calculate_percentage(replies, replies_target)
+        views_percentage = calculate_percentage(views, views_target)
+        bookmarks_percentage = calculate_percentage(bookmarks, bookmarks_target)
+        global percentages
+        percentages = (
+            f"{get_emoji(likes_percentage)} Likes <b>{likes} | {likes_target}</b>  [{'💯' if likes_percentage==100 else likes_percentage }%]\n"
+            + f"{get_emoji(retweets_percentage)} Retweets <b>{retweets} | {retweets_target}</b>  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n"
+            + f"{get_emoji(replies_percentage)} Replies <b>{replies} | {replies_target}</b>  [{'💯' if replies_percentage==100 else replies_percentage}%]\n"
+            + (
+                ""
+                if views_target == 0
+                else f"{get_emoji(views_percentage)} Views <b>{views} | {views_target}</b>  [{'💯' if views_percentage==100 else views_percentage}%]\n"
+            )
+            + (
+                ""
+                if bookmarks_target == 0
+                else f"{get_emoji(bookmarks_percentage)} Bookmarks <b>{bookmarks} | {bookmarks_target}</b>  [{'💯' if bookmarks_percentage==100 else bookmarks_percentage}%]\n"
+            )
+            + f"\n{link}\n\n"
+        )
+        if (
+            likes_percentage == 100
+            and retweets_percentage == 100
+            and replies_percentage == 100
+        ):
+            raid_message = (
+                "🎊 Raid Ended - Targets Reached!\n\n"
+                + percentages
+                + "⏰ Duration: 0 minutes"
+            )
+        else:
+            chat_id = callback.message.chat.id
+            raid_status[chat_id] = True
+            raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
+
+        await callback.message.delete()
+        await callback.message.answer(raid_message)
+        await callback.answer()
+    else:
+        await callback.answer(
+            "❌ You have to be an admin to start the raid.", show_alert=True
+        )
 
 
 @dp.callback_query(lambda c: c.data.startswith("option"))
