@@ -306,55 +306,44 @@ async def reply_handler(message: types.Message):
 async def handle_message(message: types.Message):
     # Check if message has text
     message_text = message.text
-    if not message_text:
-        return
-
-    # Search for Twitter link
-    match = TWITTER_LINK_PATTERN.search(message_text)
-    if not match:
-        return
-
-    # Check if the sender is an admin
-    chat_id = message.chat.id
-    user_id = message.from_user.id
-
-    member = await message.bot.get_chat_member(chat_id, user_id)
-    # if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
-    # return  # User is not an admin, ignore message
-
-    # Process Twitter link
-    global link
-    link = message_text
-    global likes_target, retweets_target, replies_target, views_target, bookmarks_target
-    likes_target = likes_default_target
-    retweets_target = retweets_default_target
-    replies_target = replies_default_target
-    views_target = views_default_target
-    bookmarks_target = bookmarks_default_target
-
-    formatted = (
-        "⚙️ <b>Raid Options</b>\n\n"
-        f"🔗 <b>Link:</b> {link}\n"
-        f"💙 <b>Likes:</b> {likes_target}\n"
-        f"🔄 <b>Retweets:</b> {retweets_target}\n"
-        f"💬 <b>Replies:</b> {replies_target}\n"
-        f"👀 <b>Views:</b> {views_target}\n"
-        f"🔖 <b>Bookmarks:</b> {bookmarks_target}"
-    )
-
-    global keyboard_message
-    keyboard_message = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="💥 Start Raid 💥", callback_data="start raid")],
-            [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
-            [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
-        ]
-    )
-
-    await message.answer(
-        formatted,
-        reply_markup=keyboard_message,
-    )
+    if message_text:
+        match = TWITTER_LINK_PATTERN.search(message_text)
+        if match:
+            global link
+            link = message_text
+            global likes_target, retweets_target, replies_target, views_target, bookmarks_target
+            likes_target = likes_default_target
+            retweets_target = retweets_default_target
+            replies_target = replies_default_target
+            views_target = views_default_target
+            bookmarks_target = bookmarks_default_target
+            formatted = (
+                "⚙️ <b>Raid Options</b>\n\n"
+                f"🔗 <b>Link:</b> {link}\n"
+                f"💙 <b>Likes:</b> {likes_target}\n"
+                f"🔄 <b>Retweets:</b> {retweets_target}\n"
+                f"💬 <b>Replies:</b> {replies_target}\n"
+                f"👀 <b>Views:</b> {views_target}\n"
+                f"🔖 <b>Bookmarks:</b> {bookmarks_target}"
+            )
+            global keyboard_message
+            keyboard_message = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text="💥 Start Raid 💥", callback_data="start raid"
+                        )
+                    ],
+                    [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
+                    [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
+                ]
+            )
+            await message.answer(
+                formatted,
+                reply_markup=keyboard_message,
+            )
+        else:
+            return
 
 
 @dp.callback_query(lambda c: c.data.startswith("target_"))
@@ -678,6 +667,38 @@ async def process_callback(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
         )
+    elif option == "4":
+        keyboard_customization = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🚀  Start Media", callback_data="option_5"
+                    )
+                ],
+                [InlineKeyboardButton(text="🖼  Raid Media", callback_data="option_6")],
+                [
+                    InlineKeyboardButton(
+                        text="🏁  End Media",
+                        callback_data="option_7",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="📝  Custom Text",
+                        callback_data="option_8",
+                    )
+                ],
+                [InlineKeyboardButton(text="🔙 Back", callback_data="target_6")],
+            ]
+        )
+        await bot.edit_message_text(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            text="⚙️ <b>Raid Options > Customization</b>\n\n"
+            "You can set custom media for ongoing raids and end media for when a raid is completed.",
+            reply_markup=keyboard_customization,
+        )
+        await callback_query.answer()
 
 
 async def main():
