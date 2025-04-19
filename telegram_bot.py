@@ -45,6 +45,7 @@ async def stop_command(message: types.Message):
     member = await message.bot.get_chat_member(chat_id, user_id)
     if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
         return  # User is not an admin, ignore message
+
     chat_id = message.chat.id
     if raid_status.get(chat_id):
         raid_status[chat_id] = False
@@ -64,6 +65,7 @@ async def reply_handler(message: types.Message):
     member = await message.bot.get_chat_member(chat_id, user_id)
     if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
         return  # User is not an admin, ignore message
+
     bot_id = (await bot.me()).id
     message_reply = message.reply_to_message.text
     if message.reply_to_message.from_user.id == bot_id:
@@ -306,44 +308,56 @@ async def reply_handler(message: types.Message):
 async def handle_message(message: types.Message):
     # Check if message has text
     message_text = message.text
-    if message_text:
-        match = TWITTER_LINK_PATTERN.search(message_text)
-        if match:
-            global link
-            link = message_text
-            global likes_target, retweets_target, replies_target, views_target, bookmarks_target
-            likes_target = likes_default_target
-            retweets_target = retweets_default_target
-            replies_target = replies_default_target
-            views_target = views_default_target
-            bookmarks_target = bookmarks_default_target
-            formatted = (
-                "⚙️ <b>Raid Options</b>\n\n"
-                f"🔗 <b>Link:</b> {link}\n"
-                f"💙 <b>Likes:</b> {likes_target}\n"
-                f"🔄 <b>Retweets:</b> {retweets_target}\n"
-                f"💬 <b>Replies:</b> {replies_target}\n"
-                f"👀 <b>Views:</b> {views_target}\n"
-                f"🔖 <b>Bookmarks:</b> {bookmarks_target}"
-            )
-            global keyboard_message
-            keyboard_message = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text="💥 Start Raid 💥", callback_data="start raid"
-                        )
-                    ],
-                    [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
-                    [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
-                ]
-            )
-            await message.answer(
-                formatted,
-                reply_markup=keyboard_message,
-            )
-        else:
-            return
+    if not message_text:
+        return
+
+    # Search for Twitter link
+    match = TWITTER_LINK_PATTERN.search(message_text)
+    if not match:
+        return
+
+    # Check if the sender is an admin
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+
+    member = await message.bot.get_chat_member(chat_id, user_id)
+    if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
+        return  # User is not an admin, ignore message
+
+    # Process Twitter link
+    global link
+    link = message_text
+    global likes_target, retweets_target, replies_target, views_target, bookmarks_target
+    likes_target = likes_default_target
+    retweets_target = retweets_default_target
+    replies_target = replies_default_target
+    views_target = views_default_target
+    bookmarks_target = bookmarks_default_target
+
+    formatted = (
+        "⚙️ <b>Raid Options</b>\n\n"
+        f"🔗 <b>Link:</b> {link}\n"
+        f"💙 <b>Likes:</b> {likes_target}\n"
+        f"🔄 <b>Retweets:</b> {retweets_target}\n"
+        f"💬 <b>Replies:</b> {replies_target}\n"
+        f"👀 <b>Views:</b> {views_target}\n"
+        f"🔖 <b>Bookmarks:</b> {bookmarks_target}"
+    )
+
+    global keyboard_message
+    keyboard_message = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="💥 Start Raid 💥", callback_data="start raid")],
+            [InlineKeyboardButton(text="🎨  Customization", callback_data="option_4")],
+            [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
+            [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
+        ]
+    )
+
+    await message.answer(
+        formatted,
+        reply_markup=keyboard_message,
+    )
 
 
 @dp.callback_query(lambda c: c.data.startswith("target_"))
