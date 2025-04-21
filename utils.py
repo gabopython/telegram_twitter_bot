@@ -13,6 +13,10 @@ targets_reply = (
     "Please reply to this message with the new number of {} that a tweet must have to be considered a valid target.\n\n"
     "<b>Current {}:</b> {}"
 )
+customization_text = (
+    "⚙️ <b>Raid Options > Customization {}</b>\n\n"
+    "{}."
+)
 
 
 def read_values():

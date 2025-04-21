@@ -4,6 +4,7 @@ from utils import (
     raid_status,
     targets_text,
     targets_reply,
+    customization_text,
     calculate_percentage,
     get_emoji,
     write_values,
@@ -697,20 +698,20 @@ async def process_callback(callback_query: types.CallbackQuery):
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text="🚀  Start Media", callback_data="option_5"
+                        text="🚀  Start Media", callback_data="customization_1"
                     )
                 ],
-                [InlineKeyboardButton(text="🖼  Raid Media", callback_data="option_6")],
+                [InlineKeyboardButton(text="🖼  Raid Media", callback_data="customization_2")],
                 [
                     InlineKeyboardButton(
                         text="🏁  End Media",
-                        callback_data="option_7",
+                        callback_data="customization_3",
                     )
                 ],
                 [
                     InlineKeyboardButton(
                         text="📝  Custom Text",
-                        callback_data="option_8",
+                        callback_data="customization_4",
                     )
                 ],
                 [InlineKeyboardButton(text="🔙 Back", callback_data="target_6")],
@@ -719,16 +720,36 @@ async def process_callback(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text="⚙️ <b>Raid Options > Customization</b>\n\n"
-            "You can set custom media for ongoing raids and end media for when a raid is completed.",
+            text=customization_text.format('', 'You can set custom media for ongoing raids and end media for when a raid is completed.'),
             reply_markup=keyboard_customization,
         )
         await callback_query.answer()
 
 
+@router.callback_query(F.data.startswith("customization_"))
+async def process_callback(callback: CallbackQuery):
+    option = callback.data.replace("customization_", "")
+
+    if option == "2":
+        keyboard_raid_media = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🔙 Back",
+                        callback_data="customization_5",
+                    )
+                ],
+            ]
+        )
+        await callback.message.edit_text(customization_text.format(
+            "> Raid Media",
+            'Reply to this message with a video or image to set it as media for ongoing raids in this group'
+        ))    
+
+
 async def main():
     dp.include_router(router)
-    await dp.start_polling(bot)
+    await dp.start_polling(bot, skip_updates=False)
 
 
 if __name__ == "__main__":
