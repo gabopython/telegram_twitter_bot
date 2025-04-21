@@ -701,7 +701,11 @@ async def process_callback(callback_query: types.CallbackQuery):
                         text="🚀  Start Media", callback_data="customization_1"
                     )
                 ],
-                [InlineKeyboardButton(text="🖼  Raid Media", callback_data="customization_2")],
+                [
+                    InlineKeyboardButton(
+                        text="🖼  Raid Media", callback_data="customization_2"
+                    )
+                ],
                 [
                     InlineKeyboardButton(
                         text="🏁  End Media",
@@ -720,7 +724,10 @@ async def process_callback(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=customization_text.format('', 'You can set custom media for ongoing raids and end media for when a raid is completed.'),
+            text=customization_text.format(
+                "",
+                "You can set custom media for ongoing raids and end media for when a raid is completed.",
+            ),
             reply_markup=keyboard_customization,
         )
         await callback_query.answer()
@@ -741,15 +748,18 @@ async def process_callback(callback: CallbackQuery):
                 ],
             ]
         )
-        await callback.message.edit_text(customization_text.format(
-            "> Raid Media",
-            'Reply to this message with a video or image to set it as media for ongoing raids in this group'
-        ))    
+        await callback.message.edit_text(
+            customization_text.format(
+                "> Raid Media",
+                "Reply to this message with a video or image to set it as media for ongoing raids in this group",
+            )
+        )
 
 
 async def main():
+    print("🚀 Bot is up and running! Waiting for updates...")
     dp.include_router(router)
-    await dp.start_polling(bot, skip_updates=False)
+    await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
