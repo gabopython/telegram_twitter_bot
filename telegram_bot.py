@@ -631,7 +631,7 @@ async def star_raid_callback(callback: CallbackQuery):
         await callback.answer()
     else:
         await callback.answer(
-            "❌ You have to be an admin to start the raid.", show_alert=True
+            "🛑 You must be an admin to interact with WAOxrpBot.", show_alert=True
         )
 
 
