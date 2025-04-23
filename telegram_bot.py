@@ -694,6 +694,7 @@ async def process_callback(callback_query: types.CallbackQuery):
             message_id=callback_query.message.message_id,
         )
     elif option == "4":
+        global keyboard_customization
         keyboard_customization = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
@@ -726,7 +727,7 @@ async def process_callback(callback_query: types.CallbackQuery):
             message_id=callback_query.message.message_id,
             text=customization_text.format(
                 "",
-                "You can set custom media for ongoing raids and end media for when a raid is completed.",
+                "You can set custom media for ongoing raids and end media for when a raid is completed",
             ),
             reply_markup=keyboard_customization,
         )
@@ -736,14 +737,15 @@ async def process_callback(callback_query: types.CallbackQuery):
 @router.callback_query(F.data.startswith("customization_"))
 async def process_callback(callback: CallbackQuery):
     option = callback.data.replace("customization_", "")
-
+    is_file = False
     if option == "2":
         keyboard_raid_media = InlineKeyboardMarkup(
             inline_keyboard=[
+                [InlineKeyboardButton(text="❌ Remove File", callback_data="customization_5")] if is_file else [],
                 [
                     InlineKeyboardButton(
                         text="🔙 Back",
-                        callback_data="customization_5",
+                        callback_data="customization_6",
                     )
                 ],
             ]
@@ -752,8 +754,17 @@ async def process_callback(callback: CallbackQuery):
             customization_text.format(
                 "> Raid Media",
                 "Reply to this message with a video or image to set it as media for ongoing raids in this group",
-            )
+            )+('\n\n<b>Current Media:</b> file' if is_file else ''),
+            reply_markup=keyboard_raid_media,
         )
+    if option == "6":
+        await callback.message.edit_text(
+            customization_text.format(
+                "",
+                "You can set custom media for ongoing raids and end media for when a raid is completed",
+            ),
+            reply_markup=keyboard_customization,
+        )            
 
 
 async def main():
