@@ -1,7 +1,7 @@
 import aiosqlite
 
 
-DB_NAME = "users.db"
+DB_NAME = "bot.db"
 
 
 async def init_db():

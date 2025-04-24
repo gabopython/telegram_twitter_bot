@@ -44,7 +44,7 @@ retweets_target = retweets_default_target
 replies_target = replies_default_target
 views_target = views_default_target
 bookmarks_target = bookmarks_default_target
-IMAGES_DIR = Path("images")
+MEDIA_DIR = Path("media")
 RAID_MEDIA_PROMPT = (
     "⚙️ Raid Options > Customization > Raid Media\n\n"
     "Reply to this message with a video or image to set it as media for ongoing raids in this group.\n\n"
@@ -328,17 +328,17 @@ async def reply_handler(message: types.Message):
 
         if message.photo:
             media = message.photo[-1]
-            file_path = IMAGES_DIR / f"{message.from_user.id}_{media.file_id}.jpg"
+            file_path = MEDIA_DIR / f"{chat_id}.jpg"
             await bot.download(media, destination=file_path)
 
         elif message.video:
             media = message.video
-            file_path = IMAGES_DIR / f"{message.from_user.id}_{media.file_id}.mp4"
+            file_path = MEDIA_DIR / f"{chat_id}.mp4"
             await bot.download(media, destination=file_path)
 
         elif message.animation:
             media = message.animation
-            file_path = IMAGES_DIR / f"{message.from_user.id}_{media.file_id}.gif"
+            file_path = MEDIA_DIR / f"{chat_id}.gif"
             await bot.download(media, destination=file_path)
 
         if file_path:
