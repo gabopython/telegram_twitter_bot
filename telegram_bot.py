@@ -11,13 +11,22 @@ from utils import (
     read_values,
 )
 from config import BOT_TOKEN
+from db import init_db, save_image
+
 from aiogram import Bot, Dispatcher, types
 import asyncio
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    CallbackQuery,
+    FSInputFile,
+)
+from aiogram.types import Message
 from aiogram.enums.chat_member_status import ChatMemberStatus
 from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from pathlib import Path
 
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -35,6 +44,12 @@ retweets_target = retweets_default_target
 replies_target = replies_default_target
 views_target = views_default_target
 bookmarks_target = bookmarks_default_target
+IMAGES_DIR = Path("images")
+RAID_MEDIA_PROMPT = (
+    "⚙️ Raid Options > Customization > Raid Media\n\n"
+    "Reply to this message with a video or image to set it as media for ongoing raids in this group.\n\n"
+    "Current Media: file"
+)
 
 
 @dp.message(F.text == "/stop")
@@ -301,8 +316,33 @@ async def reply_handler(message: types.Message):
                     "❌ <b>Invalid input. Please enter a valid number.</b>"
                 )
                 await asyncio.sleep(5)
+        else:
+            bot_message = await message.answer("file")
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         await bot_message.delete()
+
+        if message_reply != RAID_MEDIA_PROMPT:
+            return  # Not the correct message
+
+        file_path = None
+
+        if message.photo:
+            media = message.photo[-1]
+            file_path = IMAGES_DIR / f"{message.from_user.id}_{media.file_id}.jpg"
+            await bot.download(media, destination=file_path)
+
+        elif message.video:
+            media = message.video
+            file_path = IMAGES_DIR / f"{message.from_user.id}_{media.file_id}.mp4"
+            await bot.download(media, destination=file_path)
+
+        elif message.animation:
+            media = message.animation
+            file_path = IMAGES_DIR / f"{message.from_user.id}_{media.file_id}.gif"
+            await bot.download(media, destination=file_path)
+
+        if file_path:
+            await save_image(message.from_user.id, str(file_path))
 
 
 @dp.message()
@@ -737,11 +777,19 @@ async def process_callback(callback_query: types.CallbackQuery):
 @router.callback_query(F.data.startswith("customization_"))
 async def process_callback(callback: CallbackQuery):
     option = callback.data.replace("customization_", "")
-    is_file = False
+    is_file = True
     if option == "2":
         keyboard_raid_media = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="❌ Remove File", callback_data="customization_5")] if is_file else [],
+                (
+                    [
+                        InlineKeyboardButton(
+                            text="❌ Remove File", callback_data="customization_5"
+                        )
+                    ]
+                    if is_file
+                    else []
+                ),
                 [
                     InlineKeyboardButton(
                         text="🔙 Back",
@@ -754,7 +802,8 @@ async def process_callback(callback: CallbackQuery):
             customization_text.format(
                 "> Raid Media",
                 "Reply to this message with a video or image to set it as media for ongoing raids in this group",
-            )+('\n\n<b>Current Media:</b> file' if is_file else ''),
+            )
+            + ("\n\n<b>Current Media:</b> file" if is_file else ""),
             reply_markup=keyboard_raid_media,
         )
     if option == "6":
@@ -764,12 +813,13 @@ async def process_callback(callback: CallbackQuery):
                 "You can set custom media for ongoing raids and end media for when a raid is completed",
             ),
             reply_markup=keyboard_customization,
-        )            
+        )
 
 
 async def main():
     print("🚀 Bot is up and running! Waiting for updates...")
     dp.include_router(router)
+    await init_db()
     await dp.start_polling(bot)
 
 

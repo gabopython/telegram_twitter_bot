@@ -1,3 +1,5 @@
 .env
 *.pyc
 values.txt
+users.db
+images
