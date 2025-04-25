@@ -328,17 +328,17 @@ async def reply_handler(message: types.Message):
 
         if message.photo:
             media = message.photo[-1]
-            file_path = MEDIA_DIR / f"{chat_id}.jpg"
+            file_path = MEDIA_DIR / f"{chat_id}"
             await bot.download(media, destination=file_path)
 
         elif message.video:
             media = message.video
-            file_path = MEDIA_DIR / f"{chat_id}.mp4"
+            file_path = MEDIA_DIR / f"{chat_id}"
             await bot.download(media, destination=file_path)
 
         elif message.animation:
             media = message.animation
-            file_path = MEDIA_DIR / f"{chat_id}.gif"
+            file_path = MEDIA_DIR / f"{chat_id}"
             await bot.download(media, destination=file_path)
 
         if file_path:
