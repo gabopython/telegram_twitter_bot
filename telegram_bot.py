@@ -330,16 +330,19 @@ async def reply_handler(message: types.Message):
             media = message.photo[-1]
             file_path = MEDIA_DIR / f"{chat_id}"
             await bot.download(media, destination=file_path)
+            file_type = 'photo'
 
         elif message.video:
             media = message.video
             file_path = MEDIA_DIR / f"{chat_id}"
             await bot.download(media, destination=file_path)
+            file_type = 'video'
 
         elif message.animation:
             media = message.animation
             file_path = MEDIA_DIR / f"{chat_id}"
             await bot.download(media, destination=file_path)
+            file_type = 'animation'
 
         if file_path:
             await save_image(message.from_user.id, str(file_path))
@@ -646,6 +649,7 @@ async def handle_target(callback_query: types.CallbackQuery):
 async def star_raid_callback(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
+    file_path = os.path.join(MEDIA_DIR, str(chat_id))
 
     # Get chat member status
     member = await bot.get_chat_member(chat_id, user_id)
@@ -696,7 +700,13 @@ async def star_raid_callback(callback: CallbackQuery):
             raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
 
         await callback.message.delete()
-        await callback.message.answer(raid_message)
+        file = FSInputFile(file_path) if os.path.isfile(file_path) else None
+        if file_type == "photo":
+            await callback.message.answer_photo(file, caption=raid_message)
+        elif file_type == "video":
+            await callback.message.answer_video(file, caption=raid_message)
+        elif file_type == "animation":
+            await callback.message.answer_animation(file, caption=raid_message)
         await callback.answer()
     else:
         await callback.answer(
