@@ -343,44 +343,34 @@ async def reply_handler(message: types.Message):
 
         if file_path:
             await save_image(message.from_user.id, str(file_path))
-            bot_message = await message.answer(
-                "✅ <b>Media saved successfully!</b>\n\n"
-                "You can now use this media for ongoing raids in this group."
+            keyboard_raid_media = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text="❌ Remove File", callback_data="customization_5"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text="🔙 Back",
+                            callback_data="customization_6",
+                        )
+                    ],
+                ]
             )
-            await asyncio.sleep(2)
-            file_path = os.path.join(MEDIA_DIR, str(chat_id))
-            if not os.path.isfile(file_path):
-                keyboard_raid_media = InlineKeyboardMarkup(
-                    inline_keyboard=[
-                        [
-                            InlineKeyboardButton(
-                                text="❌ Remove File", callback_data="customization_5"
-                            )
-                        ],
-                        [
-                            InlineKeyboardButton(
-                                text="🔙 Back",
-                                callback_data="customization_6",
-                            )
-                        ],
-                    ]
-                )
-                await bot.edit_message_text(
-                    chat_id=chat_id,
-                    message_id=message.reply_to_message.message_id,
-                    text=customization_text.format(
-                        "> Raid Media",
-                        "Reply to this message with a video or image to set it as media for ongoing raids in this group",
-                    )
-                    + "\n\n<b>Current Media:</b> file",
-                    reply_markup=keyboard_raid_media,
-                )
+            await bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=message.reply_to_message.message_id,
+                text='✅ <b>Media saved successfully!</b>\n\nReply to this message with a video or image to change the current media used for ongoing raids in this group.'
+                + "\n\n<b>Current Media:</b> file",
+                reply_markup=keyboard_raid_media,
+            )
         else:
             bot_message = await message.answer(
                 "❌ <b>Failed to save media. Upload a valid file.</b>"
             )
             await asyncio.sleep(4)
-        await bot_message.delete()
+            await bot_message.delete()
 
 
 @dp.message()
@@ -840,7 +830,7 @@ async def process_callback(callback: CallbackQuery):
         await callback.message.edit_text(
             customization_text.format(
                 "> Raid Media",
-                "Reply to this message with a video or image to set it as media for ongoing raids in this group",
+                'Reply to this message with a video or image to change the current media used for ongoing raids in this group' if is_file else "Reply to this message with a video or image to set it as media for ongoing raids in this group",
             )
             + ("\n\n<b>Current Media:</b> file" if is_file else ""),
             reply_markup=keyboard_raid_media,
