@@ -82,7 +82,7 @@ async def reply_handler(message: types.Message):
     bot_id = (await bot.me()).id
     message_reply = message.reply_to_message.text
     if message.reply_to_message.from_user.id == bot_id:
-        if 'Please reply' in message_reply:
+        if "Please reply" in message_reply:
             if "Default" in message_reply:
                 if "Likes" in message_reply:
                     try:
@@ -148,7 +148,11 @@ async def reply_handler(message: types.Message):
                             chat_id=message.reply_to_message.chat.id,
                             message_id=message.reply_to_message.message_id,
                             text=targets_reply.format(
-                                "Default", "Replies", "replies", "Replies", replies_target
+                                "Default",
+                                "Replies",
+                                "replies",
+                                "Replies",
+                                replies_target,
                             ),
                             reply_markup=keyboard_default_back,
                         )
@@ -344,30 +348,31 @@ async def reply_handler(message: types.Message):
                 "You can now use this media for ongoing raids in this group."
             )
             await asyncio.sleep(2)
-            file_path=os.path.join(MEDIA_DIR, str(chat_id))
+            file_path = os.path.join(MEDIA_DIR, str(chat_id))
             if not os.path.isfile(file_path):
                 keyboard_raid_media = InlineKeyboardMarkup(
-                inline_keyboard=[
+                    inline_keyboard=[
                         [
                             InlineKeyboardButton(
                                 text="❌ Remove File", callback_data="customization_5"
                             )
                         ],
-                    [
-                        InlineKeyboardButton(
-                            text="🔙 Back",
-                            callback_data="customization_6",
-                        )
-                    ],
-                ]
-            )
+                        [
+                            InlineKeyboardButton(
+                                text="🔙 Back",
+                                callback_data="customization_6",
+                            )
+                        ],
+                    ]
+                )
                 await bot.edit_message_text(
                     chat_id=chat_id,
                     message_id=message.reply_to_message.message_id,
                     text=customization_text.format(
                         "> Raid Media",
                         "Reply to this message with a video or image to set it as media for ongoing raids in this group",
-                    )+'\n\n<b>Current Media:</b> file',
+                    )
+                    + "\n\n<b>Current Media:</b> file",
                     reply_markup=keyboard_raid_media,
                 )
         else:
@@ -376,7 +381,6 @@ async def reply_handler(message: types.Message):
             )
             await asyncio.sleep(4)
         await bot_message.delete()
-        
 
 
 @dp.message()
@@ -811,7 +815,7 @@ async def process_callback(callback_query: types.CallbackQuery):
 @router.callback_query(F.data.startswith("customization_"))
 async def process_callback(callback: CallbackQuery):
     option = callback.data.replace("customization_", "")
-    file_path=os.path.join(MEDIA_DIR, str(callback.message.chat.id))
+    file_path = os.path.join(MEDIA_DIR, str(callback.message.chat.id))
     is_file = os.path.isfile(file_path)
     if option == "2":
         keyboard_raid_media = InlineKeyboardMarkup(
@@ -845,8 +849,8 @@ async def process_callback(callback: CallbackQuery):
         os.remove(file_path)
         await callback.message.edit_text(
             customization_text.format(
-                "> Raid Media",
-                "Reply to this message with a video or image to set it as media for ongoing raids in this group",
+                "",
+                "You can set custom media for ongoing raids and end media for when a raid is completed",
             ),
             reply_markup=keyboard_customization,
         )
