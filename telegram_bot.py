@@ -11,7 +11,7 @@ from utils import (
     read_values,
 )
 from config import BOT_TOKEN
-from db import init_db, save_image
+from db import init_db, save_image, update_file_type, get_file_type
 
 from aiogram import Bot, Dispatcher, types
 import asyncio
@@ -328,24 +328,24 @@ async def reply_handler(message: types.Message):
 
         if message.photo:
             media = message.photo[-1]
-            file_path = MEDIA_DIR / f"{chat_id}"
+            file_path = MEDIA_DIR / f"{chat_id}.jpg"
             await bot.download(media, destination=file_path)
             file_type = 'photo'
 
         elif message.video:
             media = message.video
-            file_path = MEDIA_DIR / f"{chat_id}"
+            file_path = MEDIA_DIR / f"{chat_id}.mp4"
             await bot.download(media, destination=file_path)
             file_type = 'video'
 
         elif message.animation:
             media = message.animation
-            file_path = MEDIA_DIR / f"{chat_id}"
+            file_path = MEDIA_DIR / f"{chat_id}.gif"
             await bot.download(media, destination=file_path)
             file_type = 'animation'
 
         if file_path:
-            await save_image(message.from_user.id, str(file_path))
+            await save_image(chat_id, file_type)
             keyboard_raid_media = InlineKeyboardMarkup(
                 inline_keyboard=[
                     [
@@ -701,6 +701,7 @@ async def star_raid_callback(callback: CallbackQuery):
 
         await callback.message.delete()
         file = FSInputFile(file_path) if os.path.isfile(file_path) else None
+        file_type = await get_file_type(chat_id)
         if file_type == "photo":
             await callback.message.answer_photo(file, caption=raid_message)
         elif file_type == "video":
