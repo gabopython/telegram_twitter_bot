@@ -340,7 +340,7 @@ async def reply_handler(message: types.Message):
 
         elif message.animation:
             media = message.animation
-            file_path = MEDIA_DIR / f"{chat_id}.gif"
+            file_path = MEDIA_DIR / f"{chat_id}.mp4"
             await bot.download(media, destination=file_path)
             file_type = ".gif"
 
@@ -701,7 +701,9 @@ async def star_raid_callback(callback: CallbackQuery):
         await callback.message.delete()
         file_name = str(chat_id)
         file_type = await get_file_type(chat_id)
-        file_path = os.path.join(MEDIA_DIR, file_name + file_type)
+        file_path = os.path.join(
+            MEDIA_DIR, file_name + (".mp4" if file_type == ".gif" else file_type)
+        )
         file = None if file_type == "" else FSInputFile(file_path)
         if file_type == ".jpg":
             await callback.message.answer_photo(file, caption=raid_message)
@@ -820,7 +822,10 @@ async def process_callback(callback_query: types.CallbackQuery):
 async def process_callback(callback: CallbackQuery):
     option = callback.data.replace("customization_", "")
     file_type = await get_file_type(callback.message.chat.id)
-    file_path = os.path.join(MEDIA_DIR, str(callback.message.chat.id) + file_type)
+    file_path = os.path.join(
+        MEDIA_DIR,
+        str(callback.message.chat.id) + (".mp4" if file_type == ".gif" else file_type),
+    )
     is_file = os.path.isfile(file_path)
     if option == "2":
         keyboard_raid_media = InlineKeyboardMarkup(
