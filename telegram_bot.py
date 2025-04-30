@@ -11,7 +11,7 @@ from utils import (
     read_values,
 )
 from config import BOT_TOKEN
-from db import init_db, save_image, update_file_type, get_file_type
+from db import init_db, save_image, get_file_type
 
 from aiogram import Bot, Dispatcher, types
 import asyncio
@@ -330,19 +330,19 @@ async def reply_handler(message: types.Message):
             media = message.photo[-1]
             file_path = MEDIA_DIR / f"{chat_id}.jpg"
             await bot.download(media, destination=file_path)
-            file_type = 'photo'
+            file_type = ".jpg"
 
         elif message.video:
             media = message.video
             file_path = MEDIA_DIR / f"{chat_id}.mp4"
             await bot.download(media, destination=file_path)
-            file_type = 'video'
+            file_type = ".mp4"
 
         elif message.animation:
             media = message.animation
             file_path = MEDIA_DIR / f"{chat_id}.gif"
             await bot.download(media, destination=file_path)
-            file_type = 'animation'
+            file_type = ".gif"
 
         if file_path:
             await save_image(chat_id, file_type)
@@ -364,7 +364,7 @@ async def reply_handler(message: types.Message):
             await bot.edit_message_text(
                 chat_id=chat_id,
                 message_id=message.reply_to_message.message_id,
-                text='✅ <b>Media saved successfully!</b>\n\nReply to this message with a video or image to change the current media used for ongoing raids in this group.'
+                text="✅ <b>Media saved successfully!</b>\n\nReply to this message with a video or image to change the current media used for ongoing raids in this group."
                 + "\n\n<b>Current Media:</b> file",
                 reply_markup=keyboard_raid_media,
             )
@@ -649,7 +649,6 @@ async def handle_target(callback_query: types.CallbackQuery):
 async def star_raid_callback(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
-    file_path = os.path.join(MEDIA_DIR, str(chat_id))
 
     # Get chat member status
     member = await bot.get_chat_member(chat_id, user_id)
@@ -700,14 +699,18 @@ async def star_raid_callback(callback: CallbackQuery):
             raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
 
         await callback.message.delete()
-        file = FSInputFile(file_path) if os.path.isfile(file_path) else None
+        file_name = str(chat_id)
         file_type = await get_file_type(chat_id)
-        if file_type == "photo":
+        file_path = os.path.join(MEDIA_DIR, file_name + file_type)
+        file = None if file_type == "" else FSInputFile(file_path)
+        if file_type == ".jpg":
             await callback.message.answer_photo(file, caption=raid_message)
-        elif file_type == "video":
+        elif file_type == ".mp4":
             await callback.message.answer_video(file, caption=raid_message)
-        elif file_type == "animation":
+        elif file_type == ".gif":
             await callback.message.answer_animation(file, caption=raid_message)
+        else:
+            await callback.message.answer(raid_message)
         await callback.answer()
     else:
         await callback.answer(
@@ -816,7 +819,8 @@ async def process_callback(callback_query: types.CallbackQuery):
 @router.callback_query(F.data.startswith("customization_"))
 async def process_callback(callback: CallbackQuery):
     option = callback.data.replace("customization_", "")
-    file_path = os.path.join(MEDIA_DIR, str(callback.message.chat.id))
+    file_type = await get_file_type(callback.message.chat.id)
+    file_path = os.path.join(MEDIA_DIR, str(callback.message.chat.id) + file_type)
     is_file = os.path.isfile(file_path)
     if option == "2":
         keyboard_raid_media = InlineKeyboardMarkup(
@@ -841,13 +845,17 @@ async def process_callback(callback: CallbackQuery):
         await callback.message.edit_text(
             customization_text.format(
                 "> Raid Media",
-                'Reply to this message with a video or image to change the current media used for ongoing raids in this group' if is_file else "Reply to this message with a video or image to set it as media for ongoing raids in this group",
+                (
+                    "Reply to this message with a video or image to change the current media used for ongoing raids in this group"
+                    if is_file
+                    else "Reply to this message with a video or image to set it as media for ongoing raids in this group"
+                ),
             )
             + ("\n\n<b>Current Media:</b> file" if is_file else ""),
             reply_markup=keyboard_raid_media,
         )
     elif option == "5":
-        os.remove(file_path)
+        await save_image(callback.message.chat.id, "")
         await callback.message.edit_text(
             customization_text.format(
                 "",
