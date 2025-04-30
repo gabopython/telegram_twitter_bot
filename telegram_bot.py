@@ -346,6 +346,12 @@ async def reply_handler(message: types.Message):
 
         if file_path:
             await save_image(chat_id, file_type)
+            if file_type == ".jpg":
+                current_type = "Image"
+            elif file_type == ".mp4":
+                current_type = "Video"
+            elif file_type == ".gif":
+                current_type = "GIF"
             keyboard_raid_media = InlineKeyboardMarkup(
                 inline_keyboard=[
                     [
@@ -365,7 +371,7 @@ async def reply_handler(message: types.Message):
                 chat_id=chat_id,
                 message_id=message.reply_to_message.message_id,
                 text="✅ <b>Media saved successfully!</b>\n\nReply to this message with a video or image to change the current media used for ongoing raids in this group."
-                + "\n\n<b>Current Media:</b> file",
+                + "\n\n<b>Current Media:</b> "+current_type,
                 reply_markup=keyboard_raid_media,
             )
         else:
@@ -847,6 +853,13 @@ async def process_callback(callback: CallbackQuery):
                 ],
             ]
         )
+        file_type = await get_file_type(callback.message.chat.id)
+        if file_type == ".jpg":
+            current_type = "Image"
+        elif file_type == ".mp4":
+            current_type = "Video"
+        elif file_type == ".gif":
+            current_type = "GIF"
         await callback.message.edit_text(
             customization_text.format(
                 "> Raid Media",
@@ -856,7 +869,7 @@ async def process_callback(callback: CallbackQuery):
                     else "Reply to this message with a video or image to set it as media for ongoing raids in this group"
                 ),
             )
-            + ("\n\n<b>Current Media:</b> file" if is_file else ""),
+            + ("\n\n<b>Current Media:</b> "+ current_type if is_file else ""),
             reply_markup=keyboard_raid_media,
         )
     elif option == "5":

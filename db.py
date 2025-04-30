@@ -22,6 +22,18 @@ async def init_db():
             )
         """
         )
+        await db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS telegram_groups (
+                chat_id INTEGER PRIMARY KEY,
+                likes_default_target INTEGER DEFAULT 0,
+                retweets_default_target INTEGER DEFAULT 0,
+                replies_default_target INTEGER DEFAULT 0,
+                views_default_target INTEGER DEFAULT 0,
+                bookmarks_default_target INTEGER DEFAULT 0
+            )
+        """
+        )
         await db.commit()
 
 
