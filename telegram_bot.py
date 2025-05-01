@@ -11,7 +11,7 @@ from utils import (
     read_values,
 )
 from config import BOT_TOKEN
-from db import init_db, save_image, get_file_type
+from db import *
 
 from aiogram import Bot, Dispatcher, types
 import asyncio
@@ -89,7 +89,9 @@ async def reply_handler(message: types.Message):
                         global likes_target
                         global likes_default_target
                         likes_default_target = int(message.text)
+                        await update_likes_default_target(chat_id, likes_default_target)
                         likes_target = likes_default_target
+                        await update_likes_target(chat_id, likes_target)
                         bot_message = await message.answer(
                             f"💙 <b>Default Likes</b> updated to {likes_target}"
                         )
@@ -406,11 +408,16 @@ async def handle_message(message: types.Message):
     global link
     link = message_text
     global likes_target, retweets_target, replies_target, views_target, bookmarks_target
-    likes_target = likes_default_target
-    retweets_target = retweets_default_target
-    replies_target = replies_default_target
-    views_target = views_default_target
-    bookmarks_target = bookmarks_default_target
+    likes_default_target = await get_likes_default_target(chat_id)
+    retweets_default_target = await get_retweets_default_target(chat_id)
+    replies_default_target = await get_replies_default_target(chat_id)
+    views_default_target = await get_views_default_target(chat_id)
+    bookmarks_default_target = await get_bookmarks_default_target(chat_id)
+    likes_target = await get_likes_target(chat_id)
+    retweets_target = await get_retweets_target(chat_id)
+    replies_target = await get_replies_target(chat_id)
+    views_target = await get_views_target(chat_id)
+    bookmarks_target = await get_bookmarks_target(chat_id)
 
     formatted = (
         "⚙️ <b>Raid Options</b>\n\n"
