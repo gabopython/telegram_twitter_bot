@@ -49,18 +49,6 @@ async def init_db():
         await db.commit()
 
 
-async def save_image(chat_id: int, file_type: str):
-    async with aiosqlite.connect(DB_NAME) as db:
-        await db.execute(
-            """
-            INSERT OR REPLACE INTO images (chat_id, file_type)
-            VALUES (?, ?)
-            """,
-            (chat_id, file_type),
-        )
-        await db.commit()
-
-    
 async def update_likes_default_target(chat_id: int, likes_default_target: int):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
@@ -69,6 +57,54 @@ async def update_likes_default_target(chat_id: int, likes_default_target: int):
             VALUES (?, ?)
             """,
             (chat_id, likes_default_target),
+        )
+        await db.commit()
+
+
+async def update_retweets_default_target(chat_id: int, retweets_default_target: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO default_targets (chat_id, retweets_default_target)
+            VALUES (?, ?)
+            """,
+            (chat_id, retweets_default_target),
+        )
+        await db.commit()
+
+
+async def update_replies_default_target(chat_id: int, replies_default_target: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO default_targets (chat_id, replies_default_target)
+            VALUES (?, ?)
+            """,
+            (chat_id, replies_default_target),
+        )
+        await db.commit()
+
+
+async def update_views_default_target(chat_id: int, views_default_target: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO default_targets (chat_id, views_default_target)
+            VALUES (?, ?)
+            """,
+            (chat_id, views_default_target),
+        )
+        await db.commit()
+
+
+async def update_bookmarks_default_target(chat_id: int, bookmarks_default_target: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO default_targets (chat_id, bookmarks_default_target)
+            VALUES (?, ?)
+            """,
+            (chat_id, bookmarks_default_target),
         )
         await db.commit()
 
@@ -85,6 +121,54 @@ async def update_likes_target(chat_id: int, likes_target: int):
         await db.commit()
 
 
+async def update_retweets_target(chat_id: int, retweets_target: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO targets (chat_id, retweets_target)
+            VALUES (?, ?)
+            """,
+            (chat_id, retweets_target),
+        )
+        await db.commit()
+
+
+async def update_replies_target(chat_id: int, replies_target: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO targets (chat_id, replies_target)
+            VALUES (?, ?)
+            """,
+            (chat_id, replies_target),
+        )
+        await db.commit()
+
+
+async def update_views_target(chat_id: int, views_target: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO targets (chat_id, views_target)
+            VALUES (?, ?)
+            """,
+            (chat_id, views_target),
+        )
+        await db.commit()
+
+
+async def update_bookmarks_target(chat_id: int, bookmarks_target: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO targets (chat_id, bookmarks_target)
+            VALUES (?, ?)
+            """,
+            (chat_id, bookmarks_target),
+        )
+        await db.commit()
+
+
 async def get_likes_default_target(chat_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
         async with db.execute(
@@ -95,7 +179,7 @@ async def get_likes_default_target(chat_id: int):
         ) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else 10
-        
+
 
 async def get_retweets_default_target(chat_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -107,7 +191,7 @@ async def get_retweets_default_target(chat_id: int):
         ) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else 3
-        
+
 
 async def get_replies_default_target(chat_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -119,7 +203,7 @@ async def get_replies_default_target(chat_id: int):
         ) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else 5
-        
+
 
 async def get_views_default_target(chat_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -131,7 +215,7 @@ async def get_views_default_target(chat_id: int):
         ) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else 0
-        
+
 
 async def get_bookmarks_default_target(chat_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -155,7 +239,7 @@ async def get_likes_target(chat_id: int):
         ) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else 10
-        
+
 
 async def get_retweets_target(chat_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -167,7 +251,7 @@ async def get_retweets_target(chat_id: int):
         ) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else 3
-        
+
 
 async def get_replies_target(chat_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -179,7 +263,7 @@ async def get_replies_target(chat_id: int):
         ) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else 5
-        
+
 
 async def get_views_target(chat_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -191,7 +275,7 @@ async def get_views_target(chat_id: int):
         ) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else 0
-        
+
 
 async def get_bookmarks_target(chat_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -215,6 +299,18 @@ async def get_file_type(chat_id: int):
         ) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else ""
+
+
+async def save_image(chat_id: int, file_type: str):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO images (chat_id, file_type)
+            VALUES (?, ?)
+            """,
+            (chat_id, file_type),
+        )
+        await db.commit()
 
 
 # async def add_user(user_id: int, username: str):

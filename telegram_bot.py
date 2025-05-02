@@ -7,8 +7,6 @@ from utils import (
     customization_text,
     calculate_percentage,
     get_emoji,
-    write_values,
-    read_values,
 )
 from config import BOT_TOKEN
 from db import *
@@ -33,18 +31,6 @@ import os
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 router = Router()
-(
-    likes_default_target,
-    retweets_default_target,
-    replies_default_target,
-    views_default_target,
-    bookmarks_default_target,
-) = read_values()
-likes_target = likes_default_target
-retweets_target = retweets_default_target
-replies_target = replies_default_target
-views_target = views_default_target
-bookmarks_target = bookmarks_default_target
 MEDIA_DIR = Path("media")
 RAID_MEDIA_PROMPT = "Reply to this message"
 
@@ -114,7 +100,11 @@ async def reply_handler(message: types.Message):
                         global retweets_target
                         global retweets_default_target
                         retweets_default_target = int(message.text)
+                        await update_retweets_default_target(
+                            chat_id, retweets_default_target
+                        )
                         retweets_target = retweets_default_target
+                        await update_retweets_target(chat_id, retweets_target)
                         bot_message = await message.answer(
                             f"🔄 <b>Default Retweets</b> updated to {retweets_target}"
                         )
@@ -141,7 +131,11 @@ async def reply_handler(message: types.Message):
                         global replies_target
                         global replies_default_target
                         replies_default_target = int(message.text)
+                        await update_replies_default_target(
+                            chat_id, replies_default_target
+                        )
                         replies_target = replies_default_target
+                        await update_replies_target(chat_id, replies_target)
                         bot_message = await message.answer(
                             f"💬 <b>Default Replies</b> updated to {replies_target}"
                         )
@@ -168,7 +162,9 @@ async def reply_handler(message: types.Message):
                         global views_target
                         global views_default_target
                         views_default_target = int(message.text)
+                        await update_views_default_target(chat_id, views_default_target)
                         views_target = views_default_target
+                        await update_views_target(chat_id, views_target)
                         bot_message = await message.answer(
                             f"👀 <b>Default Views</b> updated to {views_target}"
                         )
@@ -191,7 +187,11 @@ async def reply_handler(message: types.Message):
                         global bookmarks_target
                         global bookmarks_default_target
                         bookmarks_default_target = int(message.text)
+                        await update_bookmarks_default_target(
+                            chat_id, bookmarks_default_target
+                        )
                         bookmarks_target = bookmarks_default_target
+                        await update_bookmarks_target(chat_id, bookmarks_target)
                         bot_message = await message.answer(
                             f"🔖 <b>Default Bookmarks</b> updated to {bookmarks_target}"
                         )
@@ -213,16 +213,10 @@ async def reply_handler(message: types.Message):
                             "❌ <b>Invalid input. Please enter a valid number.</b>"
                         )
                         await asyncio.sleep(5)
-                write_values(
-                    likes_default_target,
-                    retweets_default_target,
-                    replies_default_target,
-                    views_default_target,
-                    bookmarks_default_target,
-                )
             elif "Likes" in message_reply:
                 try:
                     likes_target = int(message.text)
+                    await update_likes_target(chat_id, likes_target)
                     bot_message = await message.answer(
                         f"💙 <b>Likes</b> updated to {likes_target}"
                     )
@@ -243,6 +237,7 @@ async def reply_handler(message: types.Message):
             elif "Retweets" in message_reply:
                 try:
                     retweets_target = int(message.text)
+                    await update_retweets_target(chat_id, retweets_target)
                     bot_message = await message.answer(
                         f"🔄 <b>Retweets</b> updated to {retweets_target}"
                     )
@@ -263,6 +258,7 @@ async def reply_handler(message: types.Message):
             elif "Replies" in message_reply:
                 try:
                     replies_target = int(message.text)
+                    await update_replies_target(chat_id, replies_target)
                     bot_message = await message.answer(
                         f"💬 <b>Replies</b> updated to {replies_target}"
                     )
@@ -283,6 +279,7 @@ async def reply_handler(message: types.Message):
             elif "Views" in message_reply:
                 try:
                     views_target = int(message.text)
+                    await update_views_target(chat_id, views_target)
                     bot_message = await message.answer(
                         f"👀 <b>Views</b> updated to {views_target}"
                     )
@@ -303,6 +300,7 @@ async def reply_handler(message: types.Message):
             elif "Bookmarks" in message_reply:
                 try:
                     bookmarks_target = int(message.text)
+                    await update_bookmarks_target(chat_id, bookmarks_target)
                     bot_message = await message.answer(
                         f"🔖 <b>Bookmarks</b> updated to {bookmarks_target}"
                     )
@@ -373,7 +371,8 @@ async def reply_handler(message: types.Message):
                 chat_id=chat_id,
                 message_id=message.reply_to_message.message_id,
                 text="✅ <b>Media saved successfully!</b>\n\nReply to this message with a video or image to change the current media used for ongoing raids in this group."
-                + "\n\n<b>Current Media:</b> "+current_type,
+                + "\n\n<b>Current Media:</b> "
+                + current_type,
                 reply_markup=keyboard_raid_media,
             )
         else:
@@ -408,16 +407,22 @@ async def handle_message(message: types.Message):
     global link
     link = message_text
     global likes_target, retweets_target, replies_target, views_target, bookmarks_target
+    global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
     likes_default_target = await get_likes_default_target(chat_id)
     retweets_default_target = await get_retweets_default_target(chat_id)
     replies_default_target = await get_replies_default_target(chat_id)
     views_default_target = await get_views_default_target(chat_id)
     bookmarks_default_target = await get_bookmarks_default_target(chat_id)
-    likes_target = await get_likes_target(chat_id)
-    retweets_target = await get_retweets_target(chat_id)
-    replies_target = await get_replies_target(chat_id)
-    views_target = await get_views_target(chat_id)
-    bookmarks_target = await get_bookmarks_target(chat_id)
+    likes_target = likes_default_target
+    retweets_target = retweets_default_target
+    replies_target = replies_default_target
+    views_target = views_default_target
+    bookmarks_target = bookmarks_default_target
+    await update_likes_target(chat_id, likes_target)
+    await update_retweets_target(chat_id, retweets_target)
+    await update_replies_target(chat_id, replies_target)
+    await update_views_target(chat_id, views_target)
+    await update_bookmarks_target(chat_id, bookmarks_target)
 
     formatted = (
         "⚙️ <b>Raid Options</b>\n\n"
@@ -571,28 +576,31 @@ async def handle_target(callback_query: types.CallbackQuery):
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text=f"💙 Likes ({likes_target})", callback_data="target_9"
+                        text=f"💙 Likes ({likes_default_target})",
+                        callback_data="target_9",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"🔄 Retweets ({retweets_target})",
+                        text=f"🔄 Retweets ({retweets_default_target})",
                         callback_data="target_10",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"💬 Replies ({replies_target})", callback_data="target_11"
+                        text=f"💬 Replies ({replies_default_target})",
+                        callback_data="target_11",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"👀 Views ({views_target})", callback_data="target_12"
+                        text=f"👀 Views ({views_default_target})",
+                        callback_data="target_12",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"🔖 Bookmarks ({bookmarks_target})",
+                        text=f"🔖 Bookmarks ({bookmarks_default_target})",
                         callback_data="target_13",
                     )
                 ],
@@ -876,7 +884,7 @@ async def process_callback(callback: CallbackQuery):
                     else "Reply to this message with a video or image to set it as media for ongoing raids in this group"
                 ),
             )
-            + ("\n\n<b>Current Media:</b> "+ current_type if is_file else ""),
+            + ("\n\n<b>Current Media:</b> " + current_type if is_file else ""),
             reply_markup=keyboard_raid_media,
         )
     elif option == "5":
