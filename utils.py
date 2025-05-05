@@ -22,39 +22,6 @@ target_saved = (
 same_value = "❌ <b>{} {} already set to this value.</b>"
 
 
-def read_values():
-    with open("values.txt", "r") as file:
-        lines = file.readlines()
-        likes_target_default = int(lines[0].strip())
-        retweets_target_default = int(lines[1].strip())
-        replies_target_default = int(lines[2].strip())
-        views_target_default = int(lines[3].strip())
-        bookmarks_target_default = int(lines[4].strip())
-
-    return (
-        likes_target_default,
-        retweets_target_default,
-        replies_target_default,
-        views_target_default,
-        bookmarks_target_default,
-    )
-
-
-def write_values(
-    likes_target_default,
-    retweets_target_default,
-    replies_target_default,
-    views_target_default,
-    bookmarks_target_default,
-):
-    with open("values.txt", "w") as file:
-        file.write(f"{likes_target_default}\n")
-        file.write(f"{retweets_target_default}\n")
-        file.write(f"{replies_target_default}\n")
-        file.write(f"{views_target_default}\n")
-        file.write(f"{bookmarks_target_default}\n")
-
-
 def calculate_percentage(actual, target):
     if target == 0:
         return 100  # Avoid division by zero
