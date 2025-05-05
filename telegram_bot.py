@@ -7,6 +7,7 @@ from utils import (
     customization_text,
     calculate_percentage,
     get_emoji,
+    target_saved,
 )
 from config import BOT_TOKEN
 from db import *
@@ -68,208 +69,89 @@ async def reply_handler(message: types.Message):
     bot_id = (await bot.me()).id
     message_reply = message.reply_to_message.text
     if message.reply_to_message.from_user.id == bot_id:
-        if "Please reply" in message_reply:
-            if "Default" in message_reply:
-                if "Likes" in message_reply:
-                    try:
-                        global likes_target
-                        global likes_default_target
-                        likes_default_target = int(message.text)
-                        await update_likes_default_target(chat_id, likes_default_target)
-                        likes_target = likes_default_target
-                        await update_likes_target(chat_id, likes_target)
-                        bot_message = await message.answer(
-                            f"💙 <b>Default Likes</b> updated to {likes_target}"
-                        )
-                        await asyncio.sleep(3)
-                        await bot.edit_message_text(
-                            chat_id=message.reply_to_message.chat.id,
-                            message_id=message.reply_to_message.message_id,
-                            text=targets_reply.format(
-                                "Default", "Likes", "likes", "Likes", likes_target
-                            ),
-                            reply_markup=keyboard_default_back,
-                        )
-                    except ValueError:
-                        bot_message = await message.answer(
-                            "❌ <b>Invalid input. Please enter a valid number.</b>"
-                        )
-                        await asyncio.sleep(5)
-                elif "Retweets" in message_reply:
-                    try:
-                        global retweets_target
-                        global retweets_default_target
-                        retweets_default_target = int(message.text)
-                        await update_retweets_default_target(
-                            chat_id, retweets_default_target
-                        )
-                        retweets_target = retweets_default_target
-                        await update_retweets_target(chat_id, retweets_target)
-                        bot_message = await message.answer(
-                            f"🔄 <b>Default Retweets</b> updated to {retweets_target}"
-                        )
-                        await asyncio.sleep(3)
-                        await bot.edit_message_text(
-                            chat_id=message.reply_to_message.chat.id,
-                            message_id=message.reply_to_message.message_id,
-                            text=targets_reply.format(
-                                "Default",
-                                "Retweets",
-                                "retweets",
-                                "Retweets",
-                                retweets_target,
-                            ),
-                            reply_markup=keyboard_default_back,
-                        )
-                    except ValueError:
-                        bot_message = await message.answer(
-                            "❌ <b>Invalid input. Please enter a valid number.</b>"
-                        )
-                        await asyncio.sleep(5)
-                elif "Replies" in message_reply:
-                    try:
-                        global replies_target
-                        global replies_default_target
-                        replies_default_target = int(message.text)
-                        await update_replies_default_target(
-                            chat_id, replies_default_target
-                        )
-                        replies_target = replies_default_target
-                        await update_replies_target(chat_id, replies_target)
-                        bot_message = await message.answer(
-                            f"💬 <b>Default Replies</b> updated to {replies_target}"
-                        )
-                        await asyncio.sleep(3)
-                        await bot.edit_message_text(
-                            chat_id=message.reply_to_message.chat.id,
-                            message_id=message.reply_to_message.message_id,
-                            text=targets_reply.format(
-                                "Default",
-                                "Replies",
-                                "replies",
-                                "Replies",
-                                replies_target,
-                            ),
-                            reply_markup=keyboard_default_back,
-                        )
-                    except ValueError:
-                        bot_message = await message.answer(
-                            "❌ <b>Invalid input. Please enter a valid number.</b>"
-                        )
-                        await asyncio.sleep(5)
-                elif "Views" in message_reply:
-                    try:
-                        global views_target
-                        global views_default_target
-                        views_default_target = int(message.text)
-                        await update_views_default_target(chat_id, views_default_target)
-                        views_target = views_default_target
-                        await update_views_target(chat_id, views_target)
-                        bot_message = await message.answer(
-                            f"👀 <b>Default Views</b> updated to {views_target}"
-                        )
-                        await asyncio.sleep(3)
-                        await bot.edit_message_text(
-                            chat_id=message.reply_to_message.chat.id,
-                            message_id=message.reply_to_message.message_id,
-                            text=targets_reply.format(
-                                "Default", "Views", "views", "Views", views_target
-                            ),
-                            reply_markup=keyboard_default_back,
-                        )
-                    except ValueError:
-                        bot_message = await message.answer(
-                            "❌ <b>Invalid input. Please enter a valid number.</b>"
-                        )
-                        await asyncio.sleep(5)
-                elif "Bookmarks" in message_reply:
-                    try:
-                        global bookmarks_target
-                        global bookmarks_default_target
-                        bookmarks_default_target = int(message.text)
-                        await update_bookmarks_default_target(
-                            chat_id, bookmarks_default_target
-                        )
-                        bookmarks_target = bookmarks_default_target
-                        await update_bookmarks_target(chat_id, bookmarks_target)
-                        bot_message = await message.answer(
-                            f"🔖 <b>Default Bookmarks</b> updated to {bookmarks_target}"
-                        )
-                        await asyncio.sleep(3)
-                        await bot.edit_message_text(
-                            chat_id=message.reply_to_message.chat.id,
-                            message_id=message.reply_to_message.message_id,
-                            text=targets_reply.format(
-                                "Default",
-                                "Bookmarks",
-                                "bookmarks",
-                                "Bookmarks",
-                                bookmarks_target,
-                            ),
-                            reply_markup=keyboard_default_back,
-                        )
-                    except ValueError:
-                        bot_message = await message.answer(
-                            "❌ <b>Invalid input. Please enter a valid number.</b>"
-                        )
-                        await asyncio.sleep(5)
-            elif "Likes" in message_reply:
+        if "default" in message_reply.lower():
+            if "Likes" in message_reply:
                 try:
-                    likes_target = int(message.text)
+                    global likes_target
+                    global likes_default_target
+                    if likes_default_target == int(message.text):
+                        bot_message = await message.answer(
+                            "❌ <b>Default Likes already set to this value.</b>"
+                        )
+                        await asyncio.sleep(3)
+                        await bot_message.delete()
+                        await bot.delete_message(
+                            chat_id=message.chat.id, message_id=message.message_id
+                        )
+                        return
+                    likes_default_target = int(message.text)
+                    await update_likes_default_target(chat_id, likes_default_target)
+                    likes_target = likes_default_target
                     await update_likes_target(chat_id, likes_target)
-                    bot_message = await message.answer(
-                        f"💙 <b>Likes</b> updated to {likes_target}"
-                    )
-                    await asyncio.sleep(3)
                     await bot.edit_message_text(
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
-                        text=targets_reply.format(
-                            "", "Likes", "likes", "Likes", likes_target
-                        ),
-                        reply_markup=keyboard_back,
+                        text=target_saved.format('likes', 'default', 'Likes', likes_target),
+                        reply_markup=keyboard_default_back,
                     )
                 except ValueError:
                     bot_message = await message.answer(
                         "❌ <b>Invalid input. Please enter a valid number.</b>"
                     )
                     await asyncio.sleep(5)
+                    await bot_message.delete()
             elif "Retweets" in message_reply:
                 try:
-                    retweets_target = int(message.text)
-                    await update_retweets_target(chat_id, retweets_target)
-                    bot_message = await message.answer(
-                        f"🔄 <b>Retweets</b> updated to {retweets_target}"
+                    global retweets_target
+                    global retweets_default_target
+                    retweets_default_target = int(message.text)
+                    await update_retweets_default_target(
+                        chat_id, retweets_default_target
                     )
-                    await asyncio.sleep(3)
+                    retweets_target = retweets_default_target
+                    await update_retweets_target(chat_id, retweets_target)
                     await bot.edit_message_text(
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
-                        text=targets_reply.format(
-                            "", "Retweets", "retweets", "Retweets", retweets_target
+                        text=target_saved.format(
+                            "retweets",
+                            "default",
+                            "Retweets",
+                            retweets_target,
                         ),
-                        reply_markup=keyboard_back,
+                        reply_markup=keyboard_default_back,
                     )
                 except ValueError:
                     bot_message = await message.answer(
                         "❌ <b>Invalid input. Please enter a valid number.</b>"
                     )
                     await asyncio.sleep(5)
+                    await bot_message.delete()
             elif "Replies" in message_reply:
                 try:
-                    replies_target = int(message.text)
+                    global replies_target
+                    global replies_default_target
+                    replies_default_target = int(message.text)
+                    await update_replies_default_target(
+                        chat_id, replies_default_target
+                    )
+                    replies_target = replies_default_target
                     await update_replies_target(chat_id, replies_target)
                     bot_message = await message.answer(
-                        f"💬 <b>Replies</b> updated to {replies_target}"
+                        f"💬 <b>Default Replies</b> updated to {replies_target}"
                     )
                     await asyncio.sleep(3)
                     await bot.edit_message_text(
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            "", "Replies", "replies", "Replies", replies_target
+                            "Default",
+                            "Replies",
+                            "replies",
+                            "Replies",
+                            replies_target,
                         ),
-                        reply_markup=keyboard_back,
+                        reply_markup=keyboard_default_back,
                     )
                 except ValueError:
                     bot_message = await message.answer(
@@ -278,19 +160,23 @@ async def reply_handler(message: types.Message):
                     await asyncio.sleep(5)
             elif "Views" in message_reply:
                 try:
-                    views_target = int(message.text)
+                    global views_target
+                    global views_default_target
+                    views_default_target = int(message.text)
+                    await update_views_default_target(chat_id, views_default_target)
+                    views_target = views_default_target
                     await update_views_target(chat_id, views_target)
                     bot_message = await message.answer(
-                        f"👀 <b>Views</b> updated to {views_target}"
+                        f"👀 <b>Default Views</b> updated to {views_target}"
                     )
                     await asyncio.sleep(3)
                     await bot.edit_message_text(
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            "", "Views", "views", "Views", views_target
+                            "Default", "Views", "views", "Views", views_target
                         ),
-                        reply_markup=keyboard_back,
+                        reply_markup=keyboard_default_back,
                     )
                 except ValueError:
                     bot_message = await message.answer(
@@ -299,26 +185,134 @@ async def reply_handler(message: types.Message):
                     await asyncio.sleep(5)
             elif "Bookmarks" in message_reply:
                 try:
-                    bookmarks_target = int(message.text)
+                    global bookmarks_target
+                    global bookmarks_default_target
+                    bookmarks_default_target = int(message.text)
+                    await update_bookmarks_default_target(
+                        chat_id, bookmarks_default_target
+                    )
+                    bookmarks_target = bookmarks_default_target
                     await update_bookmarks_target(chat_id, bookmarks_target)
                     bot_message = await message.answer(
-                        f"🔖 <b>Bookmarks</b> updated to {bookmarks_target}"
+                        f"🔖 <b>Default Bookmarks</b> updated to {bookmarks_target}"
                     )
                     await asyncio.sleep(3)
                     await bot.edit_message_text(
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=targets_reply.format(
-                            "", "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
+                            "Default",
+                            "Bookmarks",
+                            "bookmarks",
+                            "Bookmarks",
+                            bookmarks_target,
                         ),
-                        reply_markup=keyboard_back,
+                        reply_markup=keyboard_default_back,
                     )
                 except ValueError:
                     bot_message = await message.answer(
                         "❌ <b>Invalid input. Please enter a valid number.</b>"
                     )
                     await asyncio.sleep(5)
-            await bot_message.delete()
+        elif "Likes" in message_reply:
+            try:
+                likes_target = int(message.text)
+                await update_likes_target(chat_id, likes_target)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text=target_saved.format(
+                        "likes", "", "Likes", likes_target
+                    ),
+                    reply_markup=keyboard_back,
+                )
+            except ValueError:
+                bot_message = await message.answer(
+                    "❌ <b>Invalid input. Please enter a valid number.</b>"
+                )
+                await asyncio.sleep(5)
+                await bot_message.delete()
+        elif "Retweets" in message_reply:
+            try:
+                retweets_target = int(message.text)
+                await update_retweets_target(chat_id, retweets_target)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text=target_saved.format(
+                        "retweets", "", "Retweets", retweets_target
+                    ),
+                    reply_markup=keyboard_back,
+                )
+            except ValueError:
+                bot_message = await message.answer(
+                    "❌ <b>Invalid input. Please enter a valid number.</b>"
+                )
+                await asyncio.sleep(5)
+        elif "Replies" in message_reply:
+            try:
+                replies_target = int(message.text)
+                await update_replies_target(chat_id, replies_target)
+                bot_message = await message.answer(
+                    f"💬 <b>Replies</b> updated to {replies_target}"
+                )
+                await asyncio.sleep(3)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text=targets_reply.format(
+                        "", "Replies", "replies", "Replies", replies_target
+                    ),
+                    reply_markup=keyboard_back,
+                )
+            except ValueError:
+                bot_message = await message.answer(
+                    "❌ <b>Invalid input. Please enter a valid number.</b>"
+                )
+                await asyncio.sleep(5)
+        elif "Views" in message_reply:
+            try:
+                views_target = int(message.text)
+                await update_views_target(chat_id, views_target)
+                bot_message = await message.answer(
+                    f"👀 <b>Views</b> updated to {views_target}"
+                )
+                await asyncio.sleep(3)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text=targets_reply.format(
+                        "", "Views", "views", "Views", views_target
+                    ),
+                    reply_markup=keyboard_back,
+                )
+            except ValueError:
+                bot_message = await message.answer(
+                    "❌ <b>Invalid input. Please enter a valid number.</b>"
+                )
+                await asyncio.sleep(5)
+        elif "Bookmarks" in message_reply:
+            try:
+                bookmarks_target = int(message.text)
+                await update_bookmarks_target(chat_id, bookmarks_target)
+                bot_message = await message.answer(
+                    f"🔖 <b>Bookmarks</b> updated to {bookmarks_target}"
+                )
+                await asyncio.sleep(3)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text=targets_reply.format(
+                        "", "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
+                    ),
+                    reply_markup=keyboard_back,
+                )
+            except ValueError:
+                bot_message = await message.answer(
+                    "❌ <b>Invalid input. Please enter a valid number.</b>"
+                )
+                await asyncio.sleep(5)
+                await bot_message.delete()
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 
         if RAID_MEDIA_PROMPT not in message_reply:
