@@ -519,7 +519,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_reply.format("", "Likes", "likes", "Likes", likes_target),
+            text=targets_reply.format("", "Likes", "likes", "", "Likes", likes_target),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -528,7 +528,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "", "Retweets", "retweets", "Retweets", retweets_target
+                "", "Retweets", "retweets", "", "Retweets", retweets_target
             ),
             reply_markup=keyboard_back,
         )
@@ -538,7 +538,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "", "Replies", "replies", "Replies", replies_target
+                "", "Replies", "replies", "", "Replies", replies_target
             ),
             reply_markup=keyboard_back,
         )
@@ -547,7 +547,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         await bot.edit_message_text(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            text=targets_reply.format("", "Views", "views", "Views", views_target),
+            text=targets_reply.format("", "Views", "views", "", "Views", views_target),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -556,7 +556,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "", "Bookmarks", "bookmarks", "Bookmarks", bookmarks_target
+                "", "Bookmarks", "bookmarks", "", "Bookmarks", bookmarks_target
             ),
             reply_markup=keyboard_back,
         )
@@ -670,7 +670,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Default", "Likes", "likes", "likes", likes_target
+                "Default", "Likes", "likes", "default", "likes", likes_target
             ),
             reply_markup=keyboard_default_back,
         )
@@ -680,7 +680,12 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Default", "Retweets", "retweets", "retweets", retweets_target
+                "Default",
+                "Retweets",
+                "retweets",
+                "default",
+                "retweets",
+                retweets_target,
             ),
             reply_markup=keyboard_default_back,
         )
@@ -690,7 +695,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Default", "Replies", "replies", "replies", replies_target
+                "Default", "Replies", "replies", "default", "replies", replies_target
             ),
             reply_markup=keyboard_default_back,
         )
@@ -700,7 +705,7 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Default", "Views", "views", "views", views_target
+                "Default", "Views", "views", "default", "views", views_target
             ),
             reply_markup=keyboard_default_back,
         )
@@ -710,7 +715,12 @@ async def handle_target(callback_query: types.CallbackQuery):
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Default", "Bookmarks", "bookmarks", "bookmarks", bookmarks_target
+                "Default",
+                "Bookmarks",
+                "bookmarks",
+                "default",
+                "bookmarks",
+                bookmarks_target,
             ),
             reply_markup=keyboard_default_back,
         )
