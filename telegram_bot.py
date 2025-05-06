@@ -1,15 +1,5 @@
 import x_bot
-from utils import (
-    TWITTER_LINK_PATTERN,
-    raid_status,
-    targets_text,
-    targets_reply,
-    customization_text,
-    calculate_percentage,
-    get_emoji,
-    target_saved,
-    same_value,
-)
+from utils import *
 from config import BOT_TOKEN
 from db import *
 
@@ -21,20 +11,16 @@ from aiogram.types import (
     CallbackQuery,
     FSInputFile,
 )
-from aiogram.types import Message
 from aiogram.enums.chat_member_status import ChatMemberStatus
 from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
-from pathlib import Path
 import os
 
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 router = Router()
-MEDIA_DIR = Path("media")
-RAID_MEDIA_PROMPT = "Reply to this message"
 
 
 @dp.message(F.text == "/stop")

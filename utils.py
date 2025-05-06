@@ -1,8 +1,12 @@
 import re
+from pathlib import Path
 
 TWITTER_LINK_PATTERN = re.compile(
     r"https?://(www\.)?(twitter\.com|x\.com)/[A-Za-z0-9_]+/status/\d+"
 )
+MEDIA_DIR = Path("media")
+RAID_MEDIA_PROMPT = "Reply to this message"
+
 raid_status = {}
 targets_text = (
     "⚙️ <b>Raid Options > {} Targets</b>\n\n"
