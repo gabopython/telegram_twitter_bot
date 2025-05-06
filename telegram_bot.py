@@ -761,12 +761,18 @@ async def star_raid_callback(callback: CallbackQuery):
                 + percentages
                 + "⏰ Duration: 0 minutes"
             )
+            raid_status[chat_id] = False
         else:
             chat_id = callback.message.chat.id
             raid_status[chat_id] = True
             raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
 
         await callback.message.delete()
+        if not raid_status.get(chat_id):
+            bot_message = await callback.message.answer('<b>❌ There is already an ongoing raid in this group. Please use /stop to stop it.</b>')
+            await asyncio.sleep(5)
+            await bot_message.delete()
+            return
         file_name = str(chat_id)
         file_type = await get_file_type(chat_id)
         file_path = os.path.join(
