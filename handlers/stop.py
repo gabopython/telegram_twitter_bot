@@ -5,10 +5,10 @@ from utils import raid_status
 from aiogram.filters import Command
 
 
-stop_router = Router()
+router = Router()
 
 
-@stop_router.message(Command("stop"))
+@router.message(Command("stop"))
 async def stop_command(message: Message):
     # Check if the sender is an admin
     chat_id = message.chat.id
