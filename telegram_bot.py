@@ -79,7 +79,7 @@ async def reply_handler(message: types.Message):
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
-                            "likes", "default", "Likes", likes_target
+                            "likes", "default ", "Likes", likes_target
                         ),
                         reply_markup=keyboard_default_back,
                     )
@@ -114,7 +114,7 @@ async def reply_handler(message: types.Message):
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
                             "retweets",
-                            "default",
+                            "default ",
                             "Retweets",
                             retweets_target,
                         ),
@@ -149,7 +149,7 @@ async def reply_handler(message: types.Message):
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
                             "replies",
-                            "default",
+                            "default ",
                             "Replies",
                             replies_target,
                         ),
@@ -183,7 +183,7 @@ async def reply_handler(message: types.Message):
                         chat_id=message.reply_to_message.chat.id,
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
-                            "views", "default", "Views", views_target
+                            "views", "default ", "Views", views_target
                         ),
                         reply_markup=keyboard_default_back,
                     )
@@ -218,7 +218,7 @@ async def reply_handler(message: types.Message):
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
                             "bookmarks",
-                            "default",
+                            "default ",
                             "Bookmarks",
                             bookmarks_target,
                         ),
@@ -297,7 +297,7 @@ async def reply_handler(message: types.Message):
                 await bot.edit_message_text(
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
-                    text=target_saved.format("replies", "" "Replies", replies_target),
+                    text=target_saved.format("replies", "", "Replies", replies_target),
                     reply_markup=keyboard_back,
                 )
             except ValueError:
@@ -774,14 +774,30 @@ async def star_raid_callback(callback: CallbackQuery):
         )
         file = None if file_type == "" else FSInputFile(file_path)
         if file_type == ".jpg":
-            await callback.message.answer_photo(file, caption=raid_message)
+            bot_message = await callback.message.answer_photo(file, caption=raid_message)
+            await callback.answer()
+            await asyncio.sleep(20)
+            await bot_message.edit_caption(caption = '⚡️ <b>Raid Tweet</b>\n\n'+ percentages)
+            await asyncio.sleep(1)
         elif file_type == ".mp4":
-            await callback.message.answer_video(file, caption=raid_message)
+            bot_message = await callback.message.answer_video(file, caption=raid_message)
+            await callback.answer()
+            await asyncio.sleep(20)
+            await bot_message.edit_caption(caption = '⚡️ <b>Raid Tweet</b>\n\n'+ percentages)
+            await asyncio.sleep(1)
         elif file_type == ".gif":
-            await callback.message.answer_animation(file, caption=raid_message)
+            bot_message = await callback.message.answer_animation(file, caption=raid_message)
+            await callback.answer()
+            await asyncio.sleep(20)
+            await bot_message.edit_caption(caption = '⚡️ <b>Raid Tweet</b>\n\n'+ percentages)
+            await asyncio.sleep(1)
         else:
-            await callback.message.answer(raid_message)
-        await callback.answer()
+            bot_message = await callback.message.answer(raid_message)
+            await callback.answer()
+            await asyncio.sleep(20)
+            await bot_message.edit_text('⚡️ <b>Raid Tweet</b>\n\n'+ percentages)
+            await asyncio.sleep(1)
+        
     else:
         await callback.answer(
             "🛑 You must be an admin to interact with WAOxrpBot.", show_alert=True

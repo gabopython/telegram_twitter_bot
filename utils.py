@@ -20,7 +20,7 @@ targets_reply = (
 customization_text = "⚙️ <b>Raid Options > Customization {}</b>\n\n" "{}."
 target_saved = (
     "✅ <b>Target saved successfully!</b>\n\n"
-    "Please reply to this message with the new number of {} that a tweet must have to be considered a valid {} target.\n\n"
+    "Please reply to this message with the new number of {} that a tweet must have to be considered a valid {}target.\n\n"
     "<b>Current {}:</b> {}"
 )
 same_value = "❌ <b>{} {} already set to this value.</b>"
