@@ -751,6 +751,15 @@ async def star_raid_callback(callback: CallbackQuery):
             )
             + f"\n{link}\n\n"
         )
+
+        if raid_status.get(chat_id, False):
+            bot_message = await callback.message.answer(
+                "<b>❌ There is already an ongoing raid in this group. Please use /stop to stop it.</b>"
+            )
+            await asyncio.sleep(5)
+            await bot_message.delete()
+            return
+
         if (
             likes_percentage == 100
             and retweets_percentage == 100
@@ -766,13 +775,8 @@ async def star_raid_callback(callback: CallbackQuery):
             chat_id = callback.message.chat.id
             raid_status[chat_id] = True
             raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
-
         await callback.message.delete()
-        if not raid_status.get(chat_id):
-            bot_message = await callback.message.answer('<b>❌ There is already an ongoing raid in this group. Please use /stop to stop it.</b>')
-            await asyncio.sleep(5)
-            await bot_message.delete()
-            return
+
         file_name = str(chat_id)
         file_type = await get_file_type(chat_id)
         file_path = os.path.join(
@@ -780,30 +784,30 @@ async def star_raid_callback(callback: CallbackQuery):
         )
         file = None if file_type == "" else FSInputFile(file_path)
         if file_type == ".jpg":
-            bot_message = await callback.message.answer_photo(file, caption=raid_message)
-            await callback.answer()
-            await asyncio.sleep(20)
-            await bot_message.edit_caption(caption = '⚡️ <b>Raid Tweet</b>\n\n'+ percentages)
-            await asyncio.sleep(1)
+            bot_message = await callback.message.answer_photo(
+                file, caption=raid_message
+            )
         elif file_type == ".mp4":
-            bot_message = await callback.message.answer_video(file, caption=raid_message)
-            await callback.answer()
-            await asyncio.sleep(20)
-            await bot_message.edit_caption(caption = '⚡️ <b>Raid Tweet</b>\n\n'+ percentages)
-            await asyncio.sleep(1)
+            bot_message = await callback.message.answer_video(
+                file, caption=raid_message
+            )
         elif file_type == ".gif":
-            bot_message = await callback.message.answer_animation(file, caption=raid_message)
-            await callback.answer()
-            await asyncio.sleep(20)
-            await bot_message.edit_caption(caption = '⚡️ <b>Raid Tweet</b>\n\n'+ percentages)
-            await asyncio.sleep(1)
+            bot_message = await callback.message.answer_animation(
+                file, caption=raid_message
+            )
         else:
             bot_message = await callback.message.answer(raid_message)
-            await callback.answer()
-            await asyncio.sleep(20)
-            await bot_message.edit_text('⚡️ <b>Raid Tweet</b>\n\n'+ percentages)
-            await asyncio.sleep(1)
-        
+
+        await callback.answer()
+        await asyncio.sleep(20)
+        updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
+
+        if file_type == "":
+            await bot_message.edit_text(updated_caption)
+        else:
+            await bot_message.edit_caption(caption=updated_caption)
+        await asyncio.sleep(1)
+
     else:
         await callback.answer(
             "🛑 You must be an admin to interact with WAOxrpBot.", show_alert=True
