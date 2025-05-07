@@ -21,7 +21,7 @@ import os
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 router = Router()
-
+raid_message = {}
 
 @dp.message(F.text == "/stop")
 async def stop_command(message: types.Message):
@@ -43,6 +43,14 @@ async def stop_command(message: types.Message):
         await message.answer("❌ <b>There is no ongoing raid in this group</b>")
 
 
+@dp.message(F.text)
+async def on_user_message(message: types.Message):
+    chat_id = message.chat.id
+    if raid_status.get(chat_id):
+        await bot.delete_message(chat_id=chat_id, message_id=raid_message[chat_id])
+        bot_message = await message.answer('hola mundo')
+        raid_message[chat_id] = bot_message.message_id
+
 @dp.message(F.reply_to_message)
 async def reply_handler(message: types.Message):
     # Check if the sender is an admin
@@ -54,7 +62,7 @@ async def reply_handler(message: types.Message):
         return  # User is not an admin, ignore message
 
     bot_id = (await bot.me()).id
-    message_reply = message.reply_to_message.text
+    message_reply = message.reply_to_message.text if message.reply_to_message.text else ""
     if message.reply_to_message.from_user.id == bot_id:
         if "default" in message_reply.lower():
             if "Likes" in message_reply:
@@ -797,6 +805,7 @@ async def star_raid_callback(callback: CallbackQuery):
             )
         else:
             bot_message = await callback.message.answer(raid_message)
+            raid_message[chat_id] = bot_message.message_id
 
         await callback.answer()
         await asyncio.sleep(20)
