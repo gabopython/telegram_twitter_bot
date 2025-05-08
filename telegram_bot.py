@@ -21,7 +21,8 @@ import os
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 router = Router()
-raid_message = {}
+resend_message = {}
+
 
 @dp.message(F.text == "/stop")
 async def stop_command(message: types.Message):
@@ -43,14 +44,6 @@ async def stop_command(message: types.Message):
         await message.answer("❌ <b>There is no ongoing raid in this group</b>")
 
 
-@dp.message(F.text)
-async def on_user_message(message: types.Message):
-    chat_id = message.chat.id
-    if raid_status.get(chat_id):
-        await bot.delete_message(chat_id=chat_id, message_id=raid_message[chat_id])
-        bot_message = await message.answer('hola mundo')
-        raid_message[chat_id] = bot_message.message_id
-
 @dp.message(F.reply_to_message)
 async def reply_handler(message: types.Message):
     # Check if the sender is an admin
@@ -62,7 +55,9 @@ async def reply_handler(message: types.Message):
         return  # User is not an admin, ignore message
 
     bot_id = (await bot.me()).id
-    message_reply = message.reply_to_message.text if message.reply_to_message.text else ""
+    message_reply = (
+        message.reply_to_message.text if message.reply_to_message.text else ""
+    )
     if message.reply_to_message.from_user.id == bot_id:
         if "default" in message_reply.lower():
             if "Likes" in message_reply:
@@ -432,8 +427,15 @@ async def reply_handler(message: types.Message):
 async def handle_message(message: types.Message):
     # Check if message has text
     message_text = message.text
+    chat_id = message.chat.id
+
     if not message_text:
         return
+
+    if raid_status.get(chat_id):
+        await bot.delete_message(chat_id=chat_id, message_id=resend_message[chat_id])
+        bot_message = await message.answer("hola mundo")
+        resend_message[chat_id] = bot_message.message_id
 
     # Search for Twitter link
     match = TWITTER_LINK_PATTERN.search(message_text)
@@ -441,7 +443,6 @@ async def handle_message(message: types.Message):
         return
 
     # Check if the sender is an admin
-    chat_id = message.chat.id
     user_id = message.from_user.id
 
     member = await message.bot.get_chat_member(chat_id, user_id)
@@ -805,16 +806,17 @@ async def star_raid_callback(callback: CallbackQuery):
             )
         else:
             bot_message = await callback.message.answer(raid_message)
-            raid_message[chat_id] = bot_message.message_id
+            resend_message[chat_id] = bot_message.message_id
 
         await callback.answer()
         await asyncio.sleep(20)
         updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
 
-        if file_type == "":
-            await bot_message.edit_text(updated_caption)
-        else:
-            await bot_message.edit_caption(caption=updated_caption)
+        if bot_message:
+            if file_type == "":
+                await bot_message.edit_text(updated_caption)
+            else:
+                await bot_message.edit_caption(caption=updated_caption)
         await asyncio.sleep(1)
 
     else:
