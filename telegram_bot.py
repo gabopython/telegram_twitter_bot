@@ -432,13 +432,6 @@ async def handle_message(message: types.Message):
     if not message_text:
         return
 
-    if raid_status.get(chat_id):
-        await bot.delete_message(
-            chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
-        )
-        bot_message = await message.answer(resend_message[chat_id]["text"])
-        resend_message[chat_id]["message_id"] = bot_message.message_id
-
     # Search for Twitter link
     match = TWITTER_LINK_PATTERN.search(message_text)
     if not match:
@@ -491,11 +484,18 @@ async def handle_message(message: types.Message):
             [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
         ]
     )
-
     await message.answer(
         formatted,
         reply_markup=keyboard_message,
     )
+
+    if raid_status.get(chat_id):
+        await asyncio.sleep(12)
+        await bot.delete_message(
+            chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
+        )
+        bot_message = await message.answer(resend_message[chat_id]["text"])
+        resend_message[chat_id]["message_id"] = bot_message.message_id 
 
 
 @dp.callback_query(lambda c: c.data.startswith("target_"))
@@ -767,6 +767,7 @@ async def star_raid_callback(callback: CallbackQuery):
             bot_message = await callback.message.answer(
                 "<b>❌ There is already an ongoing raid in this group. Please use /stop to stop it.</b>"
             )
+            await callback.message.delete()
             await asyncio.sleep(5)
             await bot_message.delete()
             return
