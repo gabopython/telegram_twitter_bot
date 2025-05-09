@@ -446,11 +446,6 @@ async def handle_message(message: types.Message):
     if not message_text:
         return
 
-    # Search for Twitter link
-    match = TWITTER_LINK_PATTERN.search(message_text)
-    if not match:
-        return
-
     # Check if the sender is an admin
     user_id = message.from_user.id
 
@@ -458,50 +453,51 @@ async def handle_message(message: types.Message):
     if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
         return  # User is not an admin, ignore message
 
-    # Process Twitter link
-    global link
-    link = message_text
-    global likes_target, retweets_target, replies_target, views_target, bookmarks_target
-    global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
-    likes_default_target = await get_likes_default_target(chat_id)
-    retweets_default_target = await get_retweets_default_target(chat_id)
-    replies_default_target = await get_replies_default_target(chat_id)
-    views_default_target = await get_views_default_target(chat_id)
-    bookmarks_default_target = await get_bookmarks_default_target(chat_id)
-    likes_target = likes_default_target
-    retweets_target = retweets_default_target
-    replies_target = replies_default_target
-    views_target = views_default_target
-    bookmarks_target = bookmarks_default_target
-    await update_likes_target(chat_id, likes_target)
-    await update_retweets_target(chat_id, retweets_target)
-    await update_replies_target(chat_id, replies_target)
-    await update_views_target(chat_id, views_target)
-    await update_bookmarks_target(chat_id, bookmarks_target)
+    match = TWITTER_LINK_PATTERN.search(message_text)
+    if match:
+        global link
+        link = message_text
+        global likes_target, retweets_target, replies_target, views_target, bookmarks_target
+        global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
+        likes_default_target = await get_likes_default_target(chat_id)
+        retweets_default_target = await get_retweets_default_target(chat_id)
+        replies_default_target = await get_replies_default_target(chat_id)
+        views_default_target = await get_views_default_target(chat_id)
+        bookmarks_default_target = await get_bookmarks_default_target(chat_id)
+        likes_target = likes_default_target
+        retweets_target = retweets_default_target
+        replies_target = replies_default_target
+        views_target = views_default_target
+        bookmarks_target = bookmarks_default_target
+        await update_likes_target(chat_id, likes_target)
+        await update_retweets_target(chat_id, retweets_target)
+        await update_replies_target(chat_id, replies_target)
+        await update_views_target(chat_id, views_target)
+        await update_bookmarks_target(chat_id, bookmarks_target)
 
-    formatted = (
-        "⚙️ <b>Raid Options</b>\n\n"
-        f"🔗 <b>Link:</b> {link}\n"
-        f"💙 <b>Likes:</b> {likes_target}\n"
-        f"🔄 <b>Retweets:</b> {retweets_target}\n"
-        f"💬 <b>Replies:</b> {replies_target}\n"
-        f"👀 <b>Views:</b> {views_target}\n"
-        f"🔖 <b>Bookmarks:</b> {bookmarks_target}"
-    )
+        formatted = (
+            "⚙️ <b>Raid Options</b>\n\n"
+            f"🔗 <b>Link:</b> {link}\n"
+            f"💙 <b>Likes:</b> {likes_target}\n"
+            f"🔄 <b>Retweets:</b> {retweets_target}\n"
+            f"💬 <b>Replies:</b> {replies_target}\n"
+            f"👀 <b>Views:</b> {views_target}\n"
+            f"🔖 <b>Bookmarks:</b> {bookmarks_target}"
+        )
 
-    global keyboard_message
-    keyboard_message = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="💥 Start Raid 💥", callback_data="start raid")],
-            [InlineKeyboardButton(text="🎨  Customization", callback_data="option_4")],
-            [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
-            [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
-        ]
-    )
-    await message.answer(
-        formatted,
-        reply_markup=keyboard_message,
-    )
+        global keyboard_message
+        keyboard_message = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="💥 Start Raid 💥", callback_data="start raid")],
+                [InlineKeyboardButton(text="🎨  Customization", callback_data="option_4")],
+                [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
+                [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
+            ]
+        )
+        await message.answer(
+            formatted,
+            reply_markup=keyboard_message,
+        )
 
     if raid_status.get(chat_id):
         await asyncio.sleep(12)
@@ -510,6 +506,19 @@ async def handle_message(message: types.Message):
         )
         bot_message = await message.answer(resend_message[chat_id]["text"])
         resend_message[chat_id]["message_id"] = bot_message.message_id
+
+        await asyncio.sleep(8)
+        updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
+
+        try:
+            #if file_type == "":
+            await bot_message.edit_text(updated_caption)
+            resend_message[chat_id]["text"] = updated_caption
+            #else:
+                #await bot_message.edit_caption(caption=updated_caption)
+        except Exception as e:
+            pass
+        await asyncio.sleep(1)
 
 
 @dp.callback_query(lambda c: c.data.startswith("target_"))
@@ -836,6 +845,7 @@ async def star_raid_callback(callback: CallbackQuery):
         try:
             if file_type == "":
                 await bot_message.edit_text(updated_caption)
+                resend_message[chat_id]["text"] = updated_caption
             else:
                 await bot_message.edit_caption(caption=updated_caption)
         except Exception as e:
