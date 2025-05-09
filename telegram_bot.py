@@ -433,9 +433,11 @@ async def handle_message(message: types.Message):
         return
 
     if raid_status.get(chat_id):
-        await bot.delete_message(chat_id=chat_id, message_id=resend_message[chat_id]['message_id'])
-        bot_message = await message.answer(resend_message[chat_id]['text'])
-        resend_message[chat_id]['message_id'] = bot_message.message_id
+        await bot.delete_message(
+            chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
+        )
+        bot_message = await message.answer(resend_message[chat_id]["text"])
+        resend_message[chat_id]["message_id"] = bot_message.message_id
 
     # Search for Twitter link
     match = TWITTER_LINK_PATTERN.search(message_text)
@@ -806,7 +808,11 @@ async def star_raid_callback(callback: CallbackQuery):
             )
         else:
             bot_message = await callback.message.answer(raid_message)
-            resend_message[chat_id] = {'message_id': bot_message.message_id, 'text': raid_message, 'file': file if file else None}
+            resend_message[chat_id] = {
+                "message_id": bot_message.message_id,
+                "text": raid_message,
+                "file": file if file else None,
+            }
 
         await callback.answer()
         await asyncio.sleep(20)
