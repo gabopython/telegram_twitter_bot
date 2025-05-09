@@ -36,6 +36,9 @@ async def stop_command(message: types.Message):
 
     chat_id = message.chat.id
     if raid_status.get(chat_id):
+        await bot.delete_message(
+            chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
+        )
         raid_status[chat_id] = False
         await message.answer(
             "🛑 <b>Raid Ended - Stopped by admin</b>\n\n" + percentages
