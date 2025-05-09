@@ -1022,11 +1022,23 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_customization,
         )
 
+last_message = {}
+
+@dp.message(F.chat.type.in_({"group", "supergroup"}))
+async def handle_group_message(message: types.Message):
+    last_message[message.chat.id] = message
+
+async def reporter():
+    while True:
+        for chat_id, message in last_message.items():
+            print(message.text)
+        await asyncio.sleep(12) 
 
 async def main():
     print("🚀 Bot is up and running! Waiting for updates...")
     dp.include_router(router)
     await init_db()
+    dp.startup.register(lambda _: asyncio.create_task(reporter()))
     await dp.start_polling(bot)
 
 
