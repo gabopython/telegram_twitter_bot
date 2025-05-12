@@ -22,7 +22,8 @@ bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTM
 dp = Dispatcher()
 router = Router()
 resend_message = {}
-
+global resend_ongoing
+resend_ongoing = True
 
 @dp.message(F.text == "/stop")
 async def stop_command(message: types.Message):
@@ -507,13 +508,15 @@ async def handle_message(message: types.Message):
             reply_markup=keyboard_message,
         )
 
-    if raid_status.get(chat_id):
+    if raid_status.get(chat_id) and resend_ongoing:
+        resend_ongoing = False
         await asyncio.sleep(12)
         await bot.delete_message(
             chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
         )
         bot_message = await message.answer(resend_message[chat_id]["text"])
         resend_message[chat_id]["message_id"] = bot_message.message_id
+        resend_ongoing = True
 
         await asyncio.sleep(8)
         updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
