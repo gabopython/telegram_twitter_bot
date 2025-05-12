@@ -383,21 +383,54 @@ async def reply_handler(message: types.Message):
 
         file_path = None
 
-        if message.photo:
-            media = message.photo[-1]
-            file_path = MEDIA_DIR_RAID / f"{chat_id}.jpg"
-            await bot.download(media, destination=file_path)
-            file_type = ".jpg"
-        elif message.video:
-            media = message.video
-            file_path = MEDIA_DIR_RAID / f"{chat_id}.mp4"
-            await bot.download(media, destination=file_path)
-            file_type = ".mp4"
-        elif message.animation:
-            media = message.animation
-            file_path = MEDIA_DIR_RAID / f"{chat_id}.mp4"
-            await bot.download(media, destination=file_path)
-            file_type = ".gif"
+        if 'Start Media' in message_reply:
+            if message.photo:
+                media = message.photo[-1]
+                file_path = MEDIA_DIR_START / f"{chat_id}.jpg"
+                await bot.download(media, destination=file_path)
+                file_type = ".jpg"
+            elif message.video:
+                media = message.video
+                file_path = MEDIA_DIR_START / f"{chat_id}.mp4"
+                await bot.download(media, destination=file_path)
+                file_type = ".mp4"
+            elif message.animation:
+                media = message.animation
+                file_path = MEDIA_DIR_START / f"{chat_id}.mp4"
+                await bot.download(media, destination=file_path)
+                file_type = ".gif"
+        elif 'End Media' in message_reply:
+            if message.photo:
+                media = message.photo[-1]
+                file_path = MEDIA_DIR_END / f"{chat_id}.jpg"
+                await bot.download(media, destination=file_path)
+                file_type = ".jpg"
+            elif message.video:
+                media = message.video
+                file_path = MEDIA_DIR_END / f"{chat_id}.mp4"
+                await bot.download(media, destination=file_path)
+                file_type = ".mp4"
+            elif message.animation:
+                media = message.animation
+                file_path = MEDIA_DIR_END / f"{chat_id}.mp4"
+                await bot.download(media, destination=file_path)
+                file_type = ".gif"
+        elif 'Raid Media' in message_reply:
+            if message.photo:
+                media = message.photo[-1]
+                file_path = MEDIA_DIR_RAID / f"{chat_id}.jpg"
+                await bot.download(media, destination=file_path)
+                file_type = ".jpg"
+            elif message.video:
+                media = message.video
+                file_path = MEDIA_DIR_RAID / f"{chat_id}.mp4"
+                await bot.download(media, destination=file_path)
+                file_type = ".mp4"
+            elif message.animation:
+                media = message.animation
+                file_path = MEDIA_DIR_RAID / f"{chat_id}.mp4"
+                await bot.download(media, destination=file_path)
+                file_type = ".gif"
 
         if file_path:
             await save_image(chat_id, file_type)
@@ -1069,6 +1102,45 @@ async def process_callback(callback: CallbackQuery):
             )
             + ("\n\n<b>Current Media:</b> " + current_type if is_file_raid else ""),
             reply_markup=keyboard_raid_media,
+        )
+    elif option == "3":
+        keyboard_end_media = InlineKeyboardMarkup(
+            inline_keyboard=[
+                (
+                    [
+                        InlineKeyboardButton(
+                            text="❌ Remove File", callback_data="customization_5"
+                        )
+                    ]
+                    if is_file_end
+                    else []
+                ),
+                [
+                    InlineKeyboardButton(
+                        text="🔙 Back",
+                        callback_data="customization_6",
+                    )
+                ],
+            ]
+        )
+        file_type_end = await get_file_type(callback.message.chat.id)
+        if file_type_end == ".jpg":
+            current_type = "Image"
+        elif file_type_end == ".mp4":
+            current_type = "Video"
+        elif file_type_end == ".gif":
+            current_type = "GIF"
+        await callback.message.edit_text(
+            customization_text.format(
+                "> End Media",
+                (
+                    "Reply to this message with a video or image to change the current media used for raids in this group"
+                    if is_file_end
+                    else "Reply to this message with a video or image to set it as media for raids in this group"
+                ),
+            )
+            + ("\n\n<b>Current Media:</b> " + current_type if is_file_end else ""),
+            reply_markup=keyboard_end_media,
         )
     elif option == "5":
         await save_image(callback.message.chat.id, "")
