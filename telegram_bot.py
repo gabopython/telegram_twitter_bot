@@ -385,17 +385,17 @@ async def reply_handler(message: types.Message):
 
         if message.photo:
             media = message.photo[-1]
-            file_path = MEDIA_DIR / f"{chat_id}.jpg"
+            file_path = MEDIA_DIR_RAID / f"{chat_id}.jpg"
             await bot.download(media, destination=file_path)
             file_type = ".jpg"
         elif message.video:
             media = message.video
-            file_path = MEDIA_DIR / f"{chat_id}.mp4"
+            file_path = MEDIA_DIR_RAID / f"{chat_id}.mp4"
             await bot.download(media, destination=file_path)
             file_type = ".mp4"
         elif message.animation:
             media = message.animation
-            file_path = MEDIA_DIR / f"{chat_id}.mp4"
+            file_path = MEDIA_DIR_RAID / f"{chat_id}.mp4"
             await bot.download(media, destination=file_path)
             file_type = ".gif"
 
@@ -827,7 +827,7 @@ async def star_raid_callback(callback: CallbackQuery):
         file_name = str(chat_id)
         file_type = await get_file_type(chat_id)
         file_path = os.path.join(
-            MEDIA_DIR, file_name + (".mp4" if file_type == ".gif" else file_type)
+            MEDIA_DIR_RAID, file_name + (".mp4" if file_type == ".gif" else file_type)
         )
         file = None if file_type == "" else FSInputFile(file_path)
         if file_type == ".jpg":
@@ -971,14 +971,29 @@ async def process_callback(callback_query: types.CallbackQuery):
 @router.callback_query(F.data.startswith("customization_"))
 async def process_callback(callback: CallbackQuery):
     option = callback.data.replace("customization_", "")
-    file_type = await get_file_type(callback.message.chat.id)
-    file_path = os.path.join(
-        MEDIA_DIR,
-        str(callback.message.chat.id) + (".mp4" if file_type == ".gif" else file_type),
+    file_type_raid = await get_file_type(callback.message.chat.id)
+    file_path_raid = os.path.join(
+        MEDIA_DIR_RAID,
+        str(callback.message.chat.id) + (".mp4" if file_type_raid == ".gif" else file_type_raid),
     )
-    is_file = os.path.isfile(file_path)
-    if option == "2":
-        keyboard_raid_media = InlineKeyboardMarkup(
+    is_file_raid = os.path.isfile(file_path_raid)
+
+    file_type_start = await get_file_type(callback.message.chat.id)
+    file_path_start = os.path.join(
+        MEDIA_DIR_START,
+        str(callback.message.chat.id) + (".mp4" if file_type_start == ".gif" else file_type_start),
+    )
+    is_file_start = os.path.isfile(file_path_start)
+
+    file_type_end = await get_file_type(callback.message.chat.id)
+    file_path_end = os.path.join(
+        MEDIA_DIR_END   ,
+        str(callback.message.chat.id) + (".mp4" if file_type_end == ".gif" else file_type_end),
+    )
+    is_file_end = os.path.isfile(file_path_end)
+
+    if option == "1":
+        keyboard_start_media = InlineKeyboardMarkup(
             inline_keyboard=[
                 (
                     [
@@ -986,7 +1001,7 @@ async def process_callback(callback: CallbackQuery):
                             text="❌ Remove File", callback_data="customization_5"
                         )
                     ]
-                    if is_file
+                    if is_file_start
                     else []
                 ),
                 [
@@ -997,23 +1012,62 @@ async def process_callback(callback: CallbackQuery):
                 ],
             ]
         )
-        file_type = await get_file_type(callback.message.chat.id)
-        if file_type == ".jpg":
+        file_type_start = await get_file_type(callback.message.chat.id)
+        if file_type_start == ".jpg":
             current_type = "Image"
-        elif file_type == ".mp4":
+        elif file_type_start == ".mp4":
             current_type = "Video"
-        elif file_type == ".gif":
+        elif file_type_start == ".gif":
+            current_type = "GIF"
+        await callback.message.edit_text(
+            customization_text.format(
+                "> Start Media",
+                (
+                    "Reply to this message with a video or image to change the current media used for raids in this group"
+                    if is_file_start
+                    else "Reply to this message with a video or image to set it as media for raids in this group"
+                ),
+            )
+            + ("\n\n<b>Current Media:</b> " + current_type if is_file_start else ""),
+            reply_markup=keyboard_start_media,
+        )
+    elif option == "2":
+        keyboard_raid_media = InlineKeyboardMarkup(
+            inline_keyboard=[
+                (
+                    [
+                        InlineKeyboardButton(
+                            text="❌ Remove File", callback_data="customization_5"
+                        )
+                    ]
+                    if is_file_raid
+                    else []
+                ),
+                [
+                    InlineKeyboardButton(
+                        text="🔙 Back",
+                        callback_data="customization_6",
+                    )
+                ],
+            ]
+        )
+        file_type_raid = await get_file_type(callback.message.chat.id)
+        if file_type_raid == ".jpg":
+            current_type = "Image"
+        elif file_type_raid == ".mp4":
+            current_type = "Video"
+        elif file_type_raid == ".gif":
             current_type = "GIF"
         await callback.message.edit_text(
             customization_text.format(
                 "> Raid Media",
                 (
                     "Reply to this message with a video or image to change the current media used for ongoing raids in this group"
-                    if is_file
+                    if is_file_raid
                     else "Reply to this message with a video or image to set it as media for ongoing raids in this group"
                 ),
             )
-            + ("\n\n<b>Current Media:</b> " + current_type if is_file else ""),
+            + ("\n\n<b>Current Media:</b> " + current_type if is_file_raid else ""),
             reply_markup=keyboard_raid_media,
         )
     elif option == "5":

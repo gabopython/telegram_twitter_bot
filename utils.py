@@ -4,7 +4,9 @@ from pathlib import Path
 TWITTER_LINK_PATTERN = re.compile(
     r"https?://(www\.)?(twitter\.com|x\.com)/[A-Za-z0-9_]+/status/\d+"
 )
-MEDIA_DIR = Path("media")
+MEDIA_DIR_RAID = Path("media/raid")
+MEDIA_DIR_START = Path("media/start")
+MEDIA_DIR_END = Path("media/end")
 RAID_MEDIA_PROMPT = "Reply to this message"
 
 raid_status = {}
