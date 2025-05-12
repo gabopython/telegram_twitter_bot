@@ -488,8 +488,16 @@ async def handle_message(message: types.Message):
         global keyboard_message
         keyboard_message = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="💥 Start Raid 💥", callback_data="start raid")],
-                [InlineKeyboardButton(text="🎨  Customization", callback_data="option_4")],
+                [
+                    InlineKeyboardButton(
+                        text="💥 Start Raid 💥", callback_data="start raid"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="🎨  Customization", callback_data="option_4"
+                    )
+                ],
                 [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
                 [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
             ]
@@ -511,11 +519,11 @@ async def handle_message(message: types.Message):
         updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
 
         try:
-            #if file_type == "":
+            # if file_type == "":
             await bot_message.edit_text(updated_caption)
             resend_message[chat_id]["text"] = updated_caption
-            #else:
-                #await bot_message.edit_caption(caption=updated_caption)
+            # else:
+            # await bot_message.edit_caption(caption=updated_caption)
         except Exception as e:
             pass
         await asyncio.sleep(1)
@@ -1022,23 +1030,11 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_customization,
         )
 
-last_message = {}
-
-@dp.message(F.chat.type.in_({"group", "supergroup"}))
-async def handle_group_message(message: types.Message):
-    last_message[message.chat.id] = message
-
-async def reporter():
-    while True:
-        for chat_id, message in last_message.items():
-            print(message.text)
-        await asyncio.sleep(12) 
 
 async def main():
     print("🚀 Bot is up and running! Waiting for updates...")
     dp.include_router(router)
     await init_db()
-    dp.startup.register(lambda _: asyncio.create_task(reporter()))
     await dp.start_polling(bot)
 
 
