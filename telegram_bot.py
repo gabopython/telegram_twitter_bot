@@ -22,8 +22,8 @@ bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTM
 dp = Dispatcher()
 router = Router()
 resend_message = {}
-global resend_ongoing
 resend_ongoing = True
+
 
 @dp.message(F.text == "/stop")
 async def stop_command(message: types.Message):
@@ -508,6 +508,7 @@ async def handle_message(message: types.Message):
             reply_markup=keyboard_message,
         )
 
+    global resend_ongoing
     if raid_status.get(chat_id) and resend_ongoing:
         resend_ongoing = False
         await asyncio.sleep(12)
