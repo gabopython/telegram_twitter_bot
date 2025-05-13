@@ -893,6 +893,7 @@ async def star_raid_callback(callback: CallbackQuery):
             else:
                 await bot_message.edit_caption(caption=updated_caption)
             resend_message[chat_id]["text"] = updated_caption
+            resend_message[chat_id]["file"] = file if file else None
         except Exception as e:
             pass
         await asyncio.sleep(1)
