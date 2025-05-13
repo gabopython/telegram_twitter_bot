@@ -383,7 +383,7 @@ async def reply_handler(message: types.Message):
 
         file_path = None
 
-        if 'Start Media' in message_reply:
+        if "Start Media" in message_reply:
             if message.photo:
                 media = message.photo[-1]
                 file_path = MEDIA_DIR_START / f"{chat_id}.jpg"
@@ -399,7 +399,7 @@ async def reply_handler(message: types.Message):
                 file_path = MEDIA_DIR_START / f"{chat_id}.mp4"
                 await bot.download(media, destination=file_path)
                 file_type = ".gif"
-        elif 'End Media' in message_reply:
+        elif "End Media" in message_reply:
             if message.photo:
                 media = message.photo[-1]
                 file_path = MEDIA_DIR_END / f"{chat_id}.jpg"
@@ -415,7 +415,7 @@ async def reply_handler(message: types.Message):
                 file_path = MEDIA_DIR_END / f"{chat_id}.mp4"
                 await bot.download(media, destination=file_path)
                 file_type = ".gif"
-        elif 'Raid Media' in message_reply:
+        elif "Raid Media" in message_reply:
             if message.photo:
                 media = message.photo[-1]
                 file_path = MEDIA_DIR_RAID / f"{chat_id}.jpg"
@@ -877,11 +877,11 @@ async def star_raid_callback(callback: CallbackQuery):
             )
         else:
             bot_message = await callback.message.answer(raid_message)
-            resend_message[chat_id] = {
-                "message_id": bot_message.message_id,
-                "text": raid_message,
-                "file": file if file else None,
-            }
+        resend_message[chat_id] = {
+            "message_id": bot_message.message_id,
+            "text": raid_message,
+            "file": file if file else None,
+        }
 
         await callback.answer()
         await asyncio.sleep(20)
@@ -890,9 +890,9 @@ async def star_raid_callback(callback: CallbackQuery):
         try:
             if file_type == "":
                 await bot_message.edit_text(updated_caption)
-                resend_message[chat_id]["text"] = updated_caption
             else:
                 await bot_message.edit_caption(caption=updated_caption)
+            resend_message[chat_id]["text"] = updated_caption
         except Exception as e:
             pass
         await asyncio.sleep(1)
@@ -1007,21 +1007,24 @@ async def process_callback(callback: CallbackQuery):
     file_type_raid = await get_file_type(callback.message.chat.id)
     file_path_raid = os.path.join(
         MEDIA_DIR_RAID,
-        str(callback.message.chat.id) + (".mp4" if file_type_raid == ".gif" else file_type_raid),
+        str(callback.message.chat.id)
+        + (".mp4" if file_type_raid == ".gif" else file_type_raid),
     )
     is_file_raid = os.path.isfile(file_path_raid)
 
     file_type_start = await get_file_type(callback.message.chat.id)
     file_path_start = os.path.join(
         MEDIA_DIR_START,
-        str(callback.message.chat.id) + (".mp4" if file_type_start == ".gif" else file_type_start),
+        str(callback.message.chat.id)
+        + (".mp4" if file_type_start == ".gif" else file_type_start),
     )
     is_file_start = os.path.isfile(file_path_start)
 
     file_type_end = await get_file_type(callback.message.chat.id)
     file_path_end = os.path.join(
-        MEDIA_DIR_END   ,
-        str(callback.message.chat.id) + (".mp4" if file_type_end == ".gif" else file_type_end),
+        MEDIA_DIR_END,
+        str(callback.message.chat.id)
+        + (".mp4" if file_type_end == ".gif" else file_type_end),
     )
     is_file_end = os.path.isfile(file_path_end)
 
