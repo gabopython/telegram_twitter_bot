@@ -18,7 +18,7 @@ async def init_db():
             """
             CREATE TABLE IF NOT EXISTS media (
                 chat_id INTEGER PRIMARY KEY,
-                file_type TEXT
+                file_type TEXT,
                 folder TEXT
             )
         """
