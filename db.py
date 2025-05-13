@@ -16,9 +16,10 @@ async def init_db():
         )
         await db.execute(
             """
-            CREATE TABLE IF NOT EXISTS images (
+            CREATE TABLE IF NOT EXISTS media (
                 chat_id INTEGER PRIMARY KEY,
                 file_type TEXT
+                folder TEXT
             )
         """
         )
@@ -289,26 +290,26 @@ async def get_bookmarks_target(chat_id: int):
             return row[0] if row else 0
 
 
-async def get_file_type(chat_id: int):
+async def get_file_type(chat_id: int, folder: str):
     async with aiosqlite.connect(DB_NAME) as db:
         async with db.execute(
             """
-            SELECT file_type FROM images WHERE chat_id = ?
+            SELECT file_type FROM media WHERE chat_id = ? AND folder = ?
         """,
-            (chat_id,),
+            (chat_id, folder),
         ) as cursor:
             row = await cursor.fetchone()
             return row[0] if row else ""
 
 
-async def save_image(chat_id: int, file_type: str):
+async def save_media(chat_id: int, file_type: str, folder: str):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
             """
-            INSERT OR REPLACE INTO images (chat_id, file_type)
+            INSERT OR REPLACE INTO media (chat_id, file_type, folder)
             VALUES (?, ?)
             """,
-            (chat_id, file_type),
+            (chat_id, file_type, folder),
         )
         await db.commit()
 

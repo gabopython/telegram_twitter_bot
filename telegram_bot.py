@@ -399,6 +399,8 @@ async def reply_handler(message: types.Message):
                 file_path = MEDIA_DIR_START / f"{chat_id}.mp4"
                 await bot.download(media, destination=file_path)
                 file_type = ".gif"
+            folder = 'start'
+            remove_data = 'customization_5'
         elif "End Media" in message_reply:
             if message.photo:
                 media = message.photo[-1]
@@ -415,6 +417,8 @@ async def reply_handler(message: types.Message):
                 file_path = MEDIA_DIR_END / f"{chat_id}.mp4"
                 await bot.download(media, destination=file_path)
                 file_type = ".gif"
+            folder = 'end'
+            remove_data = 'customization_8'
         elif "Raid Media" in message_reply:
             if message.photo:
                 media = message.photo[-1]
@@ -431,9 +435,11 @@ async def reply_handler(message: types.Message):
                 file_path = MEDIA_DIR_RAID / f"{chat_id}.mp4"
                 await bot.download(media, destination=file_path)
                 file_type = ".gif"
+            folder = 'raid'
+            remove_data = 'customization_7'
 
         if file_path:
-            await save_image(chat_id, file_type)
+            await save_media(chat_id, file_type, folder)
             if file_type == ".jpg":
                 current_type = "Image"
             elif file_type == ".mp4":
@@ -444,7 +450,7 @@ async def reply_handler(message: types.Message):
                 inline_keyboard=[
                     [
                         InlineKeyboardButton(
-                            text="❌ Remove File", callback_data="customization_5"
+                            text="❌ Remove File", callback_data=remove_data
                         )
                     ],
                     [
@@ -1074,7 +1080,7 @@ async def process_callback(callback: CallbackQuery):
                 (
                     [
                         InlineKeyboardButton(
-                            text="❌ Remove File", callback_data="customization_5"
+                            text="❌ Remove File", callback_data="customization_7"
                         )
                     ]
                     if is_file_raid
@@ -1113,7 +1119,7 @@ async def process_callback(callback: CallbackQuery):
                 (
                     [
                         InlineKeyboardButton(
-                            text="❌ Remove File", callback_data="customization_5"
+                            text="❌ Remove File", callback_data="customization_8"
                         )
                     ]
                     if is_file_end
@@ -1147,7 +1153,7 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_end_media,
         )
     elif option == "5":
-        await save_image(callback.message.chat.id, "")
+        await save_media(callback.message.chat.id, "", 'start')
         await callback.message.edit_text(
             customization_text.format(
                 "",
@@ -1156,6 +1162,24 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_customization,
         )
     elif option == "6":
+        await callback.message.edit_text(
+            customization_text.format(
+                "",
+                "You can set custom media for ongoing raids and end media for when a raid is completed",
+            ),
+            reply_markup=keyboard_customization,
+        )
+    elif option == "7":
+        await save_media(callback.message.chat.id, "", 'raid')
+        await callback.message.edit_text(
+            customization_text.format(
+                "",
+                "You can set custom media for ongoing raids and end media for when a raid is completed",
+            ),
+            reply_markup=keyboard_customization,
+        )
+    elif option == "8":
+        await save_media(callback.message.chat.id, "", 'end')
         await callback.message.edit_text(
             customization_text.format(
                 "",
