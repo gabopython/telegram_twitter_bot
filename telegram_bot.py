@@ -439,7 +439,7 @@ async def reply_handler(message: types.Message):
             folder = 'raid'
             remove_data = 'customization_7'
 
-        print(folder, file_type)
+        print(chat_id, file_type, folder)
         if file_path:
             await save_media(chat_id, file_type, folder)
             if file_type == ".jpg":
