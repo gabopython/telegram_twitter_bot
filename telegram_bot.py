@@ -382,7 +382,6 @@ async def reply_handler(message: types.Message):
             return  # Not the correct message
 
         file_path = None
-        file_type = ""
 
         if "Start Media" in message_reply:
             if message.photo:
@@ -400,8 +399,8 @@ async def reply_handler(message: types.Message):
                 file_path = MEDIA_DIR_START / f"{chat_id}.mp4"
                 await bot.download(media, destination=file_path)
                 file_type = ".gif"
-            folder = 'start'
-            remove_data = 'customization_5'
+            folder = "start"
+            remove_data = "customization_5"
         elif "End Media" in message_reply:
             if message.photo:
                 media = message.photo[-1]
@@ -418,8 +417,8 @@ async def reply_handler(message: types.Message):
                 file_path = MEDIA_DIR_END / f"{chat_id}.mp4"
                 await bot.download(media, destination=file_path)
                 file_type = ".gif"
-            folder = 'end'
-            remove_data = 'customization_8'
+            folder = "end"
+            remove_data = "customization_8"
         elif "Raid Media" in message_reply:
             if message.photo:
                 media = message.photo[-1]
@@ -436,10 +435,9 @@ async def reply_handler(message: types.Message):
                 file_path = MEDIA_DIR_RAID / f"{chat_id}.mp4"
                 await bot.download(media, destination=file_path)
                 file_type = ".gif"
-            folder = 'raid'
-            remove_data = 'customization_7'
+            folder = "raid"
+            remove_data = "customization_7"
 
-        print(chat_id, file_type, folder)
         if file_path:
             await save_media(chat_id, file_type, folder)
             if file_type == ".jpg":
@@ -866,7 +864,7 @@ async def star_raid_callback(callback: CallbackQuery):
         await callback.message.delete()
 
         file_name = str(chat_id)
-        file_type = await get_file_type(chat_id, 'start')
+        file_type = await get_file_type(chat_id, "start")
         file_path = os.path.join(
             MEDIA_DIR_START, file_name + (".mp4" if file_type == ".gif" else file_type)
         )
@@ -1013,7 +1011,7 @@ async def process_callback(callback_query: types.CallbackQuery):
 @router.callback_query(F.data.startswith("customization_"))
 async def process_callback(callback: CallbackQuery):
     option = callback.data.replace("customization_", "")
-    file_type_raid = await get_file_type(callback.message.chat.id, 'raid')
+    file_type_raid = await get_file_type(callback.message.chat.id, "raid")
     file_path_raid = os.path.join(
         MEDIA_DIR_RAID,
         str(callback.message.chat.id)
@@ -1021,7 +1019,7 @@ async def process_callback(callback: CallbackQuery):
     )
     is_file_raid = os.path.isfile(file_path_raid)
 
-    file_type_start = await get_file_type(callback.message.chat.id, 'start')
+    file_type_start = await get_file_type(callback.message.chat.id, "start")
     file_path_start = os.path.join(
         MEDIA_DIR_START,
         str(callback.message.chat.id)
@@ -1029,7 +1027,7 @@ async def process_callback(callback: CallbackQuery):
     )
     is_file_start = os.path.isfile(file_path_start)
 
-    file_type_end = await get_file_type(callback.message.chat.id, 'end')
+    file_type_end = await get_file_type(callback.message.chat.id, "end")
     file_path_end = os.path.join(
         MEDIA_DIR_END,
         str(callback.message.chat.id)
@@ -1057,7 +1055,7 @@ async def process_callback(callback: CallbackQuery):
                 ],
             ]
         )
-        file_type_start = await get_file_type(callback.message.chat.id, 'start')
+        file_type_start = await get_file_type(callback.message.chat.id, "start")
         if file_type_start == ".jpg":
             current_type = "Image"
         elif file_type_start == ".mp4":
@@ -1096,7 +1094,7 @@ async def process_callback(callback: CallbackQuery):
                 ],
             ]
         )
-        file_type_raid = await get_file_type(callback.message.chat.id, 'raid')
+        file_type_raid = await get_file_type(callback.message.chat.id, "raid")
         if file_type_raid == ".jpg":
             current_type = "Image"
         elif file_type_raid == ".mp4":
@@ -1135,7 +1133,7 @@ async def process_callback(callback: CallbackQuery):
                 ],
             ]
         )
-        file_type_end = await get_file_type(callback.message.chat.id, 'end')
+        file_type_end = await get_file_type(callback.message.chat.id, "end")
         if file_type_end == ".jpg":
             current_type = "Image"
         elif file_type_end == ".mp4":
@@ -1155,7 +1153,7 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_end_media,
         )
     elif option == "5":
-        await save_media(callback.message.chat.id, "", 'start')
+        await save_media(callback.message.chat.id, "", "start")
         await callback.message.edit_text(
             customization_text.format(
                 "",
@@ -1172,7 +1170,7 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_customization,
         )
     elif option == "7":
-        await save_media(callback.message.chat.id, "", 'raid')
+        await save_media(callback.message.chat.id, "", "raid")
         await callback.message.edit_text(
             customization_text.format(
                 "",
@@ -1181,7 +1179,7 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_customization,
         )
     elif option == "8":
-        await save_media(callback.message.chat.id, "", 'end')
+        await save_media(callback.message.chat.id, "", "end")
         await callback.message.edit_text(
             customization_text.format(
                 "",
