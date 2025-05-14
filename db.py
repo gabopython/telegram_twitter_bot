@@ -307,7 +307,7 @@ async def save_media(chat_id: int, file_type: str, folder: str):
         await db.execute(
             """
             INSERT OR REPLACE INTO media (chat_id, file_type, folder)
-            VALUES (?, ?)
+            VALUES (?, ?, ?)
             """,
             (chat_id, file_type, folder),
         )
