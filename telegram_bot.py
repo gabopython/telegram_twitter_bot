@@ -890,19 +890,21 @@ async def star_raid_callback(callback: CallbackQuery):
         }
 
         await callback.answer()
-        await asyncio.sleep(20)
-        updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
 
-        try:
-            if file_type == "":
-                await bot_message.edit_text(updated_caption)
-            else:
-                await bot_message.edit_caption(caption=updated_caption)
-            resend_message[chat_id]["text"] = updated_caption
-            resend_message[chat_id]["file"] = file if file else None
-        except Exception as e:
-            pass
-        await asyncio.sleep(1)
+        if raid_status[chat_id]:
+            await asyncio.sleep(20)
+            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
+
+            try:
+                if file_type == "":
+                    await bot_message.edit_text(updated_caption)
+                else:
+                    await bot_message.edit_caption(caption=updated_caption)
+                resend_message[chat_id]["text"] = updated_caption
+                resend_message[chat_id]["file"] = file if file else None
+            except Exception as e:
+                pass
+            await asyncio.sleep(1)
 
     else:
         await callback.answer(

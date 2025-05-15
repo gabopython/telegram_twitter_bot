@@ -17,9 +17,10 @@ async def init_db():
         await db.execute(
             """
             CREATE TABLE IF NOT EXISTS media (
-                chat_id INTEGER PRIMARY KEY,
+                chat_id INTEGER,
                 file_type TEXT,
-                folder TEXT
+                folder TEXT, 
+                PRIMARY KEY (chat_id, folder)
             )
         """
         )
