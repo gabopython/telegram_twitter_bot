@@ -10,6 +10,10 @@ from aiogram.types import (
     InlineKeyboardButton,
     CallbackQuery,
     FSInputFile,
+    InputMediaPhoto,
+    InputMediaVideo,
+    InputMediaAnimation,
+    InputFile,
 )
 from aiogram.enums.chat_member_status import ChatMemberStatus
 from aiogram import Router, F
@@ -864,11 +868,25 @@ async def star_raid_callback(callback: CallbackQuery):
         await callback.message.delete()
 
         file_name = str(chat_id)
-        file_type = await get_file_type(chat_id, "start")
-        file_path = os.path.join(
-            MEDIA_DIR_START, file_name + (".mp4" if file_type == ".gif" else file_type)
-        )
-        file = None if file_type == "" else FSInputFile(file_path)
+        if raid_status[chat_id]:
+            file_type = await get_file_type(chat_id, "end")
+            file_path = os.path.join(
+                MEDIA_DIR_END, file_name + (".mp4" if file_type == ".gif" else file_type)
+            )
+            file = None if file_type == "" else FSInputFile(file_path)
+        else:
+            file_type = await get_file_type(chat_id, "start")
+            if file_type == "":
+                file_type = await get_file_type(chat_id, "raid")
+                file_path = os.path.join(
+                    MEDIA_DIR_RAID, file_name + (".mp4" if file_type == ".gif" else file_type)
+                )
+                file = None if file_type == "" else FSInputFile(file_path)
+            else:
+                file_path = os.path.join(
+                    MEDIA_DIR_START, file_name + (".mp4" if file_type == ".gif" else file_type)
+                )
+                file = None if file_type == "" else FSInputFile(file_path)
         if file_type == ".jpg":
             bot_message = await callback.message.answer_photo(
                 file, caption=raid_message
@@ -893,13 +911,18 @@ async def star_raid_callback(callback: CallbackQuery):
 
         if raid_status[chat_id]:
             await asyncio.sleep(20)
+            file_type = await get_file_type(chat_id, "raid")
+            file_path = os.path.join(
+                MEDIA_DIR_RAID, file_name + (".mp4" if file_type == ".gif" else file_type)
+            )
+            file = None if file_type == "" else FSInputFile(file_path)
             updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
 
             try:
                 if file_type == "":
                     await bot_message.edit_text(updated_caption)
                 else:
-                    await bot_message.edit_caption(caption=updated_caption)
+                    await bot_message.edit_media(media=InputMediaPhoto(media = file, caption=updated_caption))
                 resend_message[chat_id]["text"] = updated_caption
                 resend_message[chat_id]["file"] = file if file else None
             except Exception as e:
