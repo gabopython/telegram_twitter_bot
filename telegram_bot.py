@@ -869,24 +869,36 @@ async def star_raid_callback(callback: CallbackQuery):
 
         file_name = str(chat_id)
         if raid_status[chat_id]:
-            file_type = await get_file_type(chat_id, "end")
-            file_path = os.path.join(
-                MEDIA_DIR_END, file_name + (".mp4" if file_type == ".gif" else file_type)
-            )
-            file = None if file_type == "" else FSInputFile(file_path)
-        else:
             file_type = await get_file_type(chat_id, "start")
             if file_type == "":
                 file_type = await get_file_type(chat_id, "raid")
                 file_path = os.path.join(
-                    MEDIA_DIR_RAID, file_name + (".mp4" if file_type == ".gif" else file_type)
+                    MEDIA_DIR_RAID,
+                    file_name + (".mp4" if file_type == ".gif" else file_type),
                 )
                 file = None if file_type == "" else FSInputFile(file_path)
             else:
                 file_path = os.path.join(
-                    MEDIA_DIR_START, file_name + (".mp4" if file_type == ".gif" else file_type)
+                    MEDIA_DIR_START,
+                    file_name + (".mp4" if file_type == ".gif" else file_type),
                 )
                 file = None if file_type == "" else FSInputFile(file_path)
+        else:
+            file_type = await get_file_type(chat_id, "end")
+            if file_type == "":
+                file_type = await get_file_type(chat_id, "raid")
+                file_path = os.path.join(
+                    MEDIA_DIR_RAID,
+                    file_name + (".mp4" if file_type == ".gif" else file_type),
+                )
+                file = None if file_type == "" else FSInputFile(file_path)
+            else:
+                file_path = os.path.join(
+                    MEDIA_DIR_END,
+                    file_name + (".mp4" if file_type == ".gif" else file_type),
+                )
+                file = None if file_type == "" else FSInputFile(file_path)
+
         if file_type == ".jpg":
             bot_message = await callback.message.answer_photo(
                 file, caption=raid_message
@@ -911,22 +923,33 @@ async def star_raid_callback(callback: CallbackQuery):
 
         if raid_status[chat_id]:
             await asyncio.sleep(20)
-            file_type = await get_file_type(chat_id, "raid")
+            file_type2 = await get_file_type(chat_id, "raid")
             file_path = os.path.join(
-                MEDIA_DIR_RAID, file_name + (".mp4" if file_type == ".gif" else file_type)
+                MEDIA_DIR_RAID,
+                file_name + (".mp4" if file_type2 == ".gif" else file_type2),
             )
-            file = None if file_type == "" else FSInputFile(file_path)
+            file = None if file_type2 == "" else FSInputFile(file_path)
             updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
 
-            try:
-                if file_type == "":
-                    await bot_message.edit_text(updated_caption)
-                else:
-                    await bot_message.edit_media(media=InputMediaPhoto(media = file, caption=updated_caption))
-                resend_message[chat_id]["text"] = updated_caption
-                resend_message[chat_id]["file"] = file if file else None
-            except Exception as e:
-                pass
+            if file_type == "" and file_type2 == "":
+                await bot_message.edit_text(updated_caption)
+            elif file_type2 == "":
+                transparent = FSInputFile("media/transparent.png")
+                await bot_message.edit_media(
+                    media=InputMediaPhoto(media=transparent, caption=updated_caption)
+                )
+            else:
+                media_class = {
+                    ".jpg": InputMediaPhoto,
+                    ".mp4": InputMediaVideo,
+                    ".gif": InputMediaAnimation,
+                }.get(file_type2)
+                await bot_message.edit_media(
+                    media=media_class(media=file, caption=updated_caption)
+                )
+            resend_message[chat_id]["text"] = updated_caption
+            resend_message[chat_id]["file"] = file if file else None
+
             await asyncio.sleep(1)
 
     else:
