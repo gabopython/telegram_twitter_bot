@@ -931,24 +931,29 @@ async def star_raid_callback(callback: CallbackQuery):
             file = None if file_type2 == "" else FSInputFile(file_path)
             updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
 
-            if file_type == "" and file_type2 == "":
-                await bot_message.edit_text(updated_caption)
-            elif file_type2 == "":
-                transparent = FSInputFile("media/transparent.png")
-                await bot_message.edit_media(
-                    media=InputMediaPhoto(media=transparent, caption=updated_caption)
-                )
-            else:
-                media_class = {
-                    ".jpg": InputMediaPhoto,
-                    ".mp4": InputMediaVideo,
-                    ".gif": InputMediaAnimation,
-                }.get(file_type2)
-                await bot_message.edit_media(
-                    media=media_class(media=file, caption=updated_caption)
-                )
-            resend_message[chat_id]["text"] = updated_caption
-            resend_message[chat_id]["file"] = file if file else None
+            try:
+                if file_type == "" and file_type2 == "":
+                    await bot_message.edit_text(updated_caption)
+                elif file_type2 == "":
+                    transparent = FSInputFile("media/transparent.png")
+                    await bot_message.edit_media(
+                        media=InputMediaPhoto(
+                            media=transparent, caption=updated_caption
+                        )
+                    )
+                else:
+                    media_class = {
+                        ".jpg": InputMediaPhoto,
+                        ".mp4": InputMediaVideo,
+                        ".gif": InputMediaAnimation,
+                    }.get(file_type2)
+                    await bot_message.edit_media(
+                        media=media_class(media=file, caption=updated_caption)
+                    )
+                resend_message[chat_id]["text"] = updated_caption
+                resend_message[chat_id]["file"] = file if file else None
+            except Exception as e:
+                pass
 
             await asyncio.sleep(1)
 
