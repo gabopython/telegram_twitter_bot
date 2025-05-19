@@ -935,12 +935,7 @@ async def star_raid_callback(callback: CallbackQuery):
                 if file_type == "" and file_type2 == "":
                     await bot_message.edit_text(updated_caption)
                 elif file_type2 == "":
-                    transparent = FSInputFile("media/transparent.png")
-                    await bot_message.edit_media(
-                        media=InputMediaPhoto(
-                            media=transparent, caption=updated_caption
-                        )
-                    )
+                    await bot_message.edit_caption(caption=updated_caption)
                 else:
                     media_class = {
                         ".jpg": InputMediaPhoto,
