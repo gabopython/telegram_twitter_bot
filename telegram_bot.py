@@ -558,22 +558,57 @@ async def handle_message(message: types.Message):
         await bot.delete_message(
             chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
         )
-        bot_message = await message.answer(resend_message[chat_id]["text"])
+        file_type = resend_message[chat_id]["file_type"]
+        file = resend_message[chat_id]["file"]
+        caption = resend_message[chat_id]["text"]
+        if file_type == "":
+            bot_message = await message.answer(resend_message[chat_id]["text"])
+        elif file_type == ".jpg":
+            bot_message = await message.answer_photo(
+                file, caption=caption
+            )
+        elif file_type == ".mp4":
+            bot_message = await message.answer_video(
+                file, caption=caption
+            )
+        elif file_type == ".gif":
+            bot_message = await message.answer_animation(
+                file, caption=caption
+            )
         resend_message[chat_id]["message_id"] = bot_message.message_id
         resend_ongoing = True
 
-        await asyncio.sleep(8)
-        updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
+        if raid_tweet.get(chat_id, True):
+            await asyncio.sleep(8)
+            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
+            file_type2 = await get_file_type(chat_id, "raid")
+            file_path = os.path.join(
+                MEDIA_DIR_RAID,
+                str(chat_id) + (".mp4" if file_type2 == ".gif" else file_type2),
+            )
+            file = None if file_type2 == "" else FSInputFile(file_path)
 
-        try:
-            # if file_type == "":
-            await bot_message.edit_text(updated_caption)
-            resend_message[chat_id]["text"] = updated_caption
-            # else:
-            # await bot_message.edit_caption(caption=updated_caption)
-        except Exception as e:
-            pass
-        await asyncio.sleep(1)
+            try:
+                if file_type == "" and file_type2 == "":
+                    await bot_message.edit_text(updated_caption) 
+                elif file_type2 == '':
+                    await bot_message.edit_caption(caption=updated_caption)
+                else:
+                    media_class = {
+                        ".jpg": InputMediaPhoto,
+                        ".mp4": InputMediaVideo,
+                        ".gif": InputMediaAnimation,
+                    }.get(file_type2) 
+                    await bot_message.edit_media(
+                        media=media_class(media=file, caption=updated_caption)
+                    )    
+                resend_message[chat_id]["text"] = updated_caption
+                resend_message[chat_id]["file"] = file
+                resend_message[chat_id]["file_type"] = file_type2
+                raid_tweet[chat_id] = False
+            except Exception as e:
+                pass
+            await asyncio.sleep(1)
 
 
 @dp.callback_query(lambda c: c.data.startswith("target_"))
@@ -887,11 +922,19 @@ async def star_raid_callback(callback: CallbackQuery):
             file_type = await get_file_type(chat_id, "end")
             if file_type == "":
                 file_type = await get_file_type(chat_id, "raid")
-                file_path = os.path.join(
-                    MEDIA_DIR_RAID,
-                    file_name + (".mp4" if file_type == ".gif" else file_type),
-                )
-                file = None if file_type == "" else FSInputFile(file_path)
+                if file_type == "":
+                    file_type = await get_file_type(chat_id, "start")
+                    file_path = os.path.join(
+                        MEDIA_DIR_START,
+                        file_name + (".mp4" if file_type == ".gif" else file_type),
+                    )
+                    file = None if file_type == "" else FSInputFile(file_path)
+                else:
+                    file_path = os.path.join(
+                        MEDIA_DIR_RAID,
+                        file_name + (".mp4" if file_type == ".gif" else file_type),
+                    )
+                    file = None if file_type == "" else FSInputFile(file_path)
             else:
                 file_path = os.path.join(
                     MEDIA_DIR_END,
@@ -917,9 +960,11 @@ async def star_raid_callback(callback: CallbackQuery):
             "message_id": bot_message.message_id,
             "text": raid_message,
             "file": file if file else None,
+            'file_type': file_type,
         }
 
         await callback.answer()
+        raid_tweet[chat_id] = True
 
         if raid_status[chat_id]:
             await asyncio.sleep(20)
@@ -934,8 +979,10 @@ async def star_raid_callback(callback: CallbackQuery):
             try:
                 if file_type == "" and file_type2 == "":
                     await bot_message.edit_text(updated_caption)
+                    resend_message[chat_id]["file_type"] = file_type2
                 elif file_type2 == "":
                     await bot_message.edit_caption(caption=updated_caption)
+                    resend_message[chat_id]["file_type"] = file_type
                 else:
                     media_class = {
                         ".jpg": InputMediaPhoto,
@@ -945,8 +992,10 @@ async def star_raid_callback(callback: CallbackQuery):
                     await bot_message.edit_media(
                         media=media_class(media=file, caption=updated_caption)
                     )
+                    resend_message[chat_id]["file_type"] = file_type2
                 resend_message[chat_id]["text"] = updated_caption
                 resend_message[chat_id]["file"] = file if file else None
+                raid_tweet[chat_id] = False
             except Exception as e:
                 pass
 
