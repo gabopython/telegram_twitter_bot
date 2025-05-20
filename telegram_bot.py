@@ -45,9 +45,37 @@ async def stop_command(message: types.Message):
             chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
         )
         raid_status[chat_id] = False
-        await message.answer(
-            "🛑 <b>Raid Ended - Stopped by admin</b>\n\n" + percentages
-        )
+        caption = "🛑 <b>Raid Ended - Stopped by admin</b>\n\n" + percentages
+        file_name = str(chat_id)
+        file_type = await get_file_type(chat_id, "end")
+        if file_type == "":
+            file_type = await get_file_type(chat_id, "raid")
+            if file_type == "":
+                file_type = await get_file_type(chat_id, "start")
+                file_path = os.path.join(
+                    MEDIA_DIR_START,
+                    file_name + (".mp4" if file_type == ".gif" else file_type),
+                )
+            else:
+                file_path = os.path.join(
+                    MEDIA_DIR_RAID,
+                    file_name + (".mp4" if file_type == ".gif" else file_type),
+                )
+        else:
+            file_path = os.path.join(
+                MEDIA_DIR_END,
+                file_name + (".mp4" if file_type == ".gif" else file_type),
+            )
+        file = None if file_type == "" else FSInputFile(file_path)
+
+        if file_type == "":
+            await message.answer(caption)
+        elif file_type == ".jpg":
+            await message.answer_photo(file, caption=caption)
+        elif file_type == ".mp4":
+            await message.answer_video(file, caption=caption)
+        elif file_type == ".gif":
+            await message.answer_animation(file, caption=caption)
     else:
         await message.answer("❌ <b>There is no ongoing raid in this group</b>")
 
