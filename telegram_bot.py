@@ -580,7 +580,7 @@ async def handle_message(message: types.Message):
                 MEDIA_DIR_RAID,
                 str(chat_id) + (".mp4" if file_type2 == ".gif" else file_type2),
             )
-            file = None if file_type2 == "" else FSInputFile(file_path)
+            file = file if file_type2 == "" else FSInputFile(file_path)
 
             try:
                 if file_type == "" and file_type2 == "":
@@ -969,7 +969,7 @@ async def star_raid_callback(callback: CallbackQuery):
                 MEDIA_DIR_RAID,
                 file_name + (".mp4" if file_type2 == ".gif" else file_type2),
             )
-            file = None if file_type2 == "" else FSInputFile(file_path)
+            file = file if file_type2 == "" else FSInputFile(file_path)
             updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
 
             try:
