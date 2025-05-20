@@ -564,17 +564,11 @@ async def handle_message(message: types.Message):
         if file_type == "":
             bot_message = await message.answer(resend_message[chat_id]["text"])
         elif file_type == ".jpg":
-            bot_message = await message.answer_photo(
-                file, caption=caption
-            )
+            bot_message = await message.answer_photo(file, caption=caption)
         elif file_type == ".mp4":
-            bot_message = await message.answer_video(
-                file, caption=caption
-            )
+            bot_message = await message.answer_video(file, caption=caption)
         elif file_type == ".gif":
-            bot_message = await message.answer_animation(
-                file, caption=caption
-            )
+            bot_message = await message.answer_animation(file, caption=caption)
         resend_message[chat_id]["message_id"] = bot_message.message_id
         resend_ongoing = True
 
@@ -590,21 +584,23 @@ async def handle_message(message: types.Message):
 
             try:
                 if file_type == "" and file_type2 == "":
-                    await bot_message.edit_text(updated_caption) 
-                elif file_type2 == '':
+                    await bot_message.edit_text(updated_caption)
+                    resend_message[chat_id]["file_type"] = file_type2
+                elif file_type2 == "":
                     await bot_message.edit_caption(caption=updated_caption)
+                    resend_message[chat_id]["file_type"] = file_type
                 else:
                     media_class = {
                         ".jpg": InputMediaPhoto,
                         ".mp4": InputMediaVideo,
                         ".gif": InputMediaAnimation,
-                    }.get(file_type2) 
+                    }.get(file_type2)
                     await bot_message.edit_media(
                         media=media_class(media=file, caption=updated_caption)
-                    )    
+                    )
+                    resend_message[chat_id]["file_type"] = file_type2
                 resend_message[chat_id]["text"] = updated_caption
                 resend_message[chat_id]["file"] = file
-                resend_message[chat_id]["file_type"] = file_type2
                 raid_tweet[chat_id] = False
             except Exception as e:
                 pass
@@ -960,7 +956,7 @@ async def star_raid_callback(callback: CallbackQuery):
             "message_id": bot_message.message_id,
             "text": raid_message,
             "file": file if file else None,
-            'file_type': file_type,
+            "file_type": file_type,
         }
 
         await callback.answer()
