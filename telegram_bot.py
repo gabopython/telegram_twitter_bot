@@ -5,6 +5,7 @@ from db import *
 
 from aiogram import Bot, Dispatcher, types
 import asyncio
+from datetime import datetime
 from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -45,7 +46,15 @@ async def stop_command(message: types.Message):
             chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
         )
         raid_status[chat_id] = False
-        caption = "🛑 <b>Raid Ended - Stopped by admin</b>\n\n" + percentages
+        if chat_id in timer:
+            start_time = timer.pop(chat_id)
+            elapsed_time = datetime.now() - start_time
+            seconds = elapsed_time.total_seconds()
+            minutes = seconds // 60
+        else:
+            minutes = 0
+        minutes = '\n\n'+f'⏲️ <b>Duration</b>: 1 minute' if minutes == 1 else f'⏲️ <b>Duration</b>: {minutes} minutes'
+        caption = "🛑 <b>Raid Ended - Stopped by admin</b>\n\n" + percentages + minutes
         file_name = str(chat_id)
         file_type = await get_file_type(chat_id, "end")
         if file_type == "":
@@ -583,9 +592,12 @@ async def handle_message(message: types.Message):
     if raid_status.get(chat_id) and resend_ongoing:
         resend_ongoing = False
         await asyncio.sleep(12)
-        await bot.delete_message(
-            chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
-        )
+        try:
+            await bot.delete_message(
+                chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
+            )
+        except Exception as e:
+            return
         file_type = resend_message[chat_id]["file_type"]
         file = resend_message[chat_id]["file"]
         caption = resend_message[chat_id]["text"]
@@ -884,9 +896,21 @@ async def star_raid_callback(callback: CallbackQuery):
         bookmarks_percentage = calculate_percentage(bookmarks, bookmarks_target)
         global percentages
         percentages = (
-            f"{get_emoji(likes_percentage)} Likes <b>{likes} | {likes_target}</b>  [{'💯' if likes_percentage==100 else likes_percentage }%]\n"
-            + f"{get_emoji(retweets_percentage)} Retweets <b>{retweets} | {retweets_target}</b>  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n"
-            + f"{get_emoji(replies_percentage)} Replies <b>{replies} | {replies_target}</b>  [{'💯' if replies_percentage==100 else replies_percentage}%]\n"
+            (
+                ""
+                if likes_target == 0
+                else f"{get_emoji(likes_percentage)} Likes <b>{likes} | {likes_target}</b>  [{'💯' if likes_percentage==100 else likes_percentage }%]\n"
+            )
+            + (
+                ""
+                if retweets_target == 0
+                else f"{get_emoji(retweets_percentage)} Retweets <b>{retweets} | {retweets_target}</b>  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n"
+            )
+            + (
+                ""
+                if replies_target == 0
+                else f"{get_emoji(replies_percentage)} Replies <b>{replies} | {replies_target}</b>  [{'💯' if replies_percentage==100 else replies_percentage }%]\n"
+            )
             + (
                 ""
                 if views_target == 0
@@ -923,6 +947,7 @@ async def star_raid_callback(callback: CallbackQuery):
         else:
             chat_id = callback.message.chat.id
             raid_status[chat_id] = True
+            timer[chat_id] = datetime.now()
             raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
         await callback.message.delete()
 

@@ -11,6 +11,7 @@ RAID_MEDIA_PROMPT = "Reply to this message"
 
 raid_status = {}
 raid_tweet = {}
+timer = {}
 targets_text = (
     "⚙️ <b>Raid Options > {} Targets</b>\n\n"
     "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target {}."
