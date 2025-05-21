@@ -53,7 +53,7 @@ async def stop_command(message: types.Message):
             minutes = seconds // 60
         else:
             minutes = 0
-        minutes = '\n\n'+f'⏲️ <b>Duration</b>: 1 minute' if minutes == 1 else f'⏲️ <b>Duration</b>: {minutes} minutes'
+        minutes = f'⏲️ <b>Duration</b>: 1 minute' if minutes == 1 else f'⏲️ <b>Duration</b>: {minutes} minutes'
         caption = "🛑 <b>Raid Ended - Stopped by admin</b>\n\n" + percentages + minutes
         file_name = str(chat_id)
         file_type = await get_file_type(chat_id, "end")
