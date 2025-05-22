@@ -625,13 +625,13 @@ async def handle_message(message: types.Message):
         file = resend_message[chat_id]["file"]
         caption = resend_message[chat_id]["text"]
         if file_type == "":
-            bot_message = await message.answer(resend_message[chat_id]["text"])
+            bot_message = await message.answer(resend_message[chat_id]["text"], reply_markup=emoji_keyboard)
         elif file_type == ".jpg":
-            bot_message = await message.answer_photo(file, caption=caption)
+            bot_message = await message.answer_photo(file, caption=caption, reply_markup=emoji_keyboard)
         elif file_type == ".mp4":
-            bot_message = await message.answer_video(file, caption=caption)
+            bot_message = await message.answer_video(file, caption=caption, reply_markup=emoji_keyboard)
         elif file_type == ".gif":
-            bot_message = await message.answer_animation(file, caption=caption)
+            bot_message = await message.answer_animation(file, caption=caption, reply_markup=emoji_keyboard)
         resend_message[chat_id]["message_id"] = bot_message.message_id
         resend_ongoing = True
 
@@ -647,10 +647,10 @@ async def handle_message(message: types.Message):
 
             try:
                 if file_type == "" and file_type2 == "":
-                    await bot_message.edit_text(updated_caption)
+                    await bot_message.edit_text(updated_caption, reply_markup=emoji_keyboard)
                     resend_message[chat_id]["file_type"] = file_type2
                 elif file_type2 == "":
-                    await bot_message.edit_caption(caption=updated_caption)
+                    await bot_message.edit_caption(caption=updated_caption, reply_markup=emoji_keyboard)
                     resend_message[chat_id]["file_type"] = file_type
                 else:
                     media_class = {
@@ -659,7 +659,8 @@ async def handle_message(message: types.Message):
                         ".gif": InputMediaAnimation,
                     }.get(file_type2)
                     await bot_message.edit_media(
-                        media=media_class(media=file, caption=updated_caption)
+                        media=media_class(media=file, caption=updated_caption),
+                        reply_markup=emoji_keyboard,
                     )
                     resend_message[chat_id]["file_type"] = file_type2
                 resend_message[chat_id]["text"] = updated_caption
@@ -917,6 +918,16 @@ async def star_raid_callback(callback: CallbackQuery):
         replies_percentage = calculate_percentage(replies, replies_target)
         views_percentage = calculate_percentage(views, views_target)
         bookmarks_percentage = calculate_percentage(bookmarks, bookmarks_target)
+        emoji_buttons = [
+            InlineKeyboardButton(text="💬", callback_data="comment"),
+            InlineKeyboardButton(text="🔁", callback_data="retweet"),
+            InlineKeyboardButton(text="💙", callback_data="like"),
+            InlineKeyboardButton(text="🏷️", callback_data="tag"),
+            InlineKeyboardButton(text="👊", callback_data="fistbump"),
+        ]
+        global emoji_keyboard
+        emoji_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons])
+
         global percentages
         percentages = (
             (
@@ -1016,18 +1027,18 @@ async def star_raid_callback(callback: CallbackQuery):
 
         if file_type == ".jpg":
             bot_message = await callback.message.answer_photo(
-                file, caption=raid_message
+                file, caption=raid_message, reply_markup=emoji_keyboard
             )
         elif file_type == ".mp4":
             bot_message = await callback.message.answer_video(
-                file, caption=raid_message
+                file, caption=raid_message, reply_markup=emoji_keyboard
             )
         elif file_type == ".gif":
             bot_message = await callback.message.answer_animation(
-                file, caption=raid_message
+                file, caption=raid_message, reply_markup=emoji_keyboard
             )
         else:
-            bot_message = await callback.message.answer(raid_message)
+            bot_message = await callback.message.answer(raid_message, reply_markup=emoji_keyboard)
         resend_message[chat_id] = {
             "message_id": bot_message.message_id,
             "text": raid_message,
@@ -1050,10 +1061,10 @@ async def star_raid_callback(callback: CallbackQuery):
 
             try:
                 if file_type == "" and file_type2 == "":
-                    await bot_message.edit_text(updated_caption)
+                    await bot_message.edit_text(updated_caption, reply_markup=emoji_keyboard)
                     resend_message[chat_id]["file_type"] = file_type2
                 elif file_type2 == "":
-                    await bot_message.edit_caption(caption=updated_caption)
+                    await bot_message.edit_caption(caption=updated_caption, reply_markup=emoji_keyboard)
                     resend_message[chat_id]["file_type"] = file_type
                 else:
                     media_class = {
@@ -1062,7 +1073,8 @@ async def star_raid_callback(callback: CallbackQuery):
                         ".gif": InputMediaAnimation,
                     }.get(file_type2)
                     await bot_message.edit_media(
-                        media=media_class(media=file, caption=updated_caption)
+                        media=media_class(media=file, caption=updated_caption),
+                        reply_markup=emoji_keyboard,
                     )
                     resend_message[chat_id]["file_type"] = file_type2
                 resend_message[chat_id]["text"] = updated_caption
