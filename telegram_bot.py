@@ -442,6 +442,26 @@ async def reply_handler(message: types.Message):
                     await bot_message.delete()
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 
+        if 'with your custom text' in message_reply:
+            if message.text:
+                text = message.text
+                print(text)
+                await bot.edit_message_text(
+                    chat_id=message.reply_to_message.chat.id,
+                    message_id=message.reply_to_message.message_id,
+                    text="✅ <b>Text saved successfully!</b>\n\nReply to this message with a video or image to change the current media used for ongoing raids in this group."
+                    + "\n\n<b>Current Text:</b> "
+                    + text,
+                    reply_markup=keyboard_raid_media,
+                )
+            else:
+                bot_message = await message.answer(
+                    "❌ <b>Failed to save text. Upload a valid file.</b>"
+                )
+                await asyncio.sleep(4)
+                await bot_message.delete()
+            return
+
         if RAID_MEDIA_PROMPT not in message_reply:
             return  # Not the correct message
 
@@ -1333,6 +1353,19 @@ async def process_callback(callback: CallbackQuery):
             + ("\n\n<b>Current Media:</b> " + current_type if is_file_end else ""),
             reply_markup=keyboard_end_media,
         )
+    elif option == "4":
+        keyboard_custom_text = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="🔙 Back",
+                        callback_data="customization_6",
+                    )
+                ],
+            ]
+        )
+        await callback.message.edit_text('Please reply to this message with your custom text.', reply_markup=keyboard_custom_text)
+
     elif option == "5":
         await save_media(callback.message.chat.id, "", "start")
         await callback.message.edit_text(
