@@ -55,9 +55,9 @@ async def stop_command(message: types.Message):
         else:
             minutes = 0
         minutes = (
-            f"⏲️ <b>Duration</b>: 1 minute"
+            f"⏰ <b>Duration</b>: 1 minute"
             if minutes == 1
-            else f"⏲️ <b>Duration</b>: {minutes} minutes"
+            else f"⏰ <b>Duration</b>: {minutes} minutes"
         )
         caption = "🛑 <b>Raid Ended - Stopped by admin</b>\n\n" + percentages + minutes
         file_name = str(chat_id)
@@ -922,7 +922,7 @@ async def star_raid_callback(callback: CallbackQuery):
             InlineKeyboardButton(text="💬", callback_data="comment"),
             InlineKeyboardButton(text="🔁", callback_data="retweet"),
             InlineKeyboardButton(text="💙", callback_data="like"),
-            InlineKeyboardButton(text="🏷️", callback_data="tag"),
+            InlineKeyboardButton(text="🏷️", callback_data="bookmark"),
             InlineKeyboardButton(text="👊", callback_data="fistbump"),
         ]
         global emoji_keyboard
