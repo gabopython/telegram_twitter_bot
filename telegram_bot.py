@@ -99,20 +99,17 @@ async def login_handler(message: Message):
     bot_username = (await bot.get_me()).username
     login_url = f"https://t.me/{bot_username}?start=login"
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="In Private", url=login_url)]
-    ])
-
-    await message.answer(
-        "Please continue in private 👇",
-        reply_markup=keyboard
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="In Private", url=login_url)]]
     )
+
+    await message.answer("Please continue in private 👇", reply_markup=keyboard)
+
 
 @dp.message(Command("start"))
 async def start_handler(message: Message):
     if message.chat.type == "private" and message.text == "/start login":
         await message.answer("Let's proceed with logging in to X.")
-
 
 
 @dp.message(F.reply_to_message)
