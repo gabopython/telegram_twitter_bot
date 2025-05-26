@@ -659,7 +659,10 @@ async def handle_message(message: types.Message):
 
         if raid_tweet.get(chat_id, True):
             await asyncio.sleep(8)
-            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
+            custom_text = await get_custom_text(chat_id)
+            if custom_text != "":
+                custom_text += "\n\n" 
+            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages
             file_type2 = await get_file_type(chat_id, "raid")
             file_path = os.path.join(
                 MEDIA_DIR_RAID,
@@ -1079,7 +1082,10 @@ async def star_raid_callback(callback: CallbackQuery):
                 file_name + (".mp4" if file_type2 == ".gif" else file_type2),
             )
             file = file if file_type2 == "" else FSInputFile(file_path)
-            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + percentages
+            custom_text = await get_custom_text(chat_id)
+            if custom_text != "":
+                custom_text += "\n\n" 
+            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages
 
             try:
                 if file_type == "" and file_type2 == "":
