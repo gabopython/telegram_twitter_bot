@@ -48,7 +48,39 @@ async def init_db():
             )
         """
         )
+        await db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS custom_texts (
+                chat_id INTEGER PRIMARY KEY,
+                custom_text TEXT DEFAULT ''
+            )
+        """
+        )
         await db.commit()
+
+
+async def update_custom_text(chat_id: int, custom_text: str):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO custom_texts (chat_id, custom_text)
+            VALUES (?, ?)
+            """,
+            (chat_id, custom_text),
+        )
+        await db.commit()
+
+
+async def get_custom_text(chat_id: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute(
+            """
+            SELECT custom_text FROM custom_texts WHERE chat_id = ?
+        """,
+            (chat_id,),
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else ""
 
 
 async def update_likes_default_target(chat_id: int, likes_default_target: int):

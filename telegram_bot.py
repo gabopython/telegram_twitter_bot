@@ -445,14 +445,16 @@ async def reply_handler(message: types.Message):
         if 'with your custom text' in message_reply:
             if message.text:
                 text = message.text
-                print(text)
+                await update_custom_text(chat_id, text)
+                buttons_custom_text = [[remove_custom_text], [back]]
+                keyboard_custom_text = InlineKeyboardMarkup(inline_keyboard=buttons_custom_text)
                 await bot.edit_message_text(
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
-                    text="✅ <b>Text saved successfully!</b>\n\nReply to this message with a video or image to change the current media used for ongoing raids in this group."
+                    text="✅ <b>Text saved successfully!</b>\n\nPlease reply to this message with your custom text to change the current message used for ongoing raids in this group."
                     + "\n\n<b>Current Text:</b> "
                     + text,
-                    reply_markup=keyboard_raid_media,
+                    reply_markup=keyboard_custom_text,
                 )
             else:
                 bot_message = await message.answer(
@@ -1212,15 +1214,16 @@ async def process_callback(callback_query: types.CallbackQuery):
 @router.callback_query(F.data.startswith("customization_"))
 async def process_callback(callback: CallbackQuery):
     option = callback.data.replace("customization_", "")
-    file_type_raid = await get_file_type(callback.message.chat.id, "raid")
+    chat_id = callback.message.chat.id
+    file_type_raid = await get_file_type(chat_id, "raid")
     file_path_raid = os.path.join(
         MEDIA_DIR_RAID,
-        str(callback.message.chat.id)
+        str(chat_id)
         + (".mp4" if file_type_raid == ".gif" else file_type_raid),
     )
     is_file_raid = os.path.isfile(file_path_raid)
 
-    file_type_start = await get_file_type(callback.message.chat.id, "start")
+    file_type_start = await get_file_type(chat_id, "start")
     file_path_start = os.path.join(
         MEDIA_DIR_START,
         str(callback.message.chat.id)
@@ -1228,10 +1231,10 @@ async def process_callback(callback: CallbackQuery):
     )
     is_file_start = os.path.isfile(file_path_start)
 
-    file_type_end = await get_file_type(callback.message.chat.id, "end")
+    file_type_end = await get_file_type(chat_id, "end")
     file_path_end = os.path.join(
         MEDIA_DIR_END,
-        str(callback.message.chat.id)
+        str(chat_id)
         + (".mp4" if file_type_end == ".gif" else file_type_end),
     )
     is_file_end = os.path.isfile(file_path_end)
@@ -1354,17 +1357,23 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_end_media,
         )
     elif option == "4":
-        keyboard_custom_text = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="🔙 Back",
-                        callback_data="customization_6",
-                    )
-                ],
-            ]
+        custom_text = await get_custom_text(chat_id)
+        global keyboard_custom_text, remove_custom_text, back, buttons_custom_text
+        remove_custom_text = InlineKeyboardButton(
+            text="❌ Remove Custom Text",
+            callback_data="customization_9",
         )
-        await callback.message.edit_text('Please reply to this message with your custom text.', reply_markup=keyboard_custom_text)
+        back = InlineKeyboardButton(
+            text="🔙 Back",
+            callback_data="customization_6",
+        )
+        buttons_custom_text = [[back]]
+        message_custom_text = 'Please reply to this message with your custom text.'
+        if custom_text != "":
+            buttons_custom_text.insert(0, [remove_custom_text])
+            message_custom_text = 'Please reply to this message with your custom text to change the current message used for ongoing raids in this group.'
+        keyboard_custom_text = InlineKeyboardMarkup(inline_keyboard=buttons_custom_text)
+        await callback.message.edit_text(message_custom_text, reply_markup=keyboard_custom_text)
 
     elif option == "5":
         await save_media(callback.message.chat.id, "", "start")
@@ -1394,6 +1403,15 @@ async def process_callback(callback: CallbackQuery):
         )
     elif option == "8":
         await save_media(callback.message.chat.id, "", "end")
+        await callback.message.edit_text(
+            customization_text.format(
+                "",
+                "You can set custom media for ongoing raids and end media for when a raid is completed",
+            ),
+            reply_markup=keyboard_customization,
+        )
+    elif option == "9":
+        await update_custom_text(callback.message.chat.id, "")
         await callback.message.edit_text(
             customization_text.format(
                 "",
