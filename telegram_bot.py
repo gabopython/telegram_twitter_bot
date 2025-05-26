@@ -443,7 +443,7 @@ async def reply_handler(message: types.Message):
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 
         if 'with your custom text' in message_reply:
-            if message.text:
+            if len(message.text) <= 200:
                 text = message.text
                 await update_custom_text(chat_id, text)
                 buttons_custom_text = [[remove_custom_text], [back]]
@@ -458,7 +458,7 @@ async def reply_handler(message: types.Message):
                 )
             else:
                 bot_message = await message.answer(
-                    "❌ <b>Failed to save text. Upload a valid file.</b>"
+                    "❌ <b>Error: Your custom message exceeds the 200-character limit. Please try again.</b>"
                 )
                 await asyncio.sleep(4)
                 await bot_message.delete()
