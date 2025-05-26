@@ -16,6 +16,7 @@ from aiogram.types import (
     InputMediaVideo,
     InputMediaAnimation,
     Message,
+    BotCommand,
 )
 from aiogram.enums.chat_member_status import ChatMemberStatus
 from aiogram import Router, F
@@ -29,6 +30,10 @@ dp = Dispatcher()
 router = Router()
 resend_message = {}
 resend_ongoing = True
+commands = [
+    BotCommand(command="/login", description="Login to X"),
+    BotCommand(command="/stop", description="Stop the ongoing raid"),
+]
 
 
 @dp.message(F.text == "/stop")
@@ -571,6 +576,11 @@ async def handle_message(message: types.Message):
 
     if not message_text:
         return
+    
+    if message_text.startswith("/raid"):
+        content = message_text[5:].strip()
+        parts = content.replace("  ", " ").split()
+        print(content, parts)
 
     # Check if the sender is an admin
     user_id = message.from_user.id
@@ -1431,6 +1441,7 @@ async def main():
     print("🚀 Bot is up and running! Waiting for updates...")
     dp.include_router(router)
     await init_db()
+    await bot.set_my_commands(commands)
     await dp.start_polling(bot)
 
 
