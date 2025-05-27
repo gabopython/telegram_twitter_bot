@@ -577,10 +577,64 @@ async def handle_message(message: types.Message):
     if not message_text:
         return
     
+    global likes_target, retweets_target, replies_target, views_target, bookmarks_target
+    global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
+    likes_default_target = await get_likes_default_target(chat_id)
+    retweets_default_target = await get_retweets_default_target(chat_id)
+    replies_default_target = await get_replies_default_target(chat_id)
+    views_default_target = await get_views_default_target(chat_id)
+    bookmarks_default_target = await get_bookmarks_default_target(chat_id)
+    
+    match = TWITTER_LINK_PATTERN.search(message_text)
+
     if message_text.startswith("/raid"):
-        content = message_text[5:].strip()
-        parts = content.replace("  ", " ").split()
-        print(content, parts)
+        parts = message_text.split()
+
+        if len(parts) < 2:
+            bot_message = await message.answer("❌ <b>Invalid syntax. Usage: /raid [TWEET_URL] [❤️,🔄,💬,👀,🔖]</b>")
+            await asyncio.sleep(4)
+            await bot_message.delete()
+            return
+        
+        message_text = parts[1] 
+        if not match:
+            bot_message = await message.answer("❌ <b>Invalid Twitter link. Please provide a valid link.</b>")
+            await asyncio.sleep(4)
+            await bot_message.delete()
+            return
+
+        try:
+            numbers = [int(part) for part in parts[2:]]
+        except ValueError:
+            return
+
+        while len(numbers) < 5:
+            numbers.append(0)
+
+        numbers = numbers[:5]  
+
+        await update_likes_target(chat_id, numbers[0])
+        await update_retweets_target(chat_id, numbers[1])
+        await update_replies_target(chat_id, numbers[2])
+        await update_views_target(chat_id, numbers[3])
+        await update_bookmarks_target(chat_id, numbers[4])
+        likes_target = numbers[0]
+        retweets_target = numbers[1]
+        replies_target = numbers[2]
+        views_target = numbers[3]
+        bookmarks_target = numbers[4]
+    else:
+        likes_target = likes_default_target
+        retweets_target = retweets_default_target
+        replies_target = replies_default_target
+        views_target = views_default_target
+        bookmarks_target = bookmarks_default_target
+
+    await update_likes_target(chat_id, likes_target)
+    await update_retweets_target(chat_id, retweets_target)
+    await update_replies_target(chat_id, replies_target)
+    await update_views_target(chat_id, views_target)
+    await update_bookmarks_target(chat_id, bookmarks_target)
 
     # Check if the sender is an admin
     user_id = message.from_user.id
@@ -589,27 +643,9 @@ async def handle_message(message: types.Message):
     if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
         return  # User is not an admin, ignore message
 
-    match = TWITTER_LINK_PATTERN.search(message_text)
     if match:
         global link
         link = message_text
-        global likes_target, retweets_target, replies_target, views_target, bookmarks_target
-        global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
-        likes_default_target = await get_likes_default_target(chat_id)
-        retweets_default_target = await get_retweets_default_target(chat_id)
-        replies_default_target = await get_replies_default_target(chat_id)
-        views_default_target = await get_views_default_target(chat_id)
-        bookmarks_default_target = await get_bookmarks_default_target(chat_id)
-        likes_target = likes_default_target
-        retweets_target = retweets_default_target
-        replies_target = replies_default_target
-        views_target = views_default_target
-        bookmarks_target = bookmarks_default_target
-        await update_likes_target(chat_id, likes_target)
-        await update_retweets_target(chat_id, retweets_target)
-        await update_replies_target(chat_id, replies_target)
-        await update_views_target(chat_id, views_target)
-        await update_bookmarks_target(chat_id, bookmarks_target)
 
         formatted = (
             "⚙️ <b>Raid Options</b>\n\n"
