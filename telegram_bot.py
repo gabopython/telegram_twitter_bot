@@ -571,10 +571,11 @@ async def reply_handler(message: Message):
 
 
 @dp.message()
-async def handle_message(message: Message, callback: CallbackQuery):
+async def handle_message(message: Message):
     # Check if message has text
     message_text = message.text
     chat_id = message.chat.id
+    user_id = message.from_user.id
 
     if not message_text:
         return
@@ -629,7 +630,7 @@ async def handle_message(message: Message, callback: CallbackQuery):
         replies_target = numbers[2]
         views_target = numbers[3]
         bookmarks_target = numbers[4]
-        await handle_start_raid(callback)
+        await handle_start_raid(message, user_id)
         return
     else:
         likes_target = likes_default_target
@@ -643,9 +644,6 @@ async def handle_message(message: Message, callback: CallbackQuery):
     await update_replies_target(chat_id, replies_target)
     await update_views_target(chat_id, views_target)
     await update_bookmarks_target(chat_id, bookmarks_target)
-
-    # Check if the sender is an admin
-    user_id = message.from_user.id
 
     member = await message.bot.get_chat_member(chat_id, user_id)
     if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
@@ -988,9 +986,8 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
 
 
-async def handle_start_raid(callback: CallbackQuery):
-    chat_id = callback.message.chat.id
-    user_id = callback.from_user.id
+async def handle_start_raid(message: Message, user_id: int):
+    chat_id = message.chat.id
 
     # Get chat member status
     member = await bot.get_chat_member(chat_id, user_id)
@@ -1049,10 +1046,10 @@ async def handle_start_raid(callback: CallbackQuery):
         )
 
         if raid_status.get(chat_id, False):
-            bot_message = await callback.message.answer(
+            bot_message = await message.answer(
                 "<b>❌ There is already an ongoing raid in this group. Please use /stop to stop it.</b>"
             )
-            await callback.message.delete()
+            await message.delete()
             await asyncio.sleep(5)
             await bot_message.delete()
             return
@@ -1069,11 +1066,11 @@ async def handle_start_raid(callback: CallbackQuery):
             )
             raid_status[chat_id] = False
         else:
-            chat_id = callback.message.chat.id
+            chat_id = message.chat.id
             raid_status[chat_id] = True
             timer[chat_id] = datetime.now()
             raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
-        await callback.message.delete()
+        await message.delete()
 
         file_name = str(chat_id)
         if raid_status[chat_id]:
@@ -1116,19 +1113,19 @@ async def handle_start_raid(callback: CallbackQuery):
                 file = None if file_type == "" else FSInputFile(file_path)
 
         if file_type == ".jpg":
-            bot_message = await callback.message.answer_photo(
+            bot_message = await message.answer_photo(
                 file, caption=raid_message, reply_markup=emoji_keyboard
             )
         elif file_type == ".mp4":
-            bot_message = await callback.message.answer_video(
+            bot_message = await message.answer_video(
                 file, caption=raid_message, reply_markup=emoji_keyboard
             )
         elif file_type == ".gif":
-            bot_message = await callback.message.answer_animation(
+            bot_message = await message.answer_animation(
                 file, caption=raid_message, reply_markup=emoji_keyboard
             )
         else:
-            bot_message = await callback.message.answer(
+            bot_message = await message.answer(
                 raid_message, reply_markup=emoji_keyboard
             )
         resend_message[chat_id] = {
@@ -1138,7 +1135,6 @@ async def handle_start_raid(callback: CallbackQuery):
             "file_type": file_type,
         }
 
-        await callback.answer()
         raid_tweet[chat_id] = True
 
         if raid_status[chat_id]:
@@ -1185,7 +1181,7 @@ async def handle_start_raid(callback: CallbackQuery):
             await asyncio.sleep(1)
 
     else:
-        await callback.answer(
+        await message.answer(
             "🛑 You must be an admin to interact with WAOxrpBot.", show_alert=True
         )
 
@@ -1193,7 +1189,7 @@ async def handle_start_raid(callback: CallbackQuery):
 @router.callback_query(F.data == "start raid")
 async def star_raid_callback(callback: CallbackQuery):
     await callback.answer()
-    await handle_start_raid(callback)
+    await handle_start_raid(callback.message, callback.from_user.id)
 
 
 @dp.callback_query(lambda c: c.data.startswith("option"))
