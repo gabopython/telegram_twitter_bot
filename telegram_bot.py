@@ -623,6 +623,8 @@ async def handle_message(message: types.Message):
         replies_target = numbers[2]
         views_target = numbers[3]
         bookmarks_target = numbers[4]
+        await handle_start_raid(CallbackQuery(message=message, data="start raid"))
+        return
     else:
         likes_target = likes_default_target
         retweets_target = retweets_default_target
@@ -967,9 +969,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         )
         await callback_query.answer()
 
-
-@router.callback_query(F.data == "start raid")
-async def star_raid_callback(callback: CallbackQuery):
+async def handle_start_raid(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
 
@@ -1163,6 +1163,11 @@ async def star_raid_callback(callback: CallbackQuery):
         await callback.answer(
             "🛑 You must be an admin to interact with WAOxrpBot.", show_alert=True
         )
+
+@router.callback_query(F.data == "start raid")
+async def star_raid_callback(callback: CallbackQuery):
+    await callback.answer()  
+    await handle_start_raid(callback)
 
 
 @dp.callback_query(lambda c: c.data.startswith("option"))
