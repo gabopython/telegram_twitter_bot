@@ -580,7 +580,7 @@ async def handle_message(message: Message):
     if not message_text:
         return
 
-    global likes_target, retweets_target, replies_target, views_target, bookmarks_target
+    global link, likes_target, retweets_target, replies_target, views_target, bookmarks_target
     global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
     likes_default_target = await get_likes_default_target(chat_id)
     retweets_default_target = await get_retweets_default_target(chat_id)
@@ -650,7 +650,6 @@ async def handle_message(message: Message):
         return  # User is not an admin, ignore message
 
     if match:
-        global link
         link = message_text
 
         formatted = (
