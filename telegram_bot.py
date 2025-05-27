@@ -3,7 +3,7 @@ from utils import *
 from config import BOT_TOKEN
 from db import *
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 import asyncio
 from datetime import datetime
@@ -37,7 +37,7 @@ commands = [
 
 
 @dp.message(F.text == "/stop")
-async def stop_command(message: types.Message):
+async def stop_command(message: Message):
     # Check if the sender is an admin
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -118,7 +118,7 @@ async def start_handler(message: Message):
 
 
 @dp.message(F.reply_to_message)
-async def reply_handler(message: types.Message):
+async def reply_handler(message: Message):
     # Check if the sender is an admin
     chat_id = message.chat.id
     user_id = message.from_user.id
@@ -447,12 +447,14 @@ async def reply_handler(message: types.Message):
                     await bot_message.delete()
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 
-        if 'with your custom text' in message_reply:
+        if "with your custom text" in message_reply:
             if len(message.text) <= 200:
                 text = message.text
                 await update_custom_text(chat_id, text)
                 buttons_custom_text = [[remove_custom_text], [back]]
-                keyboard_custom_text = InlineKeyboardMarkup(inline_keyboard=buttons_custom_text)
+                keyboard_custom_text = InlineKeyboardMarkup(
+                    inline_keyboard=buttons_custom_text
+                )
                 await bot.edit_message_text(
                     chat_id=message.reply_to_message.chat.id,
                     message_id=message.reply_to_message.message_id,
@@ -569,14 +571,14 @@ async def reply_handler(message: types.Message):
 
 
 @dp.message()
-async def handle_message(message: types.Message):
+async def handle_message(message: Message, callback: CallbackQuery):
     # Check if message has text
     message_text = message.text
     chat_id = message.chat.id
 
     if not message_text:
         return
-    
+
     global likes_target, retweets_target, replies_target, views_target, bookmarks_target
     global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
     likes_default_target = await get_likes_default_target(chat_id)
@@ -584,21 +586,25 @@ async def handle_message(message: types.Message):
     replies_default_target = await get_replies_default_target(chat_id)
     views_default_target = await get_views_default_target(chat_id)
     bookmarks_default_target = await get_bookmarks_default_target(chat_id)
-    
+
     match = TWITTER_LINK_PATTERN.search(message_text)
 
     if message_text.startswith("/raid"):
         parts = message_text.split()
 
         if len(parts) < 2:
-            bot_message = await message.answer("❌ <b>Invalid syntax. Usage: /raid [TWEET_URL] [❤️,🔄,💬,👀,🔖]</b>")
+            bot_message = await message.answer(
+                "❌ <b>Invalid syntax. Usage: /raid [TWEET_URL] [❤️,🔄,💬,👀,🔖]</b>"
+            )
             await asyncio.sleep(4)
             await bot_message.delete()
             return
-        
-        message_text = parts[1] 
+
+        message_text = parts[1]
         if not match:
-            bot_message = await message.answer("❌ <b>Invalid Twitter link. Please provide a valid link.</b>")
+            bot_message = await message.answer(
+                "❌ <b>Invalid Twitter link. Please provide a valid link.</b>"
+            )
             await asyncio.sleep(4)
             await bot_message.delete()
             return
@@ -611,7 +617,7 @@ async def handle_message(message: types.Message):
         while len(numbers) < 5:
             numbers.append(0)
 
-        numbers = numbers[:5]  
+        numbers = numbers[:5]
 
         await update_likes_target(chat_id, numbers[0])
         await update_retweets_target(chat_id, numbers[1])
@@ -623,7 +629,7 @@ async def handle_message(message: types.Message):
         replies_target = numbers[2]
         views_target = numbers[3]
         bookmarks_target = numbers[4]
-        await handle_start_raid(CallbackQuery(message=message, data="start raid"))
+        await handle_start_raid(callback)
         return
     else:
         likes_target = likes_default_target
@@ -695,13 +701,21 @@ async def handle_message(message: types.Message):
         file = resend_message[chat_id]["file"]
         caption = resend_message[chat_id]["text"]
         if file_type == "":
-            bot_message = await message.answer(resend_message[chat_id]["text"], reply_markup=emoji_keyboard)
+            bot_message = await message.answer(
+                resend_message[chat_id]["text"], reply_markup=emoji_keyboard
+            )
         elif file_type == ".jpg":
-            bot_message = await message.answer_photo(file, caption=caption, reply_markup=emoji_keyboard)
+            bot_message = await message.answer_photo(
+                file, caption=caption, reply_markup=emoji_keyboard
+            )
         elif file_type == ".mp4":
-            bot_message = await message.answer_video(file, caption=caption, reply_markup=emoji_keyboard)
+            bot_message = await message.answer_video(
+                file, caption=caption, reply_markup=emoji_keyboard
+            )
         elif file_type == ".gif":
-            bot_message = await message.answer_animation(file, caption=caption, reply_markup=emoji_keyboard)
+            bot_message = await message.answer_animation(
+                file, caption=caption, reply_markup=emoji_keyboard
+            )
         resend_message[chat_id]["message_id"] = bot_message.message_id
         resend_ongoing = True
 
@@ -709,7 +723,7 @@ async def handle_message(message: types.Message):
             await asyncio.sleep(8)
             custom_text = await get_custom_text(chat_id)
             if custom_text != "":
-                custom_text += "\n\n" 
+                custom_text += "\n\n"
             updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages
             file_type2 = await get_file_type(chat_id, "raid")
             file_path = os.path.join(
@@ -720,10 +734,14 @@ async def handle_message(message: types.Message):
 
             try:
                 if file_type == "" and file_type2 == "":
-                    await bot_message.edit_text(updated_caption, reply_markup=emoji_keyboard)
+                    await bot_message.edit_text(
+                        updated_caption, reply_markup=emoji_keyboard
+                    )
                     resend_message[chat_id]["file_type"] = file_type2
                 elif file_type2 == "":
-                    await bot_message.edit_caption(caption=updated_caption, reply_markup=emoji_keyboard)
+                    await bot_message.edit_caption(
+                        caption=updated_caption, reply_markup=emoji_keyboard
+                    )
                     resend_message[chat_id]["file_type"] = file_type
                 else:
                     media_class = {
@@ -745,7 +763,7 @@ async def handle_message(message: types.Message):
 
 
 @dp.callback_query(lambda c: c.data.startswith("target_"))
-async def handle_target(callback_query: types.CallbackQuery):
+async def handle_target(callback_query: CallbackQuery):
     target = callback_query.data.replace("target_", "")
     global keyboard_back, keyboard_default_back
     keyboard_back = InlineKeyboardMarkup(
@@ -969,6 +987,7 @@ async def handle_target(callback_query: types.CallbackQuery):
         )
         await callback_query.answer()
 
+
 async def handle_start_raid(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
@@ -1109,7 +1128,9 @@ async def handle_start_raid(callback: CallbackQuery):
                 file, caption=raid_message, reply_markup=emoji_keyboard
             )
         else:
-            bot_message = await callback.message.answer(raid_message, reply_markup=emoji_keyboard)
+            bot_message = await callback.message.answer(
+                raid_message, reply_markup=emoji_keyboard
+            )
         resend_message[chat_id] = {
             "message_id": bot_message.message_id,
             "text": raid_message,
@@ -1130,15 +1151,19 @@ async def handle_start_raid(callback: CallbackQuery):
             file = file if file_type2 == "" else FSInputFile(file_path)
             custom_text = await get_custom_text(chat_id)
             if custom_text != "":
-                custom_text += "\n\n" 
+                custom_text += "\n\n"
             updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages
 
             try:
                 if file_type == "" and file_type2 == "":
-                    await bot_message.edit_text(updated_caption, reply_markup=emoji_keyboard)
+                    await bot_message.edit_text(
+                        updated_caption, reply_markup=emoji_keyboard
+                    )
                     resend_message[chat_id]["file_type"] = file_type2
                 elif file_type2 == "":
-                    await bot_message.edit_caption(caption=updated_caption, reply_markup=emoji_keyboard)
+                    await bot_message.edit_caption(
+                        caption=updated_caption, reply_markup=emoji_keyboard
+                    )
                     resend_message[chat_id]["file_type"] = file_type
                 else:
                     media_class = {
@@ -1164,14 +1189,15 @@ async def handle_start_raid(callback: CallbackQuery):
             "🛑 You must be an admin to interact with WAOxrpBot.", show_alert=True
         )
 
+
 @router.callback_query(F.data == "start raid")
 async def star_raid_callback(callback: CallbackQuery):
-    await callback.answer()  
+    await callback.answer()
     await handle_start_raid(callback)
 
 
 @dp.callback_query(lambda c: c.data.startswith("option"))
-async def process_callback(callback_query: types.CallbackQuery):
+async def process_callback(callback_query: CallbackQuery):
     option = callback_query.data.replace("option_", "")
 
     if option == "2":
@@ -1275,8 +1301,7 @@ async def process_callback(callback: CallbackQuery):
     file_type_raid = await get_file_type(chat_id, "raid")
     file_path_raid = os.path.join(
         MEDIA_DIR_RAID,
-        str(chat_id)
-        + (".mp4" if file_type_raid == ".gif" else file_type_raid),
+        str(chat_id) + (".mp4" if file_type_raid == ".gif" else file_type_raid),
     )
     is_file_raid = os.path.isfile(file_path_raid)
 
@@ -1291,8 +1316,7 @@ async def process_callback(callback: CallbackQuery):
     file_type_end = await get_file_type(chat_id, "end")
     file_path_end = os.path.join(
         MEDIA_DIR_END,
-        str(chat_id)
-        + (".mp4" if file_type_end == ".gif" else file_type_end),
+        str(chat_id) + (".mp4" if file_type_end == ".gif" else file_type_end),
     )
     is_file_end = os.path.isfile(file_path_end)
 
@@ -1425,12 +1449,14 @@ async def process_callback(callback: CallbackQuery):
             callback_data="customization_6",
         )
         buttons_custom_text = [[back]]
-        message_custom_text = 'Please reply to this message with your custom text.'
+        message_custom_text = "Please reply to this message with your custom text."
         if custom_text != "":
             buttons_custom_text.insert(0, [remove_custom_text])
-            message_custom_text = 'Please reply to this message with your custom text to change the current message used for ongoing raids in this group.'
+            message_custom_text = "Please reply to this message with your custom text to change the current message used for ongoing raids in this group."
         keyboard_custom_text = InlineKeyboardMarkup(inline_keyboard=buttons_custom_text)
-        await callback.message.edit_text(message_custom_text, reply_markup=keyboard_custom_text)
+        await callback.message.edit_text(
+            message_custom_text, reply_markup=keyboard_custom_text
+        )
 
     elif option == "5":
         await save_media(callback.message.chat.id, "", "start")
