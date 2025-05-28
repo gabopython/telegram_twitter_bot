@@ -36,7 +36,7 @@ commands = [
 ]
 
 
-@dp.message(F.text == "/stop")
+@dp.message(Command("stop"))
 async def stop_command(message: Message):
     # Check if the sender is an admin
     chat_id = message.chat.id
@@ -1515,7 +1515,7 @@ async def process_callback(callback: CallbackQuery):
 async def main():
     print("🚀 Bot is up and running! Waiting for updates...")
     dp.include_router(router)
-    await init_db()
+    #await init_db()
     await bot.set_my_commands(commands)
     await dp.start_polling(bot)
 
