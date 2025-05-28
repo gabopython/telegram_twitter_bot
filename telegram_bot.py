@@ -56,7 +56,7 @@ async def stop_command(message: Message):
             start_time = timer.pop(chat_id)
             elapsed_time = datetime.now() - start_time
             seconds = elapsed_time.total_seconds()
-            minutes = seconds // 60
+            minutes = int(seconds // 60)
         else:
             minutes = 0
         minutes = (
@@ -580,13 +580,11 @@ async def handle_message(message: Message):
     if not message_text:
         return
 
-    global link, likes_target, retweets_target, replies_target, views_target, bookmarks_target
-    global likes_default_target, retweets_default_target, replies_default_target, views_default_target, bookmarks_default_target
-    likes_default_target = await get_likes_default_target(chat_id)
-    retweets_default_target = await get_retweets_default_target(chat_id)
-    replies_default_target = await get_replies_default_target(chat_id)
-    views_default_target = await get_views_default_target(chat_id)
-    bookmarks_default_target = await get_bookmarks_default_target(chat_id)
+    likes_default_target[chat_id] = await get_likes_default_target(chat_id)
+    retweets_default_target[chat_id] = await get_retweets_default_target(chat_id)
+    replies_default_target[chat_id] = await get_replies_default_target(chat_id)
+    views_default_target[chat_id] = await get_views_default_target(chat_id)
+    bookmarks_default_target[chat_id] = await get_bookmarks_default_target(chat_id)
 
     match = TWITTER_LINK_PATTERN.search(message_text)
 
@@ -601,7 +599,7 @@ async def handle_message(message: Message):
             await bot_message.delete()
             return
 
-        link = parts[1]
+        link[chat_id] = parts[1]
         if not match:
             bot_message = await message.answer(
                 "❌ <b>Invalid Twitter link. Please provide a valid link.</b>"
@@ -625,26 +623,26 @@ async def handle_message(message: Message):
         await update_replies_target(chat_id, numbers[2])
         await update_views_target(chat_id, numbers[3])
         await update_bookmarks_target(chat_id, numbers[4])
-        likes_target = numbers[0]
-        retweets_target = numbers[1]
-        replies_target = numbers[2]
-        views_target = numbers[3]
-        bookmarks_target = numbers[4]
+        likes_target[chat_id] = numbers[0]
+        retweets_target[chat_id] = numbers[1]
+        replies_target[chat_id] = numbers[2]
+        views_target[chat_id] = numbers[3]
+        bookmarks_target[chat_id] = numbers[4]
         await handle_start_raid(message, user_id)
         return
     else:
-        likes_target = likes_default_target
-        retweets_target = retweets_default_target
-        replies_target = replies_default_target
-        views_target = views_default_target
-        bookmarks_target = bookmarks_default_target
-        link = message_text
+        likes_target[chat_id] = likes_default_target[chat_id]
+        retweets_target[chat_id] = retweets_default_target[chat_id]
+        replies_target[chat_id] = replies_default_target[chat_id]
+        views_target[chat_id] = views_default_target[chat_id]
+        bookmarks_target[chat_id] = bookmarks_default_target[chat_id]
+        link[chat_id] = message_text
 
-    await update_likes_target(chat_id, likes_target)
-    await update_retweets_target(chat_id, retweets_target)
-    await update_replies_target(chat_id, replies_target)
-    await update_views_target(chat_id, views_target)
-    await update_bookmarks_target(chat_id, bookmarks_target)
+    await update_likes_target(chat_id, likes_target[chat_id])
+    await update_retweets_target(chat_id, retweets_target[chat_id])
+    await update_replies_target(chat_id, replies_target[chat_id])
+    await update_views_target(chat_id, views_target[chat_id])
+    await update_bookmarks_target(chat_id, bookmarks_target[chat_id])
 
     member = await message.bot.get_chat_member(chat_id, user_id)
     if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
@@ -653,12 +651,12 @@ async def handle_message(message: Message):
     if match:
         formatted = (
             "⚙️ <b>Raid Options</b>\n\n"
-            f"🔗 <b>Link:</b> {link}\n"
-            f"💙 <b>Likes:</b> {likes_target}\n"
-            f"🔄 <b>Retweets:</b> {retweets_target}\n"
-            f"💬 <b>Replies:</b> {replies_target}\n"
-            f"👀 <b>Views:</b> {views_target}\n"
-            f"🔖 <b>Bookmarks:</b> {bookmarks_target}"
+            f"🔗 <b>Link:</b> {link[chat_id]}\n"
+            f"💙 <b>Likes:</b> {likes_target[chat_id]}\n"
+            f"🔄 <b>Retweets:</b> {retweets_target[chat_id]}\n"
+            f"💬 <b>Replies:</b> {replies_target[chat_id]}\n"
+            f"👀 <b>Views:</b> {views_target[chat_id]}\n"
+            f"🔖 <b>Bookmarks:</b> {bookmarks_target[chat_id]}"
         )
 
         global keyboard_message
@@ -824,7 +822,7 @@ async def handle_target(callback_query: CallbackQuery):
             chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text="⚙️ <b>Raid Options</b>\n\n"
-            f"🔗 <b>Link:</b> {link}\n"
+            f"🔗 <b>Link:</b> {link[chat_id]}\n"
             f"💙 <b>Likes:</b> {likes_target}\n"
             f"🔄 <b>Retweets:</b> {retweets_target}\n"
             f"💬 <b>Replies:</b> {replies_target}\n"
@@ -992,18 +990,18 @@ async def handle_start_raid(message: Message, user_id: int):
     member = await bot.get_chat_member(chat_id, user_id)
 
     if member.status in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
-        # x_data = x_bot.get_tweet_data(link)
+        # x_data = x_bot.get_tweet_data(link[chat_id])
         x_data = {"1": 0}
         likes = x_data.get("Likes", 2)
         retweets = x_data.get("Retweets", 4)
         replies = x_data.get("Replies", 2)
         views = x_data.get("Views", 2)
         bookmarks = x_data.get("Bookmarks", 2)
-        likes_percentage = calculate_percentage(likes, likes_target)
-        retweets_percentage = calculate_percentage(retweets, retweets_target)
-        replies_percentage = calculate_percentage(replies, replies_target)
-        views_percentage = calculate_percentage(views, views_target)
-        bookmarks_percentage = calculate_percentage(bookmarks, bookmarks_target)
+        likes_percentage = calculate_percentage(likes, likes_target[chat_id])
+        retweets_percentage = calculate_percentage(retweets, retweets_target[chat_id])
+        replies_percentage = calculate_percentage(replies, replies_target[chat_id])
+        views_percentage = calculate_percentage(views, views_target[chat_id])
+        bookmarks_percentage = calculate_percentage(bookmarks, bookmarks_target[chat_id])
         emoji_buttons = [
             InlineKeyboardButton(text="💬", callback_data="comment"),
             InlineKeyboardButton(text="🔁", callback_data="retweet"),
@@ -1018,30 +1016,30 @@ async def handle_start_raid(message: Message, user_id: int):
         percentages = (
             (
                 ""
-                if likes_target == 0
-                else f"{get_emoji(likes_percentage)} Likes <b>{likes} | {likes_target}</b>  [{'💯' if likes_percentage==100 else likes_percentage }%]\n"
+                if likes_target[chat_id] == 0
+                else f"{get_emoji(likes_percentage)} Likes <b>{likes} | {likes_target[chat_id]}</b>  [{'💯' if likes_percentage==100 else likes_percentage }%]\n"
             )
             + (
                 ""
-                if retweets_target == 0
-                else f"{get_emoji(retweets_percentage)} Retweets <b>{retweets} | {retweets_target}</b>  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n"
+                if retweets_target[chat_id] == 0
+                else f"{get_emoji(retweets_percentage)} Retweets <b>{retweets} | {retweets_target[chat_id]}</b>  [{'💯' if retweets_percentage==100 else retweets_percentage }%]\n"
             )
             + (
                 ""
-                if replies_target == 0
-                else f"{get_emoji(replies_percentage)} Replies <b>{replies} | {replies_target}</b>  [{'💯' if replies_percentage==100 else replies_percentage }%]\n"
+                if replies_target[chat_id] == 0
+                else f"{get_emoji(replies_percentage)} Replies <b>{replies} | {replies_target[chat_id]}</b>  [{'💯' if replies_percentage==100 else replies_percentage }%]\n"
             )
             + (
                 ""
-                if views_target == 0
-                else f"{get_emoji(views_percentage)} Views <b>{views} | {views_target}</b>  [{'💯' if views_percentage==100 else views_percentage}%]\n"
+                if views_target[chat_id] == 0
+                else f"{get_emoji(views_percentage)} Views <b>{views} | {views_target[chat_id]}</b>  [{'💯' if views_percentage==100 else views_percentage}%]\n"
             )
             + (
                 ""
-                if bookmarks_target == 0
-                else f"{get_emoji(bookmarks_percentage)} Bookmarks <b>{bookmarks} | {bookmarks_target}</b>  [{'💯' if bookmarks_percentage==100 else bookmarks_percentage}%]\n"
+                if bookmarks_target[chat_id] == 0
+                else f"{get_emoji(bookmarks_percentage)} Bookmarks <b>{bookmarks} | {bookmarks_target[chat_id]}</b>  [{'💯' if bookmarks_percentage==100 else bookmarks_percentage}%]\n"
             )
-            + f"\n{link}\n\n"
+            + f"\n{link[chat_id]}\n\n"
         )
 
         if raid_status.get(chat_id, False):
