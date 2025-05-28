@@ -601,7 +601,7 @@ async def handle_message(message: Message):
             await bot_message.delete()
             return
 
-        message_text = parts[1]
+        link = parts[1]
         if not match:
             bot_message = await message.answer(
                 "❌ <b>Invalid Twitter link. Please provide a valid link.</b>"
@@ -638,6 +638,7 @@ async def handle_message(message: Message):
         replies_target = replies_default_target
         views_target = views_default_target
         bookmarks_target = bookmarks_default_target
+        link = message_text
 
     await update_likes_target(chat_id, likes_target)
     await update_retweets_target(chat_id, retweets_target)
@@ -650,8 +651,6 @@ async def handle_message(message: Message):
         return  # User is not an admin, ignore message
 
     if match:
-        link = message_text
-
         formatted = (
             "⚙️ <b>Raid Options</b>\n\n"
             f"🔗 <b>Link:</b> {link}\n"
