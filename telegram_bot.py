@@ -145,7 +145,7 @@ async def reply_handler(message: Message):
                             await asyncio.sleep(3)
                             await bot_message.delete()
                             await bot.delete_message(
-                                chat_id=message.chat.id, message_id=message.message_id
+                                chat_id=chat_id, message_id=message.message_id
                             )
                             return
                         likes_default_target = int(message.text)
@@ -153,7 +153,7 @@ async def reply_handler(message: Message):
                         likes_target = likes_default_target
                         await update_likes_target(chat_id, likes_target)
                         await bot.edit_message_text(
-                            chat_id=message.reply_to_message.chat.id,
+                            chat_id=chat_id,
                             message_id=message.reply_to_message.message_id,
                             text=target_saved.format(
                                 "likes", "default ", "Likes", likes_target
@@ -177,7 +177,7 @@ async def reply_handler(message: Message):
                             await asyncio.sleep(3)
                             await bot_message.delete()
                             await bot.delete_message(
-                                chat_id=message.chat.id, message_id=message.message_id
+                                chat_id=chat_id, message_id=message.message_id
                             )
                             return
                         retweets_default_target = int(message.text)
@@ -187,7 +187,7 @@ async def reply_handler(message: Message):
                         retweets_target = retweets_default_target
                         await update_retweets_target(chat_id, retweets_target)
                         await bot.edit_message_text(
-                            chat_id=message.reply_to_message.chat.id,
+                            chat_id=chat_id,
                             message_id=message.reply_to_message.message_id,
                             text=target_saved.format(
                                 "retweets",
@@ -214,7 +214,7 @@ async def reply_handler(message: Message):
                             await asyncio.sleep(3)
                             await bot_message.delete()
                             await bot.delete_message(
-                                chat_id=message.chat.id, message_id=message.message_id
+                                chat_id=chat_id, message_id=message.message_id
                             )
                             return
                         replies_default_target = int(message.text)
@@ -224,7 +224,7 @@ async def reply_handler(message: Message):
                         replies_target = replies_default_target
                         await update_replies_target(chat_id, replies_target)
                         await bot.edit_message_text(
-                            chat_id=message.reply_to_message.chat.id,
+                            chat_id=chat_id,
                             message_id=message.reply_to_message.message_id,
                             text=target_saved.format(
                                 "replies",
@@ -251,7 +251,7 @@ async def reply_handler(message: Message):
                             await asyncio.sleep(3)
                             await bot_message.delete()
                             await bot.delete_message(
-                                chat_id=message.chat.id, message_id=message.message_id
+                                chat_id=chat_id, message_id=message.message_id
                             )
                             return
                         views_default_target = int(message.text)
@@ -259,7 +259,7 @@ async def reply_handler(message: Message):
                         views_target = views_default_target
                         await update_views_target(chat_id, views_target)
                         await bot.edit_message_text(
-                            chat_id=message.reply_to_message.chat.id,
+                            chat_id=chat_id,
                             message_id=message.reply_to_message.message_id,
                             text=target_saved.format(
                                 "views", "default ", "Views", views_target
@@ -283,7 +283,7 @@ async def reply_handler(message: Message):
                             await asyncio.sleep(3)
                             await bot_message.delete()
                             await bot.delete_message(
-                                chat_id=message.chat.id, message_id=message.message_id
+                                chat_id=chat_id, message_id=message.message_id
                             )
                             return
                         bookmarks_default_target = int(message.text)
@@ -293,7 +293,7 @@ async def reply_handler(message: Message):
                         bookmarks_target = bookmarks_default_target
                         await update_bookmarks_target(chat_id, bookmarks_target)
                         await bot.edit_message_text(
-                            chat_id=message.reply_to_message.chat.id,
+                            chat_id=chat_id,
                             message_id=message.reply_to_message.message_id,
                             text=target_saved.format(
                                 "bookmarks",
@@ -318,13 +318,13 @@ async def reply_handler(message: Message):
                         await asyncio.sleep(3)
                         await bot_message.delete()
                         await bot.delete_message(
-                            chat_id=message.chat.id, message_id=message.message_id
+                            chat_id=chat_id, message_id=message.message_id
                         )
                         return
                     likes_target = int(message.text)
                     await update_likes_target(chat_id, likes_target)
                     await bot.edit_message_text(
-                        chat_id=message.reply_to_message.chat.id,
+                        chat_id=chat_id,
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format("likes", "", "Likes", likes_target),
                         reply_markup=keyboard_back,
@@ -344,13 +344,13 @@ async def reply_handler(message: Message):
                         await asyncio.sleep(3)
                         await bot_message.delete()
                         await bot.delete_message(
-                            chat_id=message.chat.id, message_id=message.message_id
+                            chat_id=chat_id, message_id=message.message_id
                         )
                         return
                     retweets_target = int(message.text)
                     await update_retweets_target(chat_id, retweets_target)
                     await bot.edit_message_text(
-                        chat_id=message.reply_to_message.chat.id,
+                        chat_id=chat_id,
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
                             "retweets", "", "Retweets", retweets_target
@@ -372,13 +372,13 @@ async def reply_handler(message: Message):
                         await asyncio.sleep(3)
                         await bot_message.delete()
                         await bot.delete_message(
-                            chat_id=message.chat.id, message_id=message.message_id
+                            chat_id=chat_id, message_id=message.message_id
                         )
                         return
                     replies_target = int(message.text)
                     await update_replies_target(chat_id, replies_target)
                     await bot.edit_message_text(
-                        chat_id=message.reply_to_message.chat.id,
+                        chat_id=chat_id,
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
                             "replies", "", "Replies", replies_target
@@ -400,13 +400,13 @@ async def reply_handler(message: Message):
                         await asyncio.sleep(3)
                         await bot_message.delete()
                         await bot.delete_message(
-                            chat_id=message.chat.id, message_id=message.message_id
+                            chat_id=chat_id, message_id=message.message_id
                         )
                         return
                     views_target = int(message.text)
                     await update_views_target(chat_id, views_target)
                     await bot.edit_message_text(
-                        chat_id=message.reply_to_message.chat.id,
+                        chat_id=chat_id,
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format("views", "", "Views", views_target),
                         reply_markup=keyboard_back,
@@ -426,13 +426,13 @@ async def reply_handler(message: Message):
                         await asyncio.sleep(3)
                         await bot_message.delete()
                         await bot.delete_message(
-                            chat_id=message.chat.id, message_id=message.message_id
+                            chat_id=chat_id, message_id=message.message_id
                         )
                         return
                     bookmarks_target = int(message.text)
                     await update_bookmarks_target(chat_id, bookmarks_target)
                     await bot.edit_message_text(
-                        chat_id=message.reply_to_message.chat.id,
+                        chat_id=chat_id,
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
                             "bookmarks", "", "Bookmarks", bookmarks_target
@@ -445,7 +445,7 @@ async def reply_handler(message: Message):
                     )
                     await asyncio.sleep(5)
                     await bot_message.delete()
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        await bot.delete_message(chat_id=chat_id, message_id=message.message_id)
 
         if "with your custom text" in message_reply:
             if len(message.text) <= 200:
@@ -456,7 +456,7 @@ async def reply_handler(message: Message):
                     inline_keyboard=buttons_custom_text
                 )
                 await bot.edit_message_text(
-                    chat_id=message.reply_to_message.chat.id,
+                    chat_id=chat_id,
                     message_id=message.reply_to_message.message_id,
                     text="✅ <b>Text saved successfully!</b>\n\nPlease reply to this message with your custom text to change the current message used for ongoing raids in this group."
                     + "\n\n<b>Current Text:</b> "
@@ -761,6 +761,7 @@ async def handle_message(message: Message):
 
 @dp.callback_query(lambda c: c.data.startswith("target_"))
 async def handle_target(callback_query: CallbackQuery):
+    chat_id = callback_query.message.chat.id
     target = callback_query.data.replace("target_", "")
     global keyboard_back, keyboard_default_back
     keyboard_back = InlineKeyboardMarkup(
@@ -775,7 +776,7 @@ async def handle_target(callback_query: CallbackQuery):
     )
     if target == "1":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format("", "Likes", "likes", "", "Likes", likes_target),
             reply_markup=keyboard_back,
@@ -783,7 +784,7 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
     elif target == "2":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
                 "", "Retweets", "retweets", "", "Retweets", retweets_target
@@ -793,7 +794,7 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
     elif target == "3":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
                 "", "Replies", "replies", "", "Replies", replies_target
@@ -803,7 +804,7 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
     elif target == "4":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format("", "Views", "views", "", "Views", views_target),
             reply_markup=keyboard_back,
@@ -811,7 +812,7 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
     elif target == "5":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
                 "", "Bookmarks", "bookmarks", "", "Bookmarks", bookmarks_target
@@ -821,7 +822,7 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
     elif target == "6":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text="⚙️ <b>Raid Options</b>\n\n"
             f"🔗 <b>Link:</b> {link}\n"
@@ -872,7 +873,7 @@ async def handle_target(callback_query: CallbackQuery):
             ]
         )
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_text.format(
                 "", "either for each raid or as a default setting"
@@ -917,7 +918,7 @@ async def handle_target(callback_query: CallbackQuery):
             ]
         )
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_text.format("Default", "in the default settings"),
             reply_markup=keyboard_default_target,
@@ -925,7 +926,7 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
     elif target == "9":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
                 "Default", "Likes", "likes", "default", "likes", likes_target
@@ -935,7 +936,7 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
     elif target == "10":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
                 "Default",
@@ -950,7 +951,7 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
     elif target == "11":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
                 "Default", "Replies", "replies", "default", "replies", replies_target
@@ -960,7 +961,7 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
     elif target == "12":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
                 "Default", "Views", "views", "default", "views", views_target
@@ -970,7 +971,7 @@ async def handle_target(callback_query: CallbackQuery):
         await callback_query.answer()
     elif target == "13":
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
                 "Default",
@@ -1065,7 +1066,6 @@ async def handle_start_raid(message: Message, user_id: int):
             )
             raid_status[chat_id] = False
         else:
-            chat_id = message.chat.id
             raid_status[chat_id] = True
             timer[chat_id] = datetime.now()
             raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
@@ -1194,6 +1194,7 @@ async def star_raid_callback(callback: CallbackQuery):
 @dp.callback_query(lambda c: c.data.startswith("option"))
 async def process_callback(callback_query: CallbackQuery):
     option = callback_query.data.replace("option_", "")
+    chat_id = callback_query.message.chat.id
 
     if option == "2":
         global keyboard_target
@@ -1235,7 +1236,7 @@ async def process_callback(callback_query: CallbackQuery):
             ]
         )
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_text.format(
                 "", "either for each raid or as a default setting"
@@ -1245,7 +1246,7 @@ async def process_callback(callback_query: CallbackQuery):
         await callback_query.answer()
     elif option == "3":
         await bot.delete_message(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
         )
     elif option == "4":
@@ -1278,7 +1279,7 @@ async def process_callback(callback_query: CallbackQuery):
             ]
         )
         await bot.edit_message_text(
-            chat_id=callback_query.message.chat.id,
+            chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=customization_text.format(
                 "",
@@ -1303,8 +1304,7 @@ async def process_callback(callback: CallbackQuery):
     file_type_start = await get_file_type(chat_id, "start")
     file_path_start = os.path.join(
         MEDIA_DIR_START,
-        str(callback.message.chat.id)
-        + (".mp4" if file_type_start == ".gif" else file_type_start),
+        str(chat_id) + (".mp4" if file_type_start == ".gif" else file_type_start),
     )
     is_file_start = os.path.isfile(file_path_start)
 
@@ -1335,7 +1335,7 @@ async def process_callback(callback: CallbackQuery):
                 ],
             ]
         )
-        file_type_start = await get_file_type(callback.message.chat.id, "start")
+        file_type_start = await get_file_type(chat_id, "start")
         if file_type_start == ".jpg":
             current_type = "Image"
         elif file_type_start == ".mp4":
@@ -1374,7 +1374,7 @@ async def process_callback(callback: CallbackQuery):
                 ],
             ]
         )
-        file_type_raid = await get_file_type(callback.message.chat.id, "raid")
+        file_type_raid = await get_file_type(chat_id, "raid")
         if file_type_raid == ".jpg":
             current_type = "Image"
         elif file_type_raid == ".mp4":
@@ -1413,7 +1413,7 @@ async def process_callback(callback: CallbackQuery):
                 ],
             ]
         )
-        file_type_end = await get_file_type(callback.message.chat.id, "end")
+        file_type_end = await get_file_type(chat_id, "end")
         if file_type_end == ".jpg":
             current_type = "Image"
         elif file_type_end == ".mp4":
@@ -1454,7 +1454,7 @@ async def process_callback(callback: CallbackQuery):
         )
 
     elif option == "5":
-        await save_media(callback.message.chat.id, "", "start")
+        await save_media(chat_id, "", "start")
         await callback.message.edit_text(
             customization_text.format(
                 "",
@@ -1471,7 +1471,7 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_customization,
         )
     elif option == "7":
-        await save_media(callback.message.chat.id, "", "raid")
+        await save_media(chat_id, "", "raid")
         await callback.message.edit_text(
             customization_text.format(
                 "",
@@ -1480,7 +1480,7 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_customization,
         )
     elif option == "8":
-        await save_media(callback.message.chat.id, "", "end")
+        await save_media(chat_id, "", "end")
         await callback.message.edit_text(
             customization_text.format(
                 "",
@@ -1489,7 +1489,7 @@ async def process_callback(callback: CallbackQuery):
             reply_markup=keyboard_customization,
         )
     elif option == "9":
-        await update_custom_text(callback.message.chat.id, "")
+        await update_custom_text(chat_id, "")
         await callback.message.edit_text(
             customization_text.format(
                 "",
