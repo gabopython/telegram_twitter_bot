@@ -64,7 +64,7 @@ async def stop_command(message: Message):
             if minutes == 1
             else f"⏰ <b>Duration</b>: {minutes} minutes"
         )
-        caption = "🛑 <b>Raid Ended - Stopped by admin</b>\n\n" + percentages + minutes
+        caption = "🛑 <b>Raid Ended - Stopped by admin</b>\n\n" + percentages[chat_id] + minutes
         file_name = str(chat_id)
         file_type = await get_file_type(chat_id, "end")
         if file_type == "":
@@ -718,7 +718,7 @@ async def handle_message(message: Message):
             custom_text = await get_custom_text(chat_id)
             if custom_text != "":
                 custom_text += "\n\n"
-            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages
+            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
             file_type2 = await get_file_type(chat_id, "raid")
             file_path = os.path.join(
                 MEDIA_DIR_RAID,
@@ -1026,8 +1026,7 @@ async def handle_start_raid(message: Message, user_id: int):
         global emoji_keyboard
         emoji_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons])
 
-        global percentages
-        percentages = (
+        percentages[chat_id] = (
             (
                 ""
                 if likes_target[chat_id] == 0
@@ -1072,14 +1071,14 @@ async def handle_start_raid(message: Message, user_id: int):
         ):
             raid_message = (
                 "🎊 Raid Ended - Targets Reached!\n\n"
-                + percentages
+                + percentages[chat_id]
                 + "⏰ Duration: 0 minutes"
             )
             raid_status[chat_id] = False
         else:
             raid_status[chat_id] = True
             timer[chat_id] = datetime.now()
-            raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages
+            raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages[chat_id]
         await message.delete()
 
         file_name = str(chat_id)
@@ -1158,7 +1157,7 @@ async def handle_start_raid(message: Message, user_id: int):
             custom_text = await get_custom_text(chat_id)
             if custom_text != "":
                 custom_text += "\n\n"
-            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages
+            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
 
             try:
                 if file_type == "" and file_type2 == "":
