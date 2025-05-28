@@ -136,9 +136,7 @@ async def reply_handler(message: Message):
             if "default" in message_reply.lower():
                 if "Likes" in message_reply:
                     try:
-                        global likes_target
-                        global likes_default_target
-                        if likes_default_target == int(message.text):
+                        if likes_default_target[chat_id] == int(message.text):
                             bot_message = await message.answer(
                                 same_value.format("Default", "Likes")
                             )
@@ -148,15 +146,17 @@ async def reply_handler(message: Message):
                                 chat_id=chat_id, message_id=message.message_id
                             )
                             return
-                        likes_default_target = int(message.text)
-                        await update_likes_default_target(chat_id, likes_default_target)
-                        likes_target = likes_default_target
-                        await update_likes_target(chat_id, likes_target)
+                        likes_default_target[chat_id] = int(message.text)
+                        await update_likes_default_target(
+                            chat_id, likes_default_target[chat_id]
+                        )
+                        likes_target[chat_id] = likes_default_target[chat_id]
+                        await update_likes_target(chat_id, likes_target[chat_id])
                         await bot.edit_message_text(
                             chat_id=chat_id,
                             message_id=message.reply_to_message.message_id,
                             text=target_saved.format(
-                                "likes", "default ", "Likes", likes_target
+                                "likes", "default ", "Likes", likes_target[chat_id]
                             ),
                             reply_markup=keyboard_default_back,
                         )
@@ -168,9 +168,7 @@ async def reply_handler(message: Message):
                         await bot_message.delete()
                 elif "Retweets" in message_reply:
                     try:
-                        global retweets_target
-                        global retweets_default_target
-                        if retweets_default_target == int(message.text):
+                        if retweets_default_target[chat_id] == int(message.text):
                             bot_message = await message.answer(
                                 same_value.format("Default", "Retweets")
                             )
@@ -180,12 +178,12 @@ async def reply_handler(message: Message):
                                 chat_id=chat_id, message_id=message.message_id
                             )
                             return
-                        retweets_default_target = int(message.text)
+                        retweets_default_target[chat_id] = int(message.text)
                         await update_retweets_default_target(
-                            chat_id, retweets_default_target
+                            chat_id, retweets_default_target[chat_id]
                         )
-                        retweets_target = retweets_default_target
-                        await update_retweets_target(chat_id, retweets_target)
+                        retweets_target[chat_id] = retweets_default_target[chat_id]
+                        await update_retweets_target(chat_id, retweets_target[chat_id])
                         await bot.edit_message_text(
                             chat_id=chat_id,
                             message_id=message.reply_to_message.message_id,
@@ -193,7 +191,7 @@ async def reply_handler(message: Message):
                                 "retweets",
                                 "default ",
                                 "Retweets",
-                                retweets_target,
+                                retweets_target[chat_id],
                             ),
                             reply_markup=keyboard_default_back,
                         )
@@ -205,9 +203,7 @@ async def reply_handler(message: Message):
                         await bot_message.delete()
                 elif "Replies" in message_reply:
                     try:
-                        global replies_target
-                        global replies_default_target
-                        if replies_default_target == int(message.text):
+                        if replies_default_target[chat_id] == int(message.text):
                             bot_message = await message.answer(
                                 same_value.format("Default", "Replies")
                             )
@@ -217,12 +213,12 @@ async def reply_handler(message: Message):
                                 chat_id=chat_id, message_id=message.message_id
                             )
                             return
-                        replies_default_target = int(message.text)
+                        replies_default_target[chat_id] = int(message.text)
                         await update_replies_default_target(
-                            chat_id, replies_default_target
+                            chat_id, replies_default_target[chat_id]
                         )
-                        replies_target = replies_default_target
-                        await update_replies_target(chat_id, replies_target)
+                        replies_target[chat_id] = replies_default_target[chat_id]
+                        await update_replies_target(chat_id, replies_target[chat_id])
                         await bot.edit_message_text(
                             chat_id=chat_id,
                             message_id=message.reply_to_message.message_id,
@@ -230,7 +226,7 @@ async def reply_handler(message: Message):
                                 "replies",
                                 "default ",
                                 "Replies",
-                                replies_target,
+                                replies_target[chat_id],
                             ),
                             reply_markup=keyboard_default_back,
                         )
@@ -242,9 +238,7 @@ async def reply_handler(message: Message):
                         await bot_message.delete()
                 elif "Views" in message_reply:
                     try:
-                        global views_target
-                        global views_default_target
-                        if views_default_target == int(message.text):
+                        if views_default_target[chat_id] == int(message.text):
                             bot_message = await message.answer(
                                 same_value.format("Default", "Views")
                             )
@@ -254,15 +248,17 @@ async def reply_handler(message: Message):
                                 chat_id=chat_id, message_id=message.message_id
                             )
                             return
-                        views_default_target = int(message.text)
-                        await update_views_default_target(chat_id, views_default_target)
-                        views_target = views_default_target
-                        await update_views_target(chat_id, views_target)
+                        views_default_target[chat_id] = int(message.text)
+                        await update_views_default_target(
+                            chat_id, views_default_target[chat_id]
+                        )
+                        views_target[chat_id] = views_default_target[chat_id]
+                        await update_views_target(chat_id, views_target[chat_id])
                         await bot.edit_message_text(
                             chat_id=chat_id,
                             message_id=message.reply_to_message.message_id,
                             text=target_saved.format(
-                                "views", "default ", "Views", views_target
+                                "views", "default ", "Views", views_target[chat_id]
                             ),
                             reply_markup=keyboard_default_back,
                         )
@@ -274,9 +270,7 @@ async def reply_handler(message: Message):
                         await bot_message.delete()
                 elif "Bookmarks" in message_reply:
                     try:
-                        global bookmarks_target
-                        global bookmarks_default_target
-                        if bookmarks_default_target == int(message.text):
+                        if bookmarks_default_target[chat_id] == int(message.text):
                             bot_message = await message.answer(
                                 same_value.format("Default", "Bookmarks")
                             )
@@ -286,12 +280,14 @@ async def reply_handler(message: Message):
                                 chat_id=chat_id, message_id=message.message_id
                             )
                             return
-                        bookmarks_default_target = int(message.text)
+                        bookmarks_default_target[chat_id] = int(message.text)
                         await update_bookmarks_default_target(
-                            chat_id, bookmarks_default_target
+                            chat_id, bookmarks_default_target[chat_id]
                         )
-                        bookmarks_target = bookmarks_default_target
-                        await update_bookmarks_target(chat_id, bookmarks_target)
+                        bookmarks_target[chat_id] = bookmarks_default_target[chat_id]
+                        await update_bookmarks_target(
+                            chat_id, bookmarks_target[chat_id]
+                        )
                         await bot.edit_message_text(
                             chat_id=chat_id,
                             message_id=message.reply_to_message.message_id,
@@ -299,7 +295,7 @@ async def reply_handler(message: Message):
                                 "bookmarks",
                                 "default ",
                                 "Bookmarks",
-                                bookmarks_target,
+                                bookmarks_target[chat_id],
                             ),
                             reply_markup=keyboard_default_back,
                         )
@@ -311,7 +307,7 @@ async def reply_handler(message: Message):
                         await bot_message.delete()
             elif "Likes" in message_reply:
                 try:
-                    if likes_target == int(message.text):
+                    if likes_target[chat_id] == int(message.text):
                         bot_message = await message.answer(
                             same_value.format("", "Likes")
                         )
@@ -321,12 +317,14 @@ async def reply_handler(message: Message):
                             chat_id=chat_id, message_id=message.message_id
                         )
                         return
-                    likes_target = int(message.text)
-                    await update_likes_target(chat_id, likes_target)
+                    likes_target[chat_id] = int(message.text)
+                    await update_likes_target(chat_id, likes_target[chat_id])
                     await bot.edit_message_text(
                         chat_id=chat_id,
                         message_id=message.reply_to_message.message_id,
-                        text=target_saved.format("likes", "", "Likes", likes_target),
+                        text=target_saved.format(
+                            "likes", "", "Likes", likes_target[chat_id]
+                        ),
                         reply_markup=keyboard_back,
                     )
                 except ValueError:
@@ -337,7 +335,7 @@ async def reply_handler(message: Message):
                     await bot_message.delete()
             elif "Retweets" in message_reply:
                 try:
-                    if retweets_target == int(message.text):
+                    if retweets_target[chat_id] == int(message.text):
                         bot_message = await message.answer(
                             same_value.format("", "Retweets")
                         )
@@ -347,13 +345,13 @@ async def reply_handler(message: Message):
                             chat_id=chat_id, message_id=message.message_id
                         )
                         return
-                    retweets_target = int(message.text)
-                    await update_retweets_target(chat_id, retweets_target)
+                    retweets_target[chat_id] = int(message.text)
+                    await update_retweets_target(chat_id, retweets_target[chat_id])
                     await bot.edit_message_text(
                         chat_id=chat_id,
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
-                            "retweets", "", "Retweets", retweets_target
+                            "retweets", "", "Retweets", retweets_target[chat_id]
                         ),
                         reply_markup=keyboard_back,
                     )
@@ -365,7 +363,7 @@ async def reply_handler(message: Message):
                     await bot_message.delete()
             elif "Replies" in message_reply:
                 try:
-                    if replies_target == int(message.text):
+                    if replies_target[chat_id] == int(message.text):
                         bot_message = await message.answer(
                             same_value.format("", "Replies")
                         )
@@ -375,13 +373,13 @@ async def reply_handler(message: Message):
                             chat_id=chat_id, message_id=message.message_id
                         )
                         return
-                    replies_target = int(message.text)
-                    await update_replies_target(chat_id, replies_target)
+                    replies_target[chat_id] = int(message.text)
+                    await update_replies_target(chat_id, replies_target[chat_id])
                     await bot.edit_message_text(
                         chat_id=chat_id,
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
-                            "replies", "", "Replies", replies_target
+                            "replies", "", "Replies", replies_target[chat_id]
                         ),
                         reply_markup=keyboard_back,
                     )
@@ -393,7 +391,7 @@ async def reply_handler(message: Message):
                     await bot_message.delete()
             elif "Views" in message_reply:
                 try:
-                    if views_target == int(message.text):
+                    if views_target[chat_id] == int(message.text):
                         bot_message = await message.answer(
                             same_value.format("", "Views")
                         )
@@ -403,12 +401,14 @@ async def reply_handler(message: Message):
                             chat_id=chat_id, message_id=message.message_id
                         )
                         return
-                    views_target = int(message.text)
-                    await update_views_target(chat_id, views_target)
+                    views_target[chat_id] = int(message.text)
+                    await update_views_target(chat_id, views_target[chat_id])
                     await bot.edit_message_text(
                         chat_id=chat_id,
                         message_id=message.reply_to_message.message_id,
-                        text=target_saved.format("views", "", "Views", views_target),
+                        text=target_saved.format(
+                            "views", "", "Views", views_target[chat_id]
+                        ),
                         reply_markup=keyboard_back,
                     )
                 except ValueError:
@@ -419,7 +419,7 @@ async def reply_handler(message: Message):
                     await bot_message.delete()
             elif "Bookmarks" in message_reply:
                 try:
-                    if bookmarks_target == int(message.text):
+                    if bookmarks_target[chat_id] == int(message.text):
                         bot_message = await message.answer(
                             same_value.format("", "Bookmarks")
                         )
@@ -429,13 +429,13 @@ async def reply_handler(message: Message):
                             chat_id=chat_id, message_id=message.message_id
                         )
                         return
-                    bookmarks_target = int(message.text)
-                    await update_bookmarks_target(chat_id, bookmarks_target)
+                    bookmarks_target[chat_id] = int(message.text)
+                    await update_bookmarks_target(chat_id, bookmarks_target[chat_id])
                     await bot.edit_message_text(
                         chat_id=chat_id,
                         message_id=message.reply_to_message.message_id,
                         text=target_saved.format(
-                            "bookmarks", "", "Bookmarks", bookmarks_target
+                            "bookmarks", "", "Bookmarks", bookmarks_target[chat_id]
                         ),
                         reply_markup=keyboard_back,
                     )
@@ -775,7 +775,9 @@ async def handle_target(callback_query: CallbackQuery):
         await bot.edit_message_text(
             chat_id=chat_id,
             message_id=callback_query.message.message_id,
-            text=targets_reply.format("", "Likes", "likes", "", "Likes", likes_target),
+            text=targets_reply.format(
+                "", "Likes", "likes", "", "Likes", likes_target[chat_id]
+            ),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -784,7 +786,7 @@ async def handle_target(callback_query: CallbackQuery):
             chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "", "Retweets", "retweets", "", "Retweets", retweets_target
+                "", "Retweets", "retweets", "", "Retweets", retweets_target[chat_id]
             ),
             reply_markup=keyboard_back,
         )
@@ -794,7 +796,7 @@ async def handle_target(callback_query: CallbackQuery):
             chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "", "Replies", "replies", "", "Replies", replies_target
+                "", "Replies", "replies", "", "Replies", replies_target[chat_id]
             ),
             reply_markup=keyboard_back,
         )
@@ -803,7 +805,9 @@ async def handle_target(callback_query: CallbackQuery):
         await bot.edit_message_text(
             chat_id=chat_id,
             message_id=callback_query.message.message_id,
-            text=targets_reply.format("", "Views", "views", "", "Views", views_target),
+            text=targets_reply.format(
+                "", "Views", "views", "", "Views", views_target[chat_id]
+            ),
             reply_markup=keyboard_back,
         )
         await callback_query.answer()
@@ -812,7 +816,7 @@ async def handle_target(callback_query: CallbackQuery):
             chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "", "Bookmarks", "bookmarks", "", "Bookmarks", bookmarks_target
+                "", "Bookmarks", "bookmarks", "", "Bookmarks", bookmarks_target[chat_id]
             ),
             reply_markup=keyboard_back,
         )
@@ -823,11 +827,11 @@ async def handle_target(callback_query: CallbackQuery):
             message_id=callback_query.message.message_id,
             text="⚙️ <b>Raid Options</b>\n\n"
             f"🔗 <b>Link:</b> {link[chat_id]}\n"
-            f"💙 <b>Likes:</b> {likes_target}\n"
-            f"🔄 <b>Retweets:</b> {retweets_target}\n"
-            f"💬 <b>Replies:</b> {replies_target}\n"
-            f"👀 <b>Views:</b> {views_target}\n"
-            f"🔖 <b>Bookmarks:</b> {bookmarks_target}",
+            f"💙 <b>Likes:</b> {likes_target[chat_id]}\n"
+            f"🔄 <b>Retweets:</b> {retweets_target[chat_id]}\n"
+            f"💬 <b>Replies:</b> {replies_target[chat_id]}\n"
+            f"👀 <b>Views:</b> {views_target[chat_id]}\n"
+            f"🔖 <b>Bookmarks:</b> {bookmarks_target[chat_id]}",
             reply_markup=keyboard_message,
         )
         await callback_query.answer()
@@ -836,28 +840,31 @@ async def handle_target(callback_query: CallbackQuery):
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text=f"💙 Likes ({likes_target})", callback_data="target_1"
+                        text=f"💙 Likes ({likes_target[chat_id]})",
+                        callback_data="target_1",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"🔄 Retweets ({retweets_target})",
+                        text=f"🔄 Retweets ({retweets_target[chat_id]})",
                         callback_data="target_2",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"💬 Replies ({replies_target})", callback_data="target_3"
+                        text=f"💬 Replies ({replies_target[chat_id]})",
+                        callback_data="target_3",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"👀 Views ({views_target})", callback_data="target_4"
+                        text=f"👀 Views ({views_target[chat_id]})",
+                        callback_data="target_4",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"🔖 Bookmarks ({bookmarks_target})",
+                        text=f"🔖 Bookmarks ({bookmarks_target[chat_id]})",
                         callback_data="target_5",
                     )
                 ],
@@ -883,31 +890,31 @@ async def handle_target(callback_query: CallbackQuery):
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text=f"💙 Likes ({likes_default_target})",
+                        text=f"💙 Likes ({likes_default_target[chat_id]})",
                         callback_data="target_9",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"🔄 Retweets ({retweets_default_target})",
+                        text=f"🔄 Retweets ({retweets_default_target[chat_id]})",
                         callback_data="target_10",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"💬 Replies ({replies_default_target})",
+                        text=f"💬 Replies ({replies_default_target[chat_id]})",
                         callback_data="target_11",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"👀 Views ({views_default_target})",
+                        text=f"👀 Views ({views_default_target[chat_id]})",
                         callback_data="target_12",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"🔖 Bookmarks ({bookmarks_default_target})",
+                        text=f"🔖 Bookmarks ({bookmarks_default_target[chat_id]})",
                         callback_data="target_13",
                     )
                 ],
@@ -926,7 +933,7 @@ async def handle_target(callback_query: CallbackQuery):
             chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Default", "Likes", "likes", "default", "likes", likes_target
+                "Default", "Likes", "likes", "default", "likes", likes_target[chat_id]
             ),
             reply_markup=keyboard_default_back,
         )
@@ -941,7 +948,7 @@ async def handle_target(callback_query: CallbackQuery):
                 "retweets",
                 "default",
                 "retweets",
-                retweets_target,
+                retweets_target[chat_id],
             ),
             reply_markup=keyboard_default_back,
         )
@@ -951,7 +958,12 @@ async def handle_target(callback_query: CallbackQuery):
             chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Default", "Replies", "replies", "default", "replies", replies_target
+                "Default",
+                "Replies",
+                "replies",
+                "default",
+                "replies",
+                replies_target[chat_id],
             ),
             reply_markup=keyboard_default_back,
         )
@@ -961,7 +973,7 @@ async def handle_target(callback_query: CallbackQuery):
             chat_id=chat_id,
             message_id=callback_query.message.message_id,
             text=targets_reply.format(
-                "Default", "Views", "views", "default", "views", views_target
+                "Default", "Views", "views", "default", "views", views_target[chat_id]
             ),
             reply_markup=keyboard_default_back,
         )
@@ -976,7 +988,7 @@ async def handle_target(callback_query: CallbackQuery):
                 "bookmarks",
                 "default",
                 "bookmarks",
-                bookmarks_target,
+                bookmarks_target[chat_id],
             ),
             reply_markup=keyboard_default_back,
         )
@@ -1001,7 +1013,9 @@ async def handle_start_raid(message: Message, user_id: int):
         retweets_percentage = calculate_percentage(retweets, retweets_target[chat_id])
         replies_percentage = calculate_percentage(replies, replies_target[chat_id])
         views_percentage = calculate_percentage(views, views_target[chat_id])
-        bookmarks_percentage = calculate_percentage(bookmarks, bookmarks_target[chat_id])
+        bookmarks_percentage = calculate_percentage(
+            bookmarks, bookmarks_target[chat_id]
+        )
         emoji_buttons = [
             InlineKeyboardButton(text="💬", callback_data="comment"),
             InlineKeyboardButton(text="🔁", callback_data="retweet"),
@@ -1199,28 +1213,31 @@ async def process_callback(callback_query: CallbackQuery):
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text=f"💙 Likes ({likes_target})", callback_data="target_1"
+                        text=f"💙 Likes ({likes_target[chat_id]})",
+                        callback_data="target_1",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"🔄 Retweets ({retweets_target})",
+                        text=f"🔄 Retweets ({retweets_target[chat_id]})",
                         callback_data="target_2",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"💬 Replies ({replies_target})", callback_data="target_3"
+                        text=f"💬 Replies ({replies_target[chat_id]})",
+                        callback_data="target_3",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"👀 Views ({views_target})", callback_data="target_4"
+                        text=f"👀 Views ({views_target[chat_id]})",
+                        callback_data="target_4",
                     )
                 ],
                 [
                     InlineKeyboardButton(
-                        text=f"🔖 Bookmarks ({bookmarks_target})",
+                        text=f"🔖 Bookmarks ({bookmarks_target[chat_id]})",
                         callback_data="target_5",
                     )
                 ],
