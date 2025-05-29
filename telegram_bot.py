@@ -33,6 +33,7 @@ resend_ongoing = True
 commands = [
     BotCommand(command="/login", description="Login to X"),
     BotCommand(command="/stop", description="Stop the ongoing raid"),
+    BotCommand(command="/trending", description="Set up a trending slot"),
 ]
 
 
@@ -102,7 +103,7 @@ async def stop_command(message: Message):
 @dp.message(Command("login"))
 async def login_handler(message: Message):
     bot_username = (await bot.get_me()).username
-    login_url = f"https://t.me/{bot_username}?start=login"
+    login_url = f"https://t.me/{bot_username}?login_dm=login"
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text="In Private", url=login_url)]]
@@ -111,10 +112,37 @@ async def login_handler(message: Message):
     await message.answer("Please continue in private 👇", reply_markup=keyboard)
 
 
-@dp.message(Command("start"))
-async def start_handler(message: Message):
-    if message.chat.type == "private" and message.text == "/start login":
-        await message.answer("Let's proceed with logging in to X.")
+@dp.message(Command("login_dm"))
+async def login_dm_handler(message: Message):
+    if message.chat.type == "private" and message.text == "/login_dm login":
+        login_keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="Login to X",
+                        url="https://x.com/i/flow/login",
+                    )
+                ]
+            ]
+        )
+        await message.answer("Let's proceed with logging in to X.", reply_markup=login_keyboard)
+
+@dp.message(Command("trending"))
+async def trending_handler(message: Message):
+    bot_username = (await bot.get_me()).username
+    trending_url = f"https://t.me/{bot_username}?trending_dm=trending"
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="In Private", url=trending_url)]]
+    )
+
+    await message.answer("Please continue in private 👇", reply_markup=keyboard)
+
+
+@dp.message(Command("trending_dm"))
+async def trending_dm_handler(message: Message):
+    if message.chat.type == "private" and message.text == "/trending_dm trending":
+        await message.answer("Reply with your Token's Contract/Issuer Address to set up a trending slot:")
 
 
 @dp.message(F.reply_to_message)
@@ -1021,10 +1049,17 @@ async def handle_start_raid(message: Message, user_id: int):
             InlineKeyboardButton(text="🔁", callback_data="retweet"),
             InlineKeyboardButton(text="💙", callback_data="like"),
             InlineKeyboardButton(text="🏷️", callback_data="bookmark"),
-            InlineKeyboardButton(text="👊", callback_data="fistbump"),
+            InlineKeyboardButton(text="👊", callback_data="smash"),
+        ]
+        trending_buttons = [
+            InlineKeyboardButton(text="🔵", callback_data="trending_1"),
+            InlineKeyboardButton(text="🔵", callback_data="trending_2"),
+            InlineKeyboardButton(text="🔵", callback_data="trending_3"),
+            InlineKeyboardButton(text="🔵", callback_data="trending_4"),
+            InlineKeyboardButton(text="🔵", callback_data="trending_5"),
         ]
         global emoji_keyboard
-        emoji_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons])
+        emoji_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons])
 
         percentages[chat_id] = (
             (
