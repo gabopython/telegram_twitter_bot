@@ -65,7 +65,11 @@ async def stop_command(message: Message):
             if minutes == 1
             else f"⏰ <b>Duration</b>: {minutes} minutes"
         )
-        caption = "🛑 <b>Raid Ended - Stopped by admin</b>\n\n" + percentages[chat_id] + minutes
+        caption = (
+            "🛑 <b>Raid Ended - Stopped by admin</b>\n\n"
+            + percentages[chat_id]
+            + minutes
+        )
         file_name = str(chat_id)
         file_type = await get_file_type(chat_id, "end")
         if file_type == "":
@@ -109,7 +113,9 @@ async def login_handler(message: Message):
         inline_keyboard=[[InlineKeyboardButton(text="In Private", url=login_url)]]
     )
 
-    await message.answer("Please continue in private 👇", reply_markup=keyboard)
+    await message.answer(
+        "🔒 For your privacy, please continue login in DM. 👇", reply_markup=keyboard
+    )
 
 
 @dp.message(Command("login_dm"))
@@ -125,7 +131,10 @@ async def login_dm_handler(message: Message):
                 ]
             ]
         )
-        await message.answer("Let's proceed with logging in to X.", reply_markup=login_keyboard)
+        await message.answer(
+            "Let's proceed with logging in to X.", reply_markup=login_keyboard
+        )
+
 
 @dp.message(Command("trending"))
 async def trending_handler(message: Message):
@@ -142,7 +151,9 @@ async def trending_handler(message: Message):
 @dp.message(Command("trending_dm"))
 async def trending_dm_handler(message: Message):
     if message.chat.type == "private" and message.text == "/trending_dm trending":
-        await message.answer("Reply with your Token's Contract/Issuer Address to set up a trending slot:")
+        await message.answer(
+            "Reply with your Token's Contract/Issuer Address to set up a trending slot:"
+        )
 
 
 @dp.message(F.reply_to_message)
@@ -746,7 +757,9 @@ async def handle_message(message: Message):
             custom_text = await get_custom_text(chat_id)
             if custom_text != "":
                 custom_text += "\n\n"
-            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
+            updated_caption = (
+                "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
+            )
             file_type2 = await get_file_type(chat_id, "raid")
             file_path = os.path.join(
                 MEDIA_DIR_RAID,
@@ -1059,7 +1072,9 @@ async def handle_start_raid(message: Message, user_id: int):
             InlineKeyboardButton(text="🔵", callback_data="trending_5"),
         ]
         global emoji_keyboard
-        emoji_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons])
+        emoji_keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[emoji_buttons, trending_buttons]
+        )
 
         percentages[chat_id] = (
             (
@@ -1192,7 +1207,9 @@ async def handle_start_raid(message: Message, user_id: int):
             custom_text = await get_custom_text(chat_id)
             if custom_text != "":
                 custom_text += "\n\n"
-            updated_caption = "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
+            updated_caption = (
+                "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
+            )
 
             try:
                 if file_type == "" and file_type2 == "":
@@ -1550,7 +1567,7 @@ async def process_callback(callback: CallbackQuery):
 async def main():
     print("🚀 Bot is up and running! Waiting for updates...")
     dp.include_router(router)
-    #await init_db()
+    # await init_db()
     await bot.set_my_commands(commands)
     await dp.start_polling(bot)
 
