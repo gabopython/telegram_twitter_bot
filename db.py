@@ -9,8 +9,11 @@ async def init_db():
         await db.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
-                username TEXT
+                user_id INTEGER,
+                username TEXT,
+                chat_id INTEGER,
+                xp_points INTEGER DEFAULT 0,
+                PRIMARY KEY (user_id, chat_id)
             )
         """
         )
@@ -347,18 +350,36 @@ async def save_media(chat_id: int, file_type: str, folder: str):
         await db.commit()
 
 
-# async def add_user(user_id: int, username: str):
-#     async with aiosqlite.connect(DB_NAME) as db:
-#         await db.execute(
-#             """
-#             INSERT OR IGNORE INTO users (user_id, username) VALUES (?, ?)
-#         """,
-#             (user_id, username),
-#         )
-#         await db.commit()
+async def add_user(user_id: int, username: str, chat_id: int, xp_points: int = 0):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO users (user_id, username, chat_id, xp_points)
+            VALUES (?, ?, ?, ?)
+            """,
+            (user_id, username, chat_id, xp_points),
+        )
+        await db.commit()
 
 
-# async def get_users():
-#     async with aiosqlite.connect(DB_NAME) as db:
-#         async with db.execute("SELECT * FROM users") as cursor:
-#             return await cursor.fetchall()
+async def get_user(user_id: int, chat_id: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute(
+            """
+            SELECT user_id, username, chat_id, xp_points FROM users WHERE user_id = ? AND chat_id = ?
+            """,
+            (user_id, chat_id),
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row if row else None
+        
+
+async def add_xp(user_id: int, chat_id: int, xp_points: int):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            UPDATE users SET xp_points = xp_points + ? WHERE user_id = ? AND chat_id = ?
+            """,
+            (xp_points, user_id, chat_id),
+        )
+        await db.commit()
