@@ -106,21 +106,18 @@ async def stop_command(message: Message):
 
 @dp.message(Command("login"))
 async def login_handler(message: Message):
-    bot_username = (await bot.get_me()).username
-    login_url = f"https://t.me/{bot_username}?login_dm=login"
+    if message.chat.type in ["group", "supergroup"]:
+        bot_username = (await bot.get_me()).username
+        login_url = f"https://t.me/{bot_username}?start=login"
 
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="In Private", url=login_url)]]
-    )
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="In Private", url=login_url)]]
+        )
 
-    await message.answer(
-        "🔒 For your privacy, please continue login in DM. 👇", reply_markup=keyboard
-    )
-
-
-@dp.message(Command("login_dm"))
-async def login_dm_handler(message: Message):
-    if message.chat.type == "private" and message.text == "/login_dm login":
+        await message.answer(
+            " Please continue in private to log in. 👇", reply_markup=keyboard
+        )
+    else:
         login_keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
@@ -138,22 +135,42 @@ async def login_dm_handler(message: Message):
 
 @dp.message(Command("trending"))
 async def trending_handler(message: Message):
-    bot_username = (await bot.get_me()).username
-    trending_url = f"https://t.me/{bot_username}?trending_dm=trending"
+    if message.chat.type in ["group", "supergroup"]:
+        bot_username = (await bot.get_me()).username
+        trending_url = f"https://t.me/{bot_username}?start=trending"
 
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="In Private", url=trending_url)]]
-    )
-
-    await message.answer("Please continue in private 👇", reply_markup=keyboard)
-
-
-@dp.message(Command("trending_dm"))
-async def trending_dm_handler(message: Message):
-    if message.chat.type == "private" and message.text == "/trending_dm trending":
-        await message.answer(
-            "Reply with your Token's Contract/Issuer Address to set up a trending slot:"
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="In Private", url=trending_url)]]
         )
+
+        await message.answer("Please continue in private to set up trending 👇", reply_markup=keyboard)
+    else:
+        await message.answer(
+            "Reply with your Token's Contract/Issuer Address to set up a trending slot."
+        )
+
+@dp.message(Command("start"))
+async def start_handler(message: Message):
+    if message.chat.type == "private" and message.text == "/start login":
+        login_keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="Login to X",
+                        url="https://x.com/i/flow/login",
+                    )
+                ]
+            ]
+        )
+        await message.answer(
+            "Let's proceed with logging in to X.", reply_markup=login_keyboard
+        )
+    elif message.chat.type == "private" and message.text == "/start trending":
+        await message.answer("Reply with your Token's Contract/Issuer Address to set up a trending slot.")
+    
+
+
+
 
 
 @dp.message(F.reply_to_message)
