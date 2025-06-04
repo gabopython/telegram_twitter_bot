@@ -1074,8 +1074,10 @@ async def handle_start_raid(message: Message, user_id: int):
         bookmarks_percentage = calculate_percentage(
             bookmarks, bookmarks_target[chat_id]
         )
+        bot_username = (await bot.get_me()).username
+        reply_url = f"https://t.me/{bot_username}?start=reply"
         emoji_buttons = [
-            InlineKeyboardButton(text="💬", callback_data="comment"),
+            InlineKeyboardButton(text="💬", url=reply_url),
             InlineKeyboardButton(text="🔁", callback_data="retweet"),
             InlineKeyboardButton(text="💙", callback_data="like"),
             InlineKeyboardButton(text="🏷️", callback_data="bookmark"),
@@ -1269,6 +1271,46 @@ async def star_raid_callback(callback: CallbackQuery):
     await callback.answer()
     await handle_start_raid(callback.message, callback.from_user.id)
 
+
+@router.callback_query(F.data == "like")
+async def like_callback(callback: CallbackQuery):
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
+    username = callback.from_user.username
+    await add_user(user_id=user_id, username=username, chat_id=chat_id)
+    await add_xp(user_id=user_id, chat_id=chat_id, xp_points=3)
+    await callback.answer("💙 Liked tweet (+3 XP)", show_alert=True)
+
+
+@router.callback_query(F.data == "retweet")
+async def retweet_callback(callback: CallbackQuery):
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
+    username = callback.from_user.username
+    await add_user(user_id=user_id, username=username, chat_id=chat_id)
+    await add_xp(user_id=user_id, chat_id=chat_id, xp_points=4)
+    await callback.answer("🔄 Retweeted tweet (+4 XP)", show_alert=True)
+
+
+
+@router.callback_query(F.data == "bookmark")
+async def bookmark_callback(callback: CallbackQuery):
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
+    username = callback.from_user.username
+    await add_user(user_id=user_id, username=username, chat_id=chat_id)
+    await add_xp(user_id=user_id, chat_id=chat_id, xp_points=2)
+    await callback.answer("🔖 Bookmarked tweet (+2 XP)", show_alert=True)
+
+
+@router.callback_query(F.data == "smash")
+async def smash_callback(callback: CallbackQuery):      
+    chat_id = callback.message.chat.id
+    user_id = callback.from_user.id
+    username = callback.from_user.username
+    await add_user(user_id=user_id, username=username, chat_id=chat_id)
+    await add_xp(user_id=user_id, chat_id=chat_id, xp_points=11)
+    await callback.answer("👊 Smashing tweet (+11 XP)", show_alert=True)
 
 @dp.callback_query(lambda c: c.data.startswith("option"))
 async def process_callback(callback_query: CallbackQuery):

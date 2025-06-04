@@ -352,14 +352,23 @@ async def save_media(chat_id: int, file_type: str, folder: str):
 
 async def add_user(user_id: int, username: str, chat_id: int, xp_points: int = 0):
     async with aiosqlite.connect(DB_NAME) as db:
-        await db.execute(
-            """
-            INSERT OR REPLACE INTO users (user_id, username, chat_id, xp_points)
-            VALUES (?, ?, ?, ?)
-            """,
-            (user_id, username, chat_id, xp_points),
-        )
-        await db.commit()
+        # Check if the user already exists in that chat
+        async with db.execute(
+            "SELECT 1 FROM users WHERE user_id = ? AND chat_id = ?",
+            (user_id, chat_id)
+        ) as cursor:
+            exists = await cursor.fetchone()    
+
+        # Only insert if user does not exist
+        if not exists:
+            await db.execute(
+                """
+                INSERT INTO users (user_id, username, chat_id, xp_points)
+                VALUES (?, ?, ?, ?)
+                """,
+                (user_id, username, chat_id, xp_points),
+            )
+            await db.commit()
 
 
 async def get_user(user_id: int, chat_id: int):
