@@ -30,6 +30,7 @@ dp = Dispatcher()
 router = Router()
 resend_message = {}
 resend_ongoing = True
+bot_username = 'waoraidarbot'
 commands = [
     BotCommand(command="/login", description="Login to X"),
     BotCommand(command="/stop", description="Stop the ongoing raid"),
@@ -107,7 +108,6 @@ async def stop_command(message: Message):
 @dp.message(Command("login"))
 async def login_handler(message: Message):
     if message.chat.type in ["group", "supergroup"]:
-        bot_username = (await bot.get_me()).username
         login_url = f"https://t.me/{bot_username}?start=login"
 
         keyboard = InlineKeyboardMarkup(
@@ -136,7 +136,6 @@ async def login_handler(message: Message):
 @dp.message(Command("trending"))
 async def trending_handler(message: Message):
     if message.chat.type in ["group", "supergroup"]:
-        bot_username = (await bot.get_me()).username
         trending_url = f"https://t.me/{bot_username}?start=trending"
 
         keyboard = InlineKeyboardMarkup(
@@ -155,24 +154,30 @@ async def trending_handler(message: Message):
 
 @dp.message(Command("start"))
 async def start_handler(message: Message):
-    if message.chat.type == "private" and message.text == "/start login":
-        login_keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="Login to X",
-                        url="https://x.com/i/flow/login",
-                    )
+    if message.chat.type == 'private':
+        if message.text == "/start login":
+            login_keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text="Login to X",
+                            url="https://x.com/i/flow/login",
+                        )
+                    ]
                 ]
-            ]
-        )
-        await message.answer(
-            "Let's proceed with logging in to X.", reply_markup=login_keyboard
-        )
-    elif message.chat.type == "private" and message.text == "/start trending":
-        await message.answer(
-            "Reply with your Token's Contract/Issuer Address to set up a trending slot."
-        )
+            )
+            await message.answer(
+                "Let's proceed with logging in to X.", reply_markup=login_keyboard
+            )
+        elif message.text == "/start trending":
+            await message.answer(
+                "Reply with your Token's Contract/Issuer Address to set up a trending slot."
+            )
+        elif message.text == "/start reply":
+            await message.answer(
+                "Please send your reply to the tweet by responding to this message.\n\n"
+                + "❗️ Replies that contain spam or lack meaningful engagement will not be eligible for XP and may result in a ban."
+            )
 
 
 @dp.message(F.reply_to_message)
@@ -1076,7 +1081,6 @@ async def handle_start_raid(message: Message, user_id: int):
         bookmarks_percentage = calculate_percentage(
             bookmarks, bookmarks_target[chat_id]
         )
-        bot_username = (await bot.get_me()).username
         reply_url = f"https://t.me/{bot_username}?start=reply"
         emoji_buttons = [
             InlineKeyboardButton(text="💬", url=reply_url),
@@ -1282,6 +1286,32 @@ async def like_callback(callback: CallbackQuery):
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=3)
     await callback.answer("💙 Liked tweet (+3 XP)", show_alert=True)
+
+
+@dp.message(F.reply_to_message)
+async def reply_callback(message: Message):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    username = message.from_user.username
+    message_reply = message.reply_to_message.text
+    
+    print(message_reply)
+    if 'send your reply' in message_reply:
+        await asyncio.sleep(3)
+        await bot.delete_message(
+            chat_id=chat_id,
+            message_id=message.reply_to_message.message_id,
+        )
+        await bot.delete_message(
+            chat_id=chat_id,
+            message_id=message.message_id,
+        )
+        await message.answer(
+            "✅ <b>Your reply has been sent to the tweet. You can view it by clicking the button below.</b>"
+            + "\n\nReceived 5 XP"
+        )
+        await add_user(user_id=user_id, username=username, chat_id=chat_id)
+        await add_xp(user_id=user_id, chat_id=chat_id, xp_points=5)
 
 
 @router.callback_query(F.data == "retweet")
@@ -1631,6 +1661,8 @@ async def main():
     # await init_db()
     await bot.set_my_commands(commands)
     await dp.start_polling(bot)
+    global bot_username
+    bot_username = (await bot.get_me()).username
 
 
 if __name__ == "__main__":
