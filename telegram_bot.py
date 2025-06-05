@@ -1091,10 +1091,10 @@ async def handle_start_raid(message: Message, user_id: int):
         ]
         trending_buttons = [
             InlineKeyboardButton(text="🔵", callback_data="trending_1"),
-            InlineKeyboardButton(text="🔵", callback_data="trending_2"),
-            InlineKeyboardButton(text="🔵", callback_data="trending_3"),
-            InlineKeyboardButton(text="🔵", callback_data="trending_4"),
-            InlineKeyboardButton(text="🔵", callback_data="trending_5"),
+            InlineKeyboardButton(text="🔵", callback_data="trending_1"),
+            InlineKeyboardButton(text="🔵", callback_data="trending_1"),
+            InlineKeyboardButton(text="🔵", callback_data="trending_1"),
+            InlineKeyboardButton(text="🔵", callback_data="trending_1"),
         ]
         global emoji_keyboard
         emoji_keyboard = InlineKeyboardMarkup(
@@ -1342,6 +1342,19 @@ async def smash_callback(callback: CallbackQuery):
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=11)
     await callback.answer("👊 Smashing tweet (+11 XP)", show_alert=True)
+
+
+@router.callback_query(F.data == "trending_1")
+async def trending_callback(callback: CallbackQuery):
+    trending_url = f'https://t.me/{bot_username}?start=trending'
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="In private", url=trending_url)]
+        ]
+    )
+    await callback.message.answer(
+        'Please continue in private to set up trending 👇', reply_markup=keyboard
+    )
 
 
 @dp.callback_query(lambda c: c.data.startswith("option"))
