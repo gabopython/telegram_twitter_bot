@@ -140,14 +140,18 @@ async def trending_handler(message: Message):
         trending_url = f"https://t.me/{bot_username}?start=trending"
 
         keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[[InlineKeyboardButton(text="In Private", url=trending_url)]]
+            inline_keyboard=[
+                [InlineKeyboardButton(text="In Private", url=trending_url)]
+            ]
         )
-
-        await message.answer("Please continue in private to set up trending 👇", reply_markup=keyboard)
+        await message.answer(
+            "Please continue in private to set up trending 👇", reply_markup=keyboard
+        )
     else:
         await message.answer(
             "Reply with your Token's Contract/Issuer Address to set up a trending slot."
         )
+
 
 @dp.message(Command("start"))
 async def start_handler(message: Message):
@@ -166,11 +170,9 @@ async def start_handler(message: Message):
             "Let's proceed with logging in to X.", reply_markup=login_keyboard
         )
     elif message.chat.type == "private" and message.text == "/start trending":
-        await message.answer("Reply with your Token's Contract/Issuer Address to set up a trending slot.")
-    
-
-
-
+        await message.answer(
+            "Reply with your Token's Contract/Issuer Address to set up a trending slot."
+        )
 
 
 @dp.message(F.reply_to_message)
@@ -1292,7 +1294,6 @@ async def retweet_callback(callback: CallbackQuery):
     await callback.answer("🔄 Retweeted tweet (+4 XP)", show_alert=True)
 
 
-
 @router.callback_query(F.data == "bookmark")
 async def bookmark_callback(callback: CallbackQuery):
     chat_id = callback.message.chat.id
@@ -1304,13 +1305,14 @@ async def bookmark_callback(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == "smash")
-async def smash_callback(callback: CallbackQuery):      
+async def smash_callback(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     username = callback.from_user.username
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=11)
     await callback.answer("👊 Smashing tweet (+11 XP)", show_alert=True)
+
 
 @dp.callback_query(lambda c: c.data.startswith("option"))
 async def process_callback(callback_query: CallbackQuery):
