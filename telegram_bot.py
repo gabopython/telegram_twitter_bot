@@ -1,10 +1,10 @@
 import x_bot
 from utils import *
-from config import BOT_TOKEN
+from config import BOT_TOKEN, BOT_USERNAME
 from db import *
 
 from aiogram import Bot, Dispatcher
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandObject
 import asyncio
 from datetime import datetime
 from aiogram.types import (
@@ -18,10 +18,15 @@ from aiogram.types import (
     Message,
     BotCommand,
 )
+from aiogram.utils.deep_linking import create_start_link
 from aiogram.enums.chat_member_status import ChatMemberStatus
 from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
+from typing import Dict
+import logging
 import os
 
 
@@ -30,7 +35,13 @@ dp = Dispatcher()
 router = Router()
 resend_message = {}
 resend_ongoing = True
-bot_username = 'waoraidarbot'
+user_replies: Dict[int, Dict] = {}
+
+
+class ReplyStates(StatesGroup):
+    waiting_for_reply = State()
+
+
 commands = [
     BotCommand(command="/login", description="Login to X"),
     BotCommand(command="/stop", description="Stop the ongoing raid"),
@@ -108,7 +119,7 @@ async def stop_command(message: Message):
 @dp.message(Command("login"))
 async def login_handler(message: Message):
     if message.chat.type in ["group", "supergroup"]:
-        login_url = f"https://t.me/{bot_username}?start=login"
+        login_url = f"https://t.me/{BOT_USERNAME}?start=login"
 
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[[InlineKeyboardButton(text="In Private", url=login_url)]]
@@ -136,7 +147,7 @@ async def login_handler(message: Message):
 @dp.message(Command("trending"))
 async def trending_handler(message: Message):
     if message.chat.type in ["group", "supergroup"]:
-        trending_url = f"https://t.me/{bot_username}?start=trending"
+        trending_url = f"https://t.me/{BOT_USERNAME}?start=trending"
 
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
@@ -153,8 +164,8 @@ async def trending_handler(message: Message):
 
 
 @dp.message(Command("start"))
-async def start_handler(message: Message):
-    if message.chat.type == 'private':
+async def on_start(message: Message, command: CommandObject, state: FSMContext):
+    if message.chat.type == "private":
         if message.text == "/start login":
             login_keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
@@ -169,15 +180,66 @@ async def start_handler(message: Message):
             await message.answer(
                 "Let's proceed with logging in to X.", reply_markup=login_keyboard
             )
+            return
         elif message.text == "/start trending":
             await message.answer(
                 "Reply with your Token's Contract/Issuer Address to set up a trending slot."
             )
-        elif message.text == "/start reply":
-            await message.answer(
-                "Please send your reply to the tweet by responding to this message.\n\n"
-                + "❗️ Replies that contain spam or lack meaningful engagement will not be eligible for XP and may result in a ban."
-            )
+            return
+
+    # Deep link: /start <payload>
+    payload = command.args
+    if not payload:
+        return
+
+    group_id = int(payload)
+    # Save group chat id in FSM
+    await state.set_state(ReplyStates.waiting_for_reply)
+    await state.update_data(group_id=group_id)
+    # Ask user to reply
+    sent = await message.answer(
+        "Please send your reply to the tweet by responding to this message.\n\n"
+        + "❗️ Replies that contain spam or lack meaningful engagement will not be eligible for XP and may result in a ban."
+    )
+    await state.update_data(prompt_message_id=sent.message_id)
+
+
+@dp.message(ReplyStates.waiting_for_reply, F.reply_to_message)
+async def save_reply(message: Message, state: FSMContext):
+    data = await state.get_data()
+    group_id = data.get("group_id")
+    prompt_message_id = data.get("prompt_message_id")
+    if not group_id or not prompt_message_id:
+        await message.answer("Session error. Start again from the group.")
+        await state.clear()
+        return
+
+    # Save reply
+    user_replies[message.from_user.id] = {
+        "reply_text": message.text,
+        "username": message.from_user.username,
+        "user_id": message.from_user.id,
+        "group_id": group_id,
+    }
+
+    # Delete both the prompt and the user's reply
+    try:
+        await bot.delete_message(chat_id=message.chat.id, message_id=prompt_message_id)
+    except Exception as e:
+        logging.warning(f"Couldn't delete prompt: {e}")
+
+    try:
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    except Exception as e:
+        logging.warning(f"Couldn't delete user reply: {e}")
+
+    await message.answer("Message saved.")
+    await state.clear()
+
+
+@dp.message(ReplyStates.waiting_for_reply)
+async def must_reply_to_prompt(message: Message):
+    await message.reply("Please reply to the prompt message so I can save your answer.")
 
 
 @dp.message(F.reply_to_message)
@@ -1081,7 +1143,7 @@ async def handle_start_raid(message: Message, user_id: int):
         bookmarks_percentage = calculate_percentage(
             bookmarks, bookmarks_target[chat_id]
         )
-        reply_url = f"https://t.me/{bot_username}?start=reply"
+        reply_url = await create_start_link(bot, payload=chat_id)
         emoji_buttons = [
             InlineKeyboardButton(text="💬", url=reply_url),
             InlineKeyboardButton(text="🔁", callback_data="retweet"),
@@ -1288,32 +1350,6 @@ async def like_callback(callback: CallbackQuery):
     await callback.answer("💙 Liked tweet (+3 XP)", show_alert=True)
 
 
-@dp.message(F.reply_to_message)
-async def reply_callback(message: Message):
-    chat_id = message.chat.id
-    user_id = message.from_user.id
-    username = message.from_user.username
-    message_reply = message.reply_to_message.text
-    
-    print(message_reply)
-    if 'send your reply' in message_reply:
-        await asyncio.sleep(3)
-        await bot.delete_message(
-            chat_id=chat_id,
-            message_id=message.reply_to_message.message_id,
-        )
-        await bot.delete_message(
-            chat_id=chat_id,
-            message_id=message.message_id,
-        )
-        await message.answer(
-            "✅ <b>Your reply has been sent to the tweet. You can view it by clicking the button below.</b>"
-            + "\n\nReceived 5 XP"
-        )
-        await add_user(user_id=user_id, username=username, chat_id=chat_id)
-        await add_xp(user_id=user_id, chat_id=chat_id, xp_points=5)
-
-
 @router.callback_query(F.data == "retweet")
 async def retweet_callback(callback: CallbackQuery):
     chat_id = callback.message.chat.id
@@ -1346,15 +1382,14 @@ async def smash_callback(callback: CallbackQuery):
 
 @router.callback_query(F.data == "trending_1")
 async def trending_callback(callback: CallbackQuery):
-    trending_url = f'https://t.me/{bot_username}?start=trending'
+    trending_url = f"https://t.me/{BOT_USERNAME}?start=trending"
     keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="In private", url=trending_url)]
-        ]
+        inline_keyboard=[[InlineKeyboardButton(text="In private", url=trending_url)]]
     )
     await callback.message.answer(
-        'Please continue in private to set up trending 👇', reply_markup=keyboard
+        "Please continue in private to set up trending 👇", reply_markup=keyboard
     )
+    await callback.answer()
 
 
 @dp.callback_query(lambda c: c.data.startswith("option"))
@@ -1674,8 +1709,6 @@ async def main():
     # await init_db()
     await bot.set_my_commands(commands)
     await dp.start_polling(bot)
-    global bot_username
-    bot_username = (await bot.get_me()).username
 
 
 if __name__ == "__main__":
