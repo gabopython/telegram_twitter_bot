@@ -25,7 +25,6 @@ from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from typing import Dict
 import logging
 import os
 
@@ -35,7 +34,6 @@ dp = Dispatcher()
 router = Router()
 resend_message = {}
 resend_ongoing = True
-user_replies: Dict[int, Dict] = {}
 
 
 class ReplyStates(StatesGroup):
@@ -209,18 +207,15 @@ async def save_reply(message: Message, state: FSMContext):
     data = await state.get_data()
     group_id = data.get("group_id")
     prompt_message_id = data.get("prompt_message_id")
+    user_id = message.from_user.id
+    username = message.from_user.username
     if not group_id or not prompt_message_id:
         await message.answer("Session error. Start again from the group.")
         await state.clear()
         return
 
-    # Save reply
-    user_replies[message.from_user.id] = {
-        "reply_text": message.text,
-        "username": message.from_user.username,
-        "user_id": message.from_user.id,
-        "group_id": group_id,
-    }
+    await add_user(user_id, username, group_id)
+    await add_xp(user_id, group_id, 5)
 
     # Delete both the prompt and the user's reply
     try:
@@ -233,7 +228,10 @@ async def save_reply(message: Message, state: FSMContext):
     except Exception as e:
         logging.warning(f"Couldn't delete user reply: {e}")
 
-    await message.answer("Message saved.")
+    await message.answer(
+        "✅ Your reply has been sent. You can view it by clicking the button below."
+        + "\n\n<b>Received 5 XP</b> "
+    )
     await state.clear()
 
 
@@ -1149,14 +1147,14 @@ async def handle_start_raid(message: Message, user_id: int):
             InlineKeyboardButton(text="🔁", callback_data="retweet"),
             InlineKeyboardButton(text="💙", callback_data="like"),
             InlineKeyboardButton(text="🏷️", callback_data="bookmark"),
-            InlineKeyboardButton(text="👊", callback_data="smash"),
+            InlineKeyboardButton(text="👊", callback_data="smashed"),
         ]
         trending_buttons = [
-            InlineKeyboardButton(text="🔵", callback_data="trending_1"),
-            InlineKeyboardButton(text="🔵", callback_data="trending_1"),
-            InlineKeyboardButton(text="🔵", callback_data="trending_1"),
-            InlineKeyboardButton(text="🔵", callback_data="trending_1"),
-            InlineKeyboardButton(text="🔵", callback_data="trending_1"),
+            InlineKeyboardButton(text="⃝", callback_data="trending_1"),
+            InlineKeyboardButton(text="⃝", callback_data="trending_1"),
+            InlineKeyboardButton(text="⃝", callback_data="trending_1"),
+            InlineKeyboardButton(text="⃝", callback_data="trending_1"),
+            InlineKeyboardButton(text="⃝", callback_data="trending_1"),
         ]
         global emoji_keyboard
         emoji_keyboard = InlineKeyboardMarkup(
@@ -1347,7 +1345,7 @@ async def like_callback(callback: CallbackQuery):
     username = callback.from_user.username
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=3)
-    await callback.answer("💙 Liked tweet (+3 XP)", show_alert=True)
+    await callback.answer("💙 Liked tweet <b>(+3 XP)</b>", show_alert=True)
 
 
 @router.callback_query(F.data == "retweet")
@@ -1357,7 +1355,7 @@ async def retweet_callback(callback: CallbackQuery):
     username = callback.from_user.username
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=4)
-    await callback.answer("🔄 Retweeted tweet (+4 XP)", show_alert=True)
+    await callback.answer("🔄 Retweeted tweet <b>(+4 XP)</b>", show_alert=True)
 
 
 @router.callback_query(F.data == "bookmark")
@@ -1367,7 +1365,7 @@ async def bookmark_callback(callback: CallbackQuery):
     username = callback.from_user.username
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=2)
-    await callback.answer("🔖 Bookmarked tweet (+2 XP)", show_alert=True)
+    await callback.answer("🔖 Bookmarked tweet <b>(+2 XP)</b>", show_alert=True)
 
 
 @router.callback_query(F.data == "smash")
@@ -1377,7 +1375,7 @@ async def smash_callback(callback: CallbackQuery):
     username = callback.from_user.username
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=11)
-    await callback.answer("👊 Smashing tweet (+11 XP)", show_alert=True)
+    await callback.answer("👊 Smashed tweet <b>(+11 XP)</b>", show_alert=True)
 
 
 @router.callback_query(F.data == "trending_1")
