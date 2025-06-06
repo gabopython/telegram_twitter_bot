@@ -13,6 +13,7 @@ raid_status = {}
 raid_tweet = {}
 timer = {}
 link = {}
+tweet_id = {}
 likes_target = {}
 retweets_target = {}
 replies_target = {}

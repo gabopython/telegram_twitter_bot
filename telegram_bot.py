@@ -723,6 +723,7 @@ async def handle_message(message: Message):
             return
 
         link[chat_id] = parts[1]
+        tweet_id[chat_id] = link[chat_id].split("/")[-1]
         if not match:
             bot_message = await message.answer(
                 "❌ <b>Invalid Twitter link. Please provide a valid link.</b>"
@@ -760,6 +761,7 @@ async def handle_message(message: Message):
         views_target[chat_id] = views_default_target[chat_id]
         bookmarks_target[chat_id] = bookmarks_default_target[chat_id]
         link[chat_id] = message_text
+        tweet_id[chat_id] = link[chat_id].split("/")[-1]
 
     await update_likes_target(chat_id, likes_target[chat_id])
     await update_retweets_target(chat_id, retweets_target[chat_id])
@@ -1142,6 +1144,7 @@ async def handle_start_raid(message: Message, user_id: int):
             bookmarks, bookmarks_target[chat_id]
         )
         reply_url = await create_start_link(bot, payload=chat_id)
+        trending_url = f"https://t.me/{BOT_USERNAME}?start=trending"
         emoji_buttons = [
             InlineKeyboardButton(text="💬", url=reply_url),
             InlineKeyboardButton(text="🔁", callback_data="retweet"),
@@ -1150,11 +1153,11 @@ async def handle_start_raid(message: Message, user_id: int):
             InlineKeyboardButton(text="👊", callback_data="smashed"),
         ]
         trending_buttons = [
-            InlineKeyboardButton(text="⃝", callback_data="trending_1"),
-            InlineKeyboardButton(text="⃝", callback_data="trending_1"),
-            InlineKeyboardButton(text="⃝", callback_data="trending_1"),
-            InlineKeyboardButton(text="⃝", callback_data="trending_1"),
-            InlineKeyboardButton(text="⃝", callback_data="trending_1"),
+            InlineKeyboardButton(text="⃝", url=trending_url),
+            InlineKeyboardButton(text="⃝", url=trending_url),
+            InlineKeyboardButton(text="⃝", url=trending_url),
+            InlineKeyboardButton(text="⃝", url=trending_url),
+            InlineKeyboardButton(text="⃝", url=trending_url),
         ]
         global emoji_keyboard
         emoji_keyboard = InlineKeyboardMarkup(
@@ -1194,7 +1197,10 @@ async def handle_start_raid(message: Message, user_id: int):
             bot_message = await message.answer(
                 "<b>❌ There is already an ongoing raid in this group. Please use /stop to stop it.</b>"
             )
-            await message.delete()
+            try:
+                await message.delete()
+            except Exception as e:
+                pass
             await asyncio.sleep(5)
             await bot_message.delete()
             return
@@ -1343,9 +1349,14 @@ async def like_callback(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     username = callback.from_user.username
+    if await has_user_liked_tweet(user_id, tweet_id[chat_id]):
+        await callback.answer("You have already liked this tweet.", show_alert=True)
+        return
+    
+    await add_user_like(user_id, tweet_id[chat_id])
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=3)
-    await callback.answer("💙 Liked tweet <b>(+3 XP)</b>", show_alert=True)
+    await callback.answer("💙 Liked tweet (+3 XP)", show_alert=True)
 
 
 @router.callback_query(F.data == "retweet")
@@ -1355,7 +1366,7 @@ async def retweet_callback(callback: CallbackQuery):
     username = callback.from_user.username
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=4)
-    await callback.answer("🔄 Retweeted tweet <b>(+4 XP)</b>", show_alert=True)
+    await callback.answer("🔄 Retweeted tweet (+4 XP)", show_alert=True)
 
 
 @router.callback_query(F.data == "bookmark")
@@ -1365,7 +1376,7 @@ async def bookmark_callback(callback: CallbackQuery):
     username = callback.from_user.username
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=2)
-    await callback.answer("🔖 Bookmarked tweet <b>(+2 XP)</b>", show_alert=True)
+    await callback.answer("🔖 Bookmarked tweet (+2 XP)", show_alert=True)
 
 
 @router.callback_query(F.data == "smash")
@@ -1375,19 +1386,7 @@ async def smash_callback(callback: CallbackQuery):
     username = callback.from_user.username
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=11)
-    await callback.answer("👊 Smashed tweet <b>(+11 XP)</b>", show_alert=True)
-
-
-@router.callback_query(F.data == "trending_1")
-async def trending_callback(callback: CallbackQuery):
-    trending_url = f"https://t.me/{BOT_USERNAME}?start=trending"
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="In private", url=trending_url)]]
-    )
-    await callback.message.answer(
-        "Please continue in private to set up trending 👇", reply_markup=keyboard
-    )
-    await callback.answer()
+    await callback.answer("👊 Smashed tweet (+11 XP)", show_alert=True)
 
 
 @dp.callback_query(lambda c: c.data.startswith("option"))

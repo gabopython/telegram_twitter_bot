@@ -59,6 +59,15 @@ async def init_db():
             )
         """
         )
+        await db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_likes (
+                user_id INTEGER,
+                tweet_id TEXT,
+                PRIMARY KEY (user_id, tweet_id)
+            )
+        """
+        )
         await db.commit()
 
 
@@ -390,5 +399,28 @@ async def add_xp(user_id: int, chat_id: int, xp_points: int):
             UPDATE users SET xp_points = xp_points + ? WHERE user_id = ? AND chat_id = ?
             """,
             (xp_points, user_id, chat_id),
+        )
+        await db.commit()
+
+
+async def has_user_liked_tweet(user_id: int, tweet_id: str) -> bool: 
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute(
+            """
+            SELECT 1 FROM user_likes WHERE user_id = ? AND tweet_id = ?
+            """,
+            (user_id, tweet_id),
+        ) as cursor:
+            return await cursor.fetchone() is not None
+        
+
+async def add_user_like(user_id: int, tweet_id: str):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR IGNORE INTO user_likes (user_id, tweet_id)
+            VALUES (?, ?)
+            """,
+            (user_id, tweet_id),
         )
         await db.commit()
