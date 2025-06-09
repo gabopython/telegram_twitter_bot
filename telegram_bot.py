@@ -103,13 +103,15 @@ async def stop_command(message: Message):
         file = None if file_type == "" else FSInputFile(file_path)
 
         if file_type == "":
-            await message.answer(caption)
+            bot_message = await message.answer(caption)
         elif file_type == ".jpg":
-            await message.answer_photo(file, caption=caption)
+            bot_message = await message.answer_photo(file, caption=caption)
         elif file_type == ".mp4":
-            await message.answer_video(file, caption=caption)
+            bot_message = await message.answer_video(file, caption=caption)
         elif file_type == ".gif":
-            await message.answer_animation(file, caption=caption)
+            bot_message = await message.answer_animation(file, caption=caption)
+        await asyncio.sleep(10)
+        await bot_message.delete()
     else:
         await message.answer("❌ <b>There is no ongoing raid in this group</b>")
 
@@ -1331,6 +1333,9 @@ async def handle_start_raid(message: Message, user_id: int):
                 pass
 
             await asyncio.sleep(1)
+        else:
+            await asyncio.sleep(10)
+            await bot_message.delete()
 
     else:
         await message.answer(
