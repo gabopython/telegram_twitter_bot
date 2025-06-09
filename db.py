@@ -61,10 +61,15 @@ async def init_db():
         )
         await db.execute(
             """
-            CREATE TABLE IF NOT EXISTS user_likes (
-                user_id INTEGER,
-                tweet_id TEXT,
-                PRIMARY KEY (user_id, tweet_id)
+            CREATE TABLE IF NOT EXISTS user_reactions (
+            user_id INTEGER,
+            tweet_id TEXT,
+            liked BOOLEAN DEFAULT 0,
+            retweeted BOOLEAN DEFAULT 0,
+            replied BOOLEAN DEFAULT 0,
+            bookmarked BOOLEAN DEFAULT 0,
+            smashed BOOLEAN DEFAULT 0,
+            PRIMARY KEY (user_id, tweet_id)
             )
         """
         )
@@ -363,10 +368,9 @@ async def add_user(user_id: int, username: str, chat_id: int, xp_points: int = 0
     async with aiosqlite.connect(DB_NAME) as db:
         # Check if the user already exists in that chat
         async with db.execute(
-            "SELECT 1 FROM users WHERE user_id = ? AND chat_id = ?",
-            (user_id, chat_id)
+            "SELECT 1 FROM users WHERE user_id = ? AND chat_id = ?", (user_id, chat_id)
         ) as cursor:
-            exists = await cursor.fetchone()    
+            exists = await cursor.fetchone()
 
         # Only insert if user does not exist
         if not exists:
@@ -390,7 +394,7 @@ async def get_user(user_id: int, chat_id: int):
         ) as cursor:
             row = await cursor.fetchone()
             return row if row else None
-        
+
 
 async def add_xp(user_id: int, chat_id: int, xp_points: int):
     async with aiosqlite.connect(DB_NAME) as db:
@@ -403,23 +407,120 @@ async def add_xp(user_id: int, chat_id: int, xp_points: int):
         await db.commit()
 
 
-async def has_user_liked_tweet(user_id: int, tweet_id: str) -> bool: 
+async def has_user_liked_tweet(user_id: int, tweet_id: str) -> bool:
     async with aiosqlite.connect(DB_NAME) as db:
         async with db.execute(
             """
-            SELECT 1 FROM user_likes WHERE user_id = ? AND tweet_id = ?
+            SELECT liked FROM user_reactions WHERE user_id = ? AND tweet_id = ?
             """,
             (user_id, tweet_id),
         ) as cursor:
-            return await cursor.fetchone() is not None
-        
+            row = await cursor.fetchone()
+            return row[0] if row else False
+
 
 async def add_user_like(user_id: int, tweet_id: str):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
             """
-            INSERT OR IGNORE INTO user_likes (user_id, tweet_id)
-            VALUES (?, ?)
+            INSERT OR REPLACE INTO user_reactions (user_id, tweet_id, liked)
+            VALUES (?, ?, 1)
+            """,
+            (user_id, tweet_id),
+        )
+        await db.commit()
+
+
+async def has_user_retweeted_tweet(user_id: int, tweet_id: str) -> bool:
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute(
+            """
+            SELECT retweeted FROM user_reactions WHERE user_id = ? AND tweet_id = ?
+            """,
+            (user_id, tweet_id),
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else False
+
+
+async def add_user_retweet(user_id: int, tweet_id: str):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO user_reactions (user_id, tweet_id, retweeted)
+            VALUES (?, ?, 1)
+            """,
+            (user_id, tweet_id),
+        )
+        await db.commit()
+
+
+async def has_user_replied_tweet(user_id: int, tweet_id: str) -> bool:
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute(
+            """
+            SELECT replied FROM user_reactions WHERE user_id = ? AND tweet_id = ?
+            """,
+            (user_id, tweet_id),
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else False
+
+
+async def add_user_reply(user_id: int, tweet_id: str):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO user_reactions (user_id, tweet_id, replied)
+            VALUES (?, ?, 1)
+            """,
+            (user_id, tweet_id),
+        )
+        await db.commit()
+
+
+async def has_user_bookmarked_tweet(user_id: int, tweet_id: str) -> bool:
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute(
+            """
+            SELECT bookmarked FROM user_reactions WHERE user_id = ? AND tweet_id = ?
+            """,
+            (user_id, tweet_id),
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else False
+
+
+async def add_user_bookmark(user_id: int, tweet_id: str):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO user_reactions (user_id, tweet_id, bookmarked)
+            VALUES (?, ?, 1)
+            """,
+            (user_id, tweet_id),
+        )
+        await db.commit()
+
+
+async def has_user_smashed_tweet(user_id: int, tweet_id: str) -> bool:
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute(
+            """
+            SELECT smashed FROM user_reactions WHERE user_id = ? AND tweet_id = ?
+            """,
+            (user_id, tweet_id),
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else False
+
+
+async def add_user_smashed(user_id: int, tweet_id: str):
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            """
+            INSERT OR REPLACE INTO user_reactions (user_id, tweet_id, smashed)
+            VALUES (?, ?, 1)
             """,
             (user_id, tweet_id),
         )

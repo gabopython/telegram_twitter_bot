@@ -1150,7 +1150,7 @@ async def handle_start_raid(message: Message, user_id: int):
             InlineKeyboardButton(text="🔁", callback_data="retweet"),
             InlineKeyboardButton(text="💙", callback_data="like"),
             InlineKeyboardButton(text="🏷️", callback_data="bookmark"),
-            InlineKeyboardButton(text="👊", callback_data="smashed"),
+            InlineKeyboardButton(text="👊", callback_data="smash"),
         ]
         trending_buttons = [
             InlineKeyboardButton(text="⃝", url=trending_url),
@@ -1352,7 +1352,7 @@ async def like_callback(callback: CallbackQuery):
     if await has_user_liked_tweet(user_id, tweet_id[chat_id]):
         await callback.answer("You have already liked this tweet.", show_alert=True)
         return
-    
+
     await add_user_like(user_id, tweet_id[chat_id])
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=3)
@@ -1364,6 +1364,11 @@ async def retweet_callback(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     username = callback.from_user.username
+    if await has_user_retweeted_tweet(user_id, tweet_id[chat_id]):
+        await callback.answer("You have already retweeted this tweet.", show_alert=True)
+        return
+
+    await add_user_retweet(user_id, tweet_id[chat_id])
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=4)
     await callback.answer("🔄 Retweeted tweet (+4 XP)", show_alert=True)
@@ -1374,6 +1379,13 @@ async def bookmark_callback(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     username = callback.from_user.username
+    if await has_user_bookmarked_tweet(user_id, tweet_id[chat_id]):
+        await callback.answer(
+            "You have already bookmarked this tweet.", show_alert=True
+        )
+        return
+
+    await add_user_bookmark(user_id, tweet_id[chat_id])
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
     await add_xp(user_id=user_id, chat_id=chat_id, xp_points=2)
     await callback.answer("🔖 Bookmarked tweet (+2 XP)", show_alert=True)
