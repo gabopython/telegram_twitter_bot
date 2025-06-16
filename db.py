@@ -423,8 +423,9 @@ async def add_user_like(user_id: int, tweet_id: str):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
             """
-            INSERT OR REPLACE INTO user_reactions (user_id, tweet_id, liked)
+            INSERT INTO user_reactions (user_id, tweet_id, liked)
             VALUES (?, ?, 1)
+            ON CONFLICT(user_id, tweet_id) DO UPDATE SET liked = 1
             """,
             (user_id, tweet_id),
         )
@@ -447,8 +448,9 @@ async def add_user_retweet(user_id: int, tweet_id: str):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
             """
-            INSERT OR REPLACE INTO user_reactions (user_id, tweet_id, retweeted)
+            INSERT INTO user_reactions (user_id, tweet_id, retweeted)
             VALUES (?, ?, 1)
+            ON CONFLICT(user_id, tweet_id) DO UPDATE SET retweeted = 1
             """,
             (user_id, tweet_id),
         )
@@ -471,8 +473,9 @@ async def add_user_reply(user_id: int, tweet_id: str):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
             """
-            INSERT OR REPLACE INTO user_reactions (user_id, tweet_id, replied)
+            INSERT INTO user_reactions (user_id, tweet_id, replied)
             VALUES (?, ?, 1)
+            ON CONFLICT(user_id, tweet_id) DO UPDATE SET replied = 1
             """,
             (user_id, tweet_id),
         )
@@ -495,8 +498,9 @@ async def add_user_bookmark(user_id: int, tweet_id: str):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
             """
-            INSERT OR REPLACE INTO user_reactions (user_id, tweet_id, bookmarked)
+            INSERT INTO user_reactions (user_id, tweet_id, bookmarked)
             VALUES (?, ?, 1)
+            ON CONFLICT(user_id, tweet_id) DO UPDATE SET bookmarked = 1
             """,
             (user_id, tweet_id),
         )
@@ -519,8 +523,9 @@ async def add_user_smashed(user_id: int, tweet_id: str):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
             """
-            INSERT OR REPLACE INTO user_reactions (user_id, tweet_id, smashed)
+            INSERT INTO user_reactions (user_id, tweet_id, smashed)
             VALUES (?, ?, 1)
+            ON CONFLICT(user_id, tweet_id) DO UPDATE SET smashed = 1
             """,
             (user_id, tweet_id),
         )

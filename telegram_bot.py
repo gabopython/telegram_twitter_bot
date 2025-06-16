@@ -110,7 +110,7 @@ async def stop_command(message: Message):
             bot_message = await message.answer_video(file, caption=caption)
         elif file_type == ".gif":
             bot_message = await message.answer_animation(file, caption=caption)
-        await asyncio.sleep(10)
+        await asyncio.sleep(30)
         await bot_message.delete()
     else:
         await message.answer("❌ <b>There is no ongoing raid in this group</b>")
@@ -1334,7 +1334,7 @@ async def handle_start_raid(message: Message, user_id: int):
 
             await asyncio.sleep(1)
         else:
-            await asyncio.sleep(10)
+            await asyncio.sleep(30)
             await bot_message.delete()
 
     else:
@@ -1401,9 +1401,66 @@ async def smash_callback(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     user_id = callback.from_user.id
     username = callback.from_user.username
+    if await has_user_smashed_tweet(user_id, tweet_id[chat_id]):
+        await callback.answer("You have already smashed this tweet.", show_alert=True)
+        return
+    is_liked = await has_user_liked_tweet(user_id, tweet_id[chat_id])
+    is_retweeted = await has_user_retweeted_tweet(user_id, tweet_id[chat_id])
+    is_bookmarked = await has_user_bookmarked_tweet(user_id, tweet_id[chat_id])
+    if is_liked and is_retweeted and is_bookmarked:
+        await callback.answer(
+            "You have already smashed this tweet.",
+            show_alert=True,
+        )
+    elif is_liked:
+        if is_retweeted:
+            await callback.answer(
+                " 👊 Smashed tweet (+2 XP) ",
+                show_alert=True,
+            )
+            await add_xp(user_id=user_id, chat_id=chat_id, xp_points=2)
+        elif is_bookmarked:
+            await callback.answer(
+                " 👊 Smashed tweet (+4 XP) ",
+                show_alert=True,
+            )
+            await add_xp(user_id=user_id, chat_id=chat_id, xp_points=4)
+        else:
+            await callback.answer(
+                " 👊 Smashed tweet (+6 XP) ",
+                show_alert=True,
+            )
+            await add_xp(user_id=user_id, chat_id=chat_id, xp_points=6)
+    elif is_retweeted:
+        if is_bookmarked:
+            await callback.answer(
+                " 👊 Smashed tweet (+3 XP) ",
+                show_alert=True,
+            )
+            await add_xp(user_id=user_id, chat_id=chat_id, xp_points=3)
+        else:
+            await callback.answer(
+                " 👊 Smashed tweet (+5 XP) ",
+                show_alert=True,
+            )
+            await add_xp(user_id=user_id, chat_id=chat_id, xp_points=5)
+    elif is_bookmarked:
+        await callback.answer(
+            " 👊 Smashed tweet (+7 XP) ",
+            show_alert=True,
+        )
+        await add_xp(user_id=user_id, chat_id=chat_id, xp_points=7)
+    else:
+        await callback.answer(
+            " 👊 Smashed tweet (+11 XP) ",
+            show_alert=True,
+        )
+        await add_xp(user_id=user_id, chat_id=chat_id, xp_points=11)
+    await add_user_smashed(user_id, tweet_id[chat_id])
+    await add_user_like(user_id, tweet_id[chat_id])
+    await add_user_retweet(user_id, tweet_id[chat_id])
+    await add_user_bookmark(user_id, tweet_id[chat_id])
     await add_user(user_id=user_id, username=username, chat_id=chat_id)
-    await add_xp(user_id=user_id, chat_id=chat_id, xp_points=11)
-    await callback.answer("👊 Smashed tweet (+11 XP)", show_alert=True)
 
 
 @dp.callback_query(lambda c: c.data.startswith("option"))
