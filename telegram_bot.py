@@ -110,7 +110,7 @@ async def stop_command(message: Message):
             bot_message = await message.answer_video(file, caption=caption)
         elif file_type == ".gif":
             bot_message = await message.answer_animation(file, caption=caption)
-        await asyncio.sleep(30)
+        await asyncio.sleep(15)
         await bot_message.delete()
     else:
         await message.answer("❌ <b>There is no ongoing raid in this group</b>")
@@ -846,7 +846,7 @@ async def handle_message(message: Message):
             if custom_text != "":
                 custom_text += "\n\n"
             updated_caption = (
-                "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
+                "<tg-emoji emoji-id='5258203794772085854'></tg-emoji> <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
             )
             file_type2 = await get_file_type(chat_id, "raid")
             file_path = os.path.join(
@@ -1221,7 +1221,7 @@ async def handle_start_raid(message: Message, user_id: int):
         else:
             raid_status[chat_id] = True
             timer[chat_id] = datetime.now()
-            raid_message = "⚡️ <b>Raid Started!</b>\n\n" + percentages[chat_id]
+            raid_message = "<tg-emoji emoji-id='5258203794772085854'></tg-emoji> <b>Raid Started!</b>\n\n" + percentages[chat_id]
         await message.delete()
 
         file_name = str(chat_id)
@@ -1301,7 +1301,7 @@ async def handle_start_raid(message: Message, user_id: int):
             if custom_text != "":
                 custom_text += "\n\n"
             updated_caption = (
-                "⚡️ <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
+                "<tg-emoji emoji-id='5258203794772085854'></tg-emoji> <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
             )
 
             try:
