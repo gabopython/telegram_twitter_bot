@@ -1,30 +1,36 @@
 from xrpl.clients import JsonRpcClient
 
-# XRPL Mainnet endpoint
-JSON_RPC_URL = "https://s.altnet.rippletest.net:51234/"
-client = JsonRpcClient(JSON_RPC_URL)
+client = JsonRpcClient("https://s.altnet.rippletest.net:51234/")
 
+import requests
+from xrpl.clients import JsonRpcClient
+from xrpl.models import AccountObjects
+from xrpl.models.requests import AccountObjects
 
+def get_token_info(issuer_address):
+    # Initialize the client
+    client = JsonRpcClient("https://s.altnet.rippletest.net:51234/")
 
-from xrpl.models.requests import AccountTx
+    # Fetch account objects
+    account_objects = client.request(AccountObjects(account=issuer_address))
 
-address = "YOUR_XRPL_ADDRESS"  # Replace with your real XRPL wallet address
+    # Extract token information
+    tokens = []
+    for obj in account_objects.result['account_objects']:
+        if obj['LedgerEntryType'] == 'RippleState':
+            currency = obj['Currency']
+            if currency != 'XRP':
+                token_info = {
+                    'currency': currency,
+                    'issuer': obj['Account'],
+                    'balance': obj['Balance']
+                }
+                tokens.append(token_info)
 
-account_tx = AccountTx(
-    account=address,
-    ledger_index_min=-1,
-    ledger_index_max=-1,
-    limit=10  # how many tx to fetch
-)
+    return tokens
 
-response = client.request(account_tx)
-transactions = response.result["transactions"]
-
-for tx in transactions:
-    # tx["tx"] is the actual transaction data
-    tx_data = tx["tx"]
-    print("Type:", tx_data["TransactionType"])
-    print("Hash:", tx_data["hash"])
-    print("Amount:", tx_data.get("Amount"))
-    print("Date:", tx_data["date"])
-    print("-" * 40)
+# Example usage
+issuer_address = ''
+tokens = get_token_info(issuer_address)
+for token in tokens:
+    print(f"Currency: {token['currency']}, Issuer: {token['issuer']}, Balance: {token['balance']}")
