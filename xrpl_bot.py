@@ -1,38 +1,52 @@
 from xrpl.clients import JsonRpcClient
-from xrpl.models.requests import AccountCurrencies, AccountLines
+from xrpl.models.requests import GatewayBalances, BookOffers
 
-# XRPL Testnet RPC URL (use mainnet if needed)
-JSON_RPC_URL = "https://s.altnet.rippletest.net:51234"
+# XRPL Mainnet client
+JSON_RPC_URL = "https://s1.ripple.com:51234"
 client = JsonRpcClient(JSON_RPC_URL)
 
-def get_token_info(issuer_address: str):
-    # Get all currencies this issuer issues
-    currencies_request = AccountCurrencies(
-        account=issuer_address,
-        ledger_index="validated"
+# Issuer address
+issuer_address = "rhCAT4hRdi2Y9puNdkpMzxrdKa5wkppR62"
+
+# 1. Get tokens issued by issuer
+gateway_request = GatewayBalances(
+    account=issuer_address,
+    ledger_index="validated",
+)
+gateway_response = client.request(gateway_request)
+obligations = gateway_response.result.get("obligations", {})
+
+print(f"Issuer: {issuer_address}")
+print("Tokens issued (raw obligations):")
+print(obligations)
+
+# 2. Get price in XRP from DEX
+def get_token_xrp_price(currency, issuer):
+    """
+    Gets the best ask price for currency/XRP from orderbook.
+    """
+    book_request = BookOffers(
+        taker_gets={"currency": "XRP"},
+        taker_pays={"currency": currency, "issuer": issuer},
+        ledger_index="validated",
     )
-    currencies_response = client.request(currencies_request).result
+    response = client.request(book_request)
+    offers = response.result.get("offers", [])
+    if not offers:
+        return None
+    
+    best = offers[0]
+    gets = int(best["TakerGets"]) / 1_000_000   # XRP drops → XRP
+    pays = float(best["TakerPays"]["value"])    # Token units
+    price = gets / pays if pays != 0 else None
+    return price
 
-    # Get trustlines for details
-    lines_request = AccountLines(
-        account=issuer_address,
-        ledger_index="validated"
-    )
-    lines_response = client.request(lines_request).result
-
-    return {
-        "issuer": issuer_address,
-        "issued_currencies": currencies_response.get("receive_currencies", []),
-        "trustlines": lines_response.get("lines", [])
-    }
-
-if __name__ == "__main__":
-    issuer = 'rfmS3zqrQrka8wVyhXifEeyTwe8AMz2Yhw'
-    info = get_token_info(issuer)
-
-    print("\n=== Token Info ===")
-    print(f"Issuer: {info['issuer']}")
-    print("Issued Currencies:", info["issued_currencies"])
-    print("\nTrustlines:")
-    for line in info["trustlines"]:
-        print(f"- Currency: {line['currency']}, Balance: {line['balance']}, Limit: {line['limit']}")
+# 3. Show ticker + market cap in XRP
+print("\nToken Market Caps in XRP:")
+for ticker, supply in obligations.items():
+    price_xrp = get_token_xrp_price(ticker, issuer_address)
+    if price_xrp:
+        market_cap_xrp = float(supply) * price_xrp
+        print(f"Ticker: {ticker} | Supply: {supply} | Price: {price_xrp:.6f} XRP | Market Cap: {market_cap_xrp:.2f} XRP")
+    else:
+        print(f"Ticker: {ticker} | Supply: {supply} | No XRP market found")
