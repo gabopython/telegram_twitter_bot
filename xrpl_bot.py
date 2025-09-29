@@ -1,3 +1,4 @@
+import requests
 from xrpl.clients import JsonRpcClient
 from xrpl.models.requests import GatewayBalances, BookOffers
 
@@ -36,17 +37,29 @@ def get_token_xrp_price(currency, issuer):
         return None
     
     best = offers[0]
-    gets = int(best["TakerGets"]) / 1_000_000   # XRP drops → XRP
+    gets = int(best["TakerGets"]) / 1_000_000   # drops → XRP
     pays = float(best["TakerPays"]["value"])    # Token units
     price = gets / pays if pays != 0 else None
     return price
 
-# 3. Show ticker + market cap in XRP
-print("\nToken Market Caps in XRP:")
+# 3. Get XRP/USD price (from CoinGecko)
+def get_xrp_usd_price():
+    url = "https://api.coingecko.com/api/v3/simple/price"
+    params = {"ids": "ripple", "vs_currencies": "usd"}
+    response = requests.get(url, params=params)
+    data = response.json()
+    return data["ripple"]["usd"]
+
+xrp_usd_price = get_xrp_usd_price()
+print(f"\nCurrent XRP/USD price: ${xrp_usd_price:.4f}")
+
+# 4. Show ticker + market cap in USD
+print("\nToken Market Caps in USD:")
 for ticker, supply in obligations.items():
     price_xrp = get_token_xrp_price(ticker, issuer_address)
     if price_xrp:
         market_cap_xrp = float(supply) * price_xrp
-        print(f"Ticker: {ticker} | Supply: {supply} | Price: {price_xrp:.6f} XRP | Market Cap: {market_cap_xrp:.2f} XRP")
+        market_cap_usd = market_cap_xrp * xrp_usd_price
+        print(f"Ticker: {ticker} | Supply: {supply} | Price: {price_xrp:.6f} XRP | Market Cap: ${market_cap_usd:,.2f}")
     else:
         print(f"Ticker: {ticker} | Supply: {supply} | No XRP market found")
