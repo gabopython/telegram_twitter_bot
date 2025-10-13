@@ -2,6 +2,7 @@ import x_bot
 from utils import *
 from config import BOT_TOKEN, BOT_USERNAME
 from db import *
+from xrpl_bot import get_token_info
 
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command, CommandObject
@@ -235,6 +236,23 @@ async def save_reply(message: Message, state: FSMContext):
         + "\n\n<b>Received 5 XP</b> "
     )
     await state.clear()
+
+
+# Handle replies to the trending slot prompt in private chat
+@dp.message(F.reply_to_message)
+async def handle_trending_reply(message: Message):
+    # Only handle in private chat
+    if message.chat.type != "private":
+        return
+    reply_text = message.reply_to_message.text if message.reply_to_message else ""
+    if "Reply with your Token's Contract/Issuer Address to set up a trending slot." in reply_text:
+        address = message.text.strip()
+        try:
+            token_info = await asyncio.to_thread(get_token_info, address)
+            await message.answer(token_info)
+        except Exception as e:
+            await message.answer('<b>Error fetching token info. Please ensure the address is correct.</b>')
+
 
 
 @dp.message(ReplyStates.waiting_for_reply)
