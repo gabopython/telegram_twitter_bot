@@ -160,7 +160,7 @@ async def trending_handler(message: Message):
         )
     else:
         await message.answer(
-            "Reply with your Token's Contract/Issuer Address to set up a trending slot."
+            "Reply to this message with your Token's Contract/Issuer Address to set up a trending slot."
         )
 
 
@@ -184,7 +184,7 @@ async def on_start(message: Message, command: CommandObject, state: FSMContext):
             return
         elif message.text == "/start trending":
             await message.answer(
-                "Reply with your Token's Contract/Issuer Address to set up a trending slot."
+                "Reply to this message with your Token's Contract/Issuer Address to set up a trending slot."
             )
             return
 
@@ -245,7 +245,7 @@ async def handle_trending_reply(message: Message):
     if message.chat.type != "private":
         return
     reply_text = message.reply_to_message.text if message.reply_to_message else ""
-    if "Reply with your Token's Contract/Issuer Address to set up a trending slot." in reply_text:
+    if "Reply to this message with your Token's Contract/Issuer Address to set up a trending slot." in reply_text:
         address = message.text.strip()
         try:
             token_info = await asyncio.to_thread(get_token_info, address)
@@ -258,6 +258,12 @@ async def handle_trending_reply(message: Message):
 @dp.message(ReplyStates.waiting_for_reply)
 async def must_reply_to_prompt(message: Message):
     await message.reply("Please reply to the prompt message so I can save your answer.")
+
+@dp.message()
+async def handle_private_messages(message: Message):
+    # Check if it's a private chat and NOT a reply
+    if message.chat.type == 'private' and message.reply_to_message is None:
+        await message.answer("Error: Please reply to the message above")
 
 
 @dp.message(F.reply_to_message)
