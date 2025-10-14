@@ -259,11 +259,6 @@ async def handle_trending_reply(message: Message):
 async def must_reply_to_prompt(message: Message):
     await message.reply("Please reply to the prompt message so I can save your answer.")
 
-@dp.message()
-async def handle_private_messages(message: Message):
-    # Check if it's a private chat and NOT a reply
-    if message.chat.type == 'private' and message.reply_to_message is None:
-        await message.answer("Error: Please reply to the message above")
 
 
 @dp.message(F.reply_to_message)
@@ -728,6 +723,9 @@ async def handle_message(message: Message):
 
     if not message_text:
         return
+    
+    if message.chat.type == 'private' and message.reply_to_message is None:
+        await message.answer("Error: Please reply to the message above")
 
     likes_default_target[chat_id] = await get_likes_default_target(chat_id)
     retweets_default_target[chat_id] = await get_retweets_default_target(chat_id)
