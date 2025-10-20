@@ -270,24 +270,25 @@ async def handle_user_message(message: Message):
                 pass 
     elif last_message == 'Reply with Y for Yes or N for No':
         if message.text.strip().lower() == 'y':
-            keyboard = InlineKeyboardBuilder()
+            global keyboard_duration
+            keyboard_duration = InlineKeyboardBuilder()
 
-            keyboard.row(
+            keyboard_duration.row(
                 InlineKeyboardButton(text="24 Hrs [300 XRP] (20% off)", callback_data="trend_24h_300")
             )
-            keyboard.row(
+            keyboard_duration.row(
                 InlineKeyboardButton(text="12 Hrs [180 XRP] (10% off)", callback_data="trend_12h_180")
             )
-            keyboard.row(
+            keyboard_duration.row(
                 InlineKeyboardButton(text="6 Hrs [100 XRP]", callback_data="trend_6h_100")
             )
-            keyboard.row(
+            keyboard_duration.row(
                 InlineKeyboardButton(text="❌ Close", callback_data="close")
             )
 
             await message.answer(
                 "Select Trend Duration",
-                reply_markup=keyboard.as_markup()
+                reply_markup=keyboard_duration.as_markup()
             )
             last_bot_message[user_id] = ''
         elif message.text.strip().lower() == 'n':
@@ -301,10 +302,13 @@ async def handle_user_message(message: Message):
 @router.callback_query(F.data == "close")
 async def close_callback(callback: types.CallbackQuery):
     await callback.message.delete()
+    await callback.message.answer("Send your Token's Contract/Issuer Address to set up a trending slot.")
+    last_bot_message[callback.from_user.id] = 'Send your Token\'s Contract/Issuer Address to set up a trending slot.'
 
 # --- When user selects a duration ---
 @router.callback_query(F.data.startswith("trend_"))
 async def trend_selected(callback: types.CallbackQuery):
+    await callback.message.delete()
     parts = callback.data.split("_")
     duration = parts[1].upper()   # e.g. 6H, 12H, 24H
     amount = parts[2]             # e.g. 100, 180, 300
@@ -329,6 +333,14 @@ async def trend_selected(callback: types.CallbackQuery):
     )
 
     await callback.message.answer(text, reply_markup=keyboard.as_markup())
+
+@router.callback_query(F.data == "cancel_order")
+async def cancel_order(callback: types.CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer(
+        "Select Trend Duration",
+        reply_markup=keyboard_duration.as_markup()
+    )
  
 
 
