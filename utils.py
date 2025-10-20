@@ -25,6 +25,8 @@ replies_default_target = {}
 views_default_target = {}
 bookmarks_default_target = {}
 percentages = {}
+last_bot_message = {}
+i = {}
 targets_text = (
     "⚙️ <b>Raid Options > {} Targets</b>\n\n"
     "You can specify the number of likes, retweets, replies, views and bookmarks that a tweet must have to be considered a valid target {}."

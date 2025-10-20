@@ -4,7 +4,7 @@ from config import BOT_TOKEN, BOT_USERNAME
 from db import *
 from xrpl_bot import get_token_info
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, CommandObject
 import asyncio
 from datetime import datetime
@@ -20,6 +20,7 @@ from aiogram.types import (
     BotCommand,
 )
 from aiogram.utils.deep_linking import create_start_link
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.enums.chat_member_status import ChatMemberStatus
 from aiogram import Router, F
 from aiogram.enums import ParseMode
@@ -159,9 +160,10 @@ async def trending_handler(message: Message):
             "Please continue in private to set up trending 👇", reply_markup=keyboard
         )
     else:
-        await message.answer(
-            "Reply to this message with your Token's Contract/Issuer Address to set up a trending slot."
+        msg = await message.answer(
+            "Send your Token's Contract/Issuer Address to set up a trending slot."
         )
+        last_bot_message[message.from_user.id] = msg.text
 
 
 @dp.message(Command("start"))
@@ -183,9 +185,10 @@ async def on_start(message: Message, command: CommandObject, state: FSMContext):
             )
             return
         elif message.text == "/start trending":
-            await message.answer(
-                "Reply to this message with your Token's Contract/Issuer Address to set up a trending slot."
+            msg = await message.answer(
+                "Send your Token's Contract/Issuer Address to set up a trending slot."
             )
+            last_bot_message[message.from_user.id] = msg.text
             return
 
     # Deep link: /start <payload>
@@ -237,22 +240,96 @@ async def save_reply(message: Message, state: FSMContext):
     )
     await state.clear()
 
+@dp.message()
+async def handle_user_message(message: Message):
+    user_id = message.from_user.id
+    last_message = last_bot_message.get(user_id)
 
-# Handle replies to the trending slot prompt in private chat
-@dp.message(F.reply_to_message)
-async def handle_trending_reply(message: Message):
-    # Only handle in private chat
     if message.chat.type != "private":
         return
-    reply_text = message.reply_to_message.text if message.reply_to_message else ""
-    if "Reply to this message with your Token's Contract/Issuer Address to set up a trending slot." in reply_text:
+    
+    if last_message == "Send your Token's Contract/Issuer Address to set up a trending slot.":
         address = message.text.strip()
         try:
             token_info = await asyncio.to_thread(get_token_info, address)
             await message.answer(token_info)
+            last_bot_message[user_id] = 'Reply with Y for Yes or N for No'
+            last_msg_id = message.message_id - 1
+            try:
+                await bot.delete_message(chat_id=message.chat.id, message_id=last_msg_id)
+            except Exception as e:
+                pass
         except Exception as e:
-            await message.answer('<b>Error fetching token info. Please ensure the address is correct.</b>')
+            msg = await message.answer('<b>Error fetching token info. Please ensure the issuer address is correct.</b>')
+            try:
+                await asyncio.sleep(3)
+                await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+                await asyncio.sleep(2)
+                await msg.delete()
+            except Exception as e:
+                pass 
+    elif last_message == 'Reply with Y for Yes or N for No':
+        if message.text.strip().lower() == 'y':
+            keyboard = InlineKeyboardBuilder()
 
+            keyboard.row(
+                InlineKeyboardButton(text="24 Hrs [300 XRP] (20% off)", callback_data="trend_24h_300")
+            )
+            keyboard.row(
+                InlineKeyboardButton(text="12 Hrs [180 XRP] (10% off)", callback_data="trend_12h_180")
+            )
+            keyboard.row(
+                InlineKeyboardButton(text="6 Hrs [100 XRP]", callback_data="trend_6h_100")
+            )
+            keyboard.row(
+                InlineKeyboardButton(text="❌ Close", callback_data="close")
+            )
+
+            await message.answer(
+                "Select Trend Duration",
+                reply_markup=keyboard.as_markup()
+            )
+            last_bot_message[user_id] = ''
+        elif message.text.strip().lower() == 'n':
+            await message.answer("Send your Token's Contract/Issuer Address to set up a trending slot.")
+            last_bot_message[user_id] = 'Send your Token\'s Contract/Issuer Address to set up a trending slot.'
+        # else:
+        #     await message.answer("❌ Invalid response. Please reply with Y for Yes or N for No.")
+
+
+# --- Close Button ---
+@router.callback_query(F.data == "close")
+async def close_callback(callback: types.CallbackQuery):
+    await callback.message.delete()
+
+# --- When user selects a duration ---
+@router.callback_query(F.data.startswith("trend_"))
+async def trend_selected(callback: types.CallbackQuery):
+    parts = callback.data.split("_")
+    duration = parts[1].upper()   # e.g. 6H, 12H, 24H
+    amount = parts[2]             # e.g. 100, 180, 300
+
+    # Payment message
+    text = (
+        f"Please make the payment of {amount} XRP to the following wallet.\n"
+        f"Wallet Address:\n"
+        f"rwzrG2KBVHNUUX8aGb4P6JiETu3ACHpYhF"
+    )
+
+    # Payment keyboard
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(
+        InlineKeyboardButton(text="✅ Payment Done", callback_data=f"payment_done_{amount}")
+    )
+    keyboard.row(
+        InlineKeyboardButton(text="🚫 No!, Cancel Order", callback_data="cancel_order")
+    )
+    keyboard.row(
+        InlineKeyboardButton(text="❌ Close", callback_data="close")
+    )
+
+    await callback.message.answer(text, reply_markup=keyboard.as_markup())
+ 
 
 
 @dp.message(ReplyStates.waiting_for_reply)
