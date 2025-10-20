@@ -240,64 +240,7 @@ async def save_reply(message: Message, state: FSMContext):
     )
     await state.clear()
 
-@dp.message()
-async def handle_user_message(message: Message):
-    user_id = message.from_user.id
-    last_message = last_bot_message.get(user_id)
-
-    if message.chat.type != "private":
-        return
     
-    if last_message == "Send your Token's Contract/Issuer Address to set up a trending slot.":
-        address = message.text.strip()
-        try:
-            token_info = await asyncio.to_thread(get_token_info, address)
-            await message.answer(token_info)
-            last_bot_message[user_id] = 'Reply with Y for Yes or N for No'
-            last_msg_id = message.message_id - 1
-            try:
-                await bot.delete_message(chat_id=message.chat.id, message_id=last_msg_id)
-            except Exception as e:
-                pass
-        except Exception as e:
-            msg = await message.answer('<b>Error fetching token info. Please ensure the issuer address is correct.</b>')
-            try:
-                await asyncio.sleep(3)
-                await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-                await asyncio.sleep(2)
-                await msg.delete()
-            except Exception as e:
-                pass 
-    elif last_message == 'Reply with Y for Yes or N for No':
-        if message.text.strip().lower() == 'y':
-            global keyboard_duration
-            keyboard_duration = InlineKeyboardBuilder()
-
-            keyboard_duration.row(
-                InlineKeyboardButton(text="24 Hrs [300 XRP] (20% off)", callback_data="trend_24h_300")
-            )
-            keyboard_duration.row(
-                InlineKeyboardButton(text="12 Hrs [180 XRP] (10% off)", callback_data="trend_12h_180")
-            )
-            keyboard_duration.row(
-                InlineKeyboardButton(text="6 Hrs [100 XRP]", callback_data="trend_6h_100")
-            )
-            keyboard_duration.row(
-                InlineKeyboardButton(text="❌ Close", callback_data="close")
-            )
-
-            await message.answer(
-                "Select Trend Duration",
-                reply_markup=keyboard_duration.as_markup()
-            )
-            last_bot_message[user_id] = ''
-        elif message.text.strip().lower() == 'n':
-            await message.answer("Send your Token's Contract/Issuer Address to set up a trending slot.")
-            last_bot_message[user_id] = 'Send your Token\'s Contract/Issuer Address to set up a trending slot.'
-        # else:
-        #     await message.answer("❌ Invalid response. Please reply with Y for Yes or N for No.")
-
-
 # --- Close Button ---
 @router.callback_query(F.data == "close")
 async def close_callback(callback: types.CallbackQuery):
@@ -809,191 +752,242 @@ async def handle_message(message: Message):
     message_text = message.text
     chat_id = message.chat.id
     user_id = message.from_user.id
+    last_message = last_bot_message.get(user_id)
 
-    if not message_text:
-        return
-    
-    if message.chat.type == 'private' and message.reply_to_message is None:
-        await message.answer("Error: Please reply to the message above")
+    if message.chat.type == "private":    
+        if last_message == "Send your Token's Contract/Issuer Address to set up a trending slot.":
+            address = message.text.strip()
+            try:
+                token_info = await asyncio.to_thread(get_token_info, address)
+                await message.answer(token_info)
+                last_bot_message[user_id] = 'Reply with Y for Yes or N for No'
+                last_msg_id = message.message_id - 1
+                try:
+                    await bot.delete_message(chat_id=message.chat.id, message_id=last_msg_id)
+                except Exception as e:
+                    pass
+            except Exception as e:
+                msg = await message.answer('<b>Error fetching token info. Please ensure the issuer address is correct.</b>')
+                try:
+                    await asyncio.sleep(3)
+                    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+                    await asyncio.sleep(2)
+                    await msg.delete()
+                except Exception as e:
+                    pass 
+        elif last_message == 'Reply with Y for Yes or N for No':
+            if message.text.strip().lower() == 'y':
+                global keyboard_duration
+                keyboard_duration = InlineKeyboardBuilder()
 
-    likes_default_target[chat_id] = await get_likes_default_target(chat_id)
-    retweets_default_target[chat_id] = await get_retweets_default_target(chat_id)
-    replies_default_target[chat_id] = await get_replies_default_target(chat_id)
-    views_default_target[chat_id] = await get_views_default_target(chat_id)
-    bookmarks_default_target[chat_id] = await get_bookmarks_default_target(chat_id)
+                keyboard_duration.row(
+                    InlineKeyboardButton(text="24 Hrs [300 XRP] (20% off)", callback_data="trend_24h_300")
+                )
+                keyboard_duration.row(
+                    InlineKeyboardButton(text="12 Hrs [180 XRP] (10% off)", callback_data="trend_12h_180")
+                )
+                keyboard_duration.row(
+                    InlineKeyboardButton(text="6 Hrs [100 XRP]", callback_data="trend_6h_100")
+                )
+                keyboard_duration.row(
+                    InlineKeyboardButton(text="❌ Close", callback_data="close")
+                )
 
-    match = TWITTER_LINK_PATTERN.search(message_text)
-
-    if message_text.startswith("/raid"):
-        parts = message_text.split()
-
-        if len(parts) < 2:
-            bot_message = await message.answer(
-                "❌ <b>Invalid syntax. Usage: /raid [TWEET_URL] [❤️,🔄,💬,👀,🔖]</b>"
-            )
-            await asyncio.sleep(4)
-            await bot_message.delete()
-            return
-
-        link[chat_id] = parts[1]
-        tweet_id[chat_id] = link[chat_id].split("/")[-1]
-        if not match:
-            bot_message = await message.answer(
-                "❌ <b>Invalid Twitter link. Please provide a valid link.</b>"
-            )
-            await asyncio.sleep(4)
-            await bot_message.delete()
-            return
-
-        try:
-            numbers = [int(part) for part in parts[2:]]
-        except ValueError:
-            return
-
-        while len(numbers) < 5:
-            numbers.append(0)
-
-        numbers = numbers[:5]
-
-        await update_likes_target(chat_id, numbers[0])
-        await update_retweets_target(chat_id, numbers[1])
-        await update_replies_target(chat_id, numbers[2])
-        await update_views_target(chat_id, numbers[3])
-        await update_bookmarks_target(chat_id, numbers[4])
-        likes_target[chat_id] = numbers[0]
-        retweets_target[chat_id] = numbers[1]
-        replies_target[chat_id] = numbers[2]
-        views_target[chat_id] = numbers[3]
-        bookmarks_target[chat_id] = numbers[4]
-        await handle_start_raid(message, user_id)
-        return
+                await message.answer(
+                    "Select Trend Duration",
+                    reply_markup=keyboard_duration.as_markup()
+                )
+                last_bot_message[user_id] = ''
+            elif message.text.strip().lower() == 'n':
+                await message.answer("Send your Token's Contract/Issuer Address to set up a trending slot.")
+                last_bot_message[user_id] = 'Send your Token\'s Contract/Issuer Address to set up a trending slot.'
+            # else:
+            #     await message.answer("❌ Invalid response. Please reply with Y for Yes or N for No.")
     else:
-        likes_target[chat_id] = likes_default_target[chat_id]
-        retweets_target[chat_id] = retweets_default_target[chat_id]
-        replies_target[chat_id] = replies_default_target[chat_id]
-        views_target[chat_id] = views_default_target[chat_id]
-        bookmarks_target[chat_id] = bookmarks_default_target[chat_id]
-        link[chat_id] = message_text
-        tweet_id[chat_id] = link[chat_id].split("/")[-1]
-
-    await update_likes_target(chat_id, likes_target[chat_id])
-    await update_retweets_target(chat_id, retweets_target[chat_id])
-    await update_replies_target(chat_id, replies_target[chat_id])
-    await update_views_target(chat_id, views_target[chat_id])
-    await update_bookmarks_target(chat_id, bookmarks_target[chat_id])
-
-    member = await message.bot.get_chat_member(chat_id, user_id)
-    if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
-        return  # User is not an admin, ignore message
-
-    if match:
-        formatted = (
-            "⚙️ <b>Raid Options</b>\n\n"
-            f"🔗 <b>Link:</b> {link[chat_id]}\n"
-            f"💙 <b>Likes:</b> {likes_target[chat_id]}\n"
-            f"🔄 <b>Retweets:</b> {retweets_target[chat_id]}\n"
-            f"💬 <b>Replies:</b> {replies_target[chat_id]}\n"
-            f"👀 <b>Views:</b> {views_target[chat_id]}\n"
-            f"🔖 <b>Bookmarks:</b> {bookmarks_target[chat_id]}"
-        )
-
-        global keyboard_message
-        keyboard_message = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="💥 Start Raid 💥", callback_data="start raid"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="🎨  Customization", callback_data="option_4"
-                    )
-                ],
-                [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
-                [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
-            ]
-        )
-        await message.answer(
-            formatted,
-            reply_markup=keyboard_message,
-        )
-
-    global resend_ongoing
-    if raid_status.get(chat_id) and resend_ongoing:
-        resend_ongoing = False
-        await asyncio.sleep(12)
-        try:
-            await bot.delete_message(
-                chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
-            )
-        except Exception as e:
+        if not message_text:
             return
-        file_type = resend_message[chat_id]["file_type"]
-        file = resend_message[chat_id]["file"]
-        caption = resend_message[chat_id]["text"]
-        if file_type == "":
-            bot_message = await message.answer(
-                resend_message[chat_id]["text"], reply_markup=emoji_keyboard
-            )
-        elif file_type == ".jpg":
-            bot_message = await message.answer_photo(
-                file, caption=caption, reply_markup=emoji_keyboard
-            )
-        elif file_type == ".mp4":
-            bot_message = await message.answer_video(
-                file, caption=caption, reply_markup=emoji_keyboard
-            )
-        elif file_type == ".gif":
-            bot_message = await message.answer_animation(
-                file, caption=caption, reply_markup=emoji_keyboard
-            )
-        resend_message[chat_id]["message_id"] = bot_message.message_id
-        resend_ongoing = True
+        
+        if message.chat.type == 'private' and message.reply_to_message is None:
+            await message.answer("Error: Please reply to the message above")
 
-        if raid_tweet.get(chat_id, True):
-            await asyncio.sleep(8)
-            custom_text = await get_custom_text(chat_id)
-            if custom_text != "":
-                custom_text += "\n\n"
-            updated_caption = (
-                "<tg-emoji emoji-id='5258203794772085854'></tg-emoji> <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
-            )
-            file_type2 = await get_file_type(chat_id, "raid")
-            file_path = os.path.join(
-                MEDIA_DIR_RAID,
-                str(chat_id) + (".mp4" if file_type2 == ".gif" else file_type2),
-            )
-            file = file if file_type2 == "" else FSInputFile(file_path)
+        likes_default_target[chat_id] = await get_likes_default_target(chat_id)
+        retweets_default_target[chat_id] = await get_retweets_default_target(chat_id)
+        replies_default_target[chat_id] = await get_replies_default_target(chat_id)
+        views_default_target[chat_id] = await get_views_default_target(chat_id)
+        bookmarks_default_target[chat_id] = await get_bookmarks_default_target(chat_id)
+
+        match = TWITTER_LINK_PATTERN.search(message_text)
+
+        if message_text.startswith("/raid"):
+            parts = message_text.split()
+
+            if len(parts) < 2:
+                bot_message = await message.answer(
+                    "❌ <b>Invalid syntax. Usage: /raid [TWEET_URL] [❤️,🔄,💬,👀,🔖]</b>"
+                )
+                await asyncio.sleep(4)
+                await bot_message.delete()
+                return
+
+            link[chat_id] = parts[1]
+            tweet_id[chat_id] = link[chat_id].split("/")[-1]
+            if not match:
+                bot_message = await message.answer(
+                    "❌ <b>Invalid Twitter link. Please provide a valid link.</b>"
+                )
+                await asyncio.sleep(4)
+                await bot_message.delete()
+                return
 
             try:
-                if file_type == "" and file_type2 == "":
-                    await bot_message.edit_text(
-                        updated_caption, reply_markup=emoji_keyboard
-                    )
-                    resend_message[chat_id]["file_type"] = file_type2
-                elif file_type2 == "":
-                    await bot_message.edit_caption(
-                        caption=updated_caption, reply_markup=emoji_keyboard
-                    )
-                    resend_message[chat_id]["file_type"] = file_type
-                else:
-                    media_class = {
-                        ".jpg": InputMediaPhoto,
-                        ".mp4": InputMediaVideo,
-                        ".gif": InputMediaAnimation,
-                    }.get(file_type2)
-                    await bot_message.edit_media(
-                        media=media_class(media=file, caption=updated_caption),
-                        reply_markup=emoji_keyboard,
-                    )
-                    resend_message[chat_id]["file_type"] = file_type2
-                resend_message[chat_id]["text"] = updated_caption
-                resend_message[chat_id]["file"] = file
-                raid_tweet[chat_id] = False
+                numbers = [int(part) for part in parts[2:]]
+            except ValueError:
+                return
+
+            while len(numbers) < 5:
+                numbers.append(0)
+
+            numbers = numbers[:5]
+
+            await update_likes_target(chat_id, numbers[0])
+            await update_retweets_target(chat_id, numbers[1])
+            await update_replies_target(chat_id, numbers[2])
+            await update_views_target(chat_id, numbers[3])
+            await update_bookmarks_target(chat_id, numbers[4])
+            likes_target[chat_id] = numbers[0]
+            retweets_target[chat_id] = numbers[1]
+            replies_target[chat_id] = numbers[2]
+            views_target[chat_id] = numbers[3]
+            bookmarks_target[chat_id] = numbers[4]
+            await handle_start_raid(message, user_id)
+            return
+        else:
+            likes_target[chat_id] = likes_default_target[chat_id]
+            retweets_target[chat_id] = retweets_default_target[chat_id]
+            replies_target[chat_id] = replies_default_target[chat_id]
+            views_target[chat_id] = views_default_target[chat_id]
+            bookmarks_target[chat_id] = bookmarks_default_target[chat_id]
+            link[chat_id] = message_text
+            tweet_id[chat_id] = link[chat_id].split("/")[-1]
+
+        await update_likes_target(chat_id, likes_target[chat_id])
+        await update_retweets_target(chat_id, retweets_target[chat_id])
+        await update_replies_target(chat_id, replies_target[chat_id])
+        await update_views_target(chat_id, views_target[chat_id])
+        await update_bookmarks_target(chat_id, bookmarks_target[chat_id])
+
+        member = await message.bot.get_chat_member(chat_id, user_id)
+        if member.status not in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR}:
+            return  # User is not an admin, ignore message
+
+        if match:
+            formatted = (
+                "⚙️ <b>Raid Options</b>\n\n"
+                f"🔗 <b>Link:</b> {link[chat_id]}\n"
+                f"💙 <b>Likes:</b> {likes_target[chat_id]}\n"
+                f"🔄 <b>Retweets:</b> {retweets_target[chat_id]}\n"
+                f"💬 <b>Replies:</b> {replies_target[chat_id]}\n"
+                f"👀 <b>Views:</b> {views_target[chat_id]}\n"
+                f"🔖 <b>Bookmarks:</b> {bookmarks_target[chat_id]}"
+            )
+
+            global keyboard_message
+            keyboard_message = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text="💥 Start Raid 💥", callback_data="start raid"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text="🎨  Customization", callback_data="option_4"
+                        )
+                    ],
+                    [InlineKeyboardButton(text="🎯 Targets", callback_data="option_2")],
+                    [InlineKeyboardButton(text="🚪 Close", callback_data="option_3")],
+                ]
+            )
+            await message.answer(
+                formatted,
+                reply_markup=keyboard_message,
+            )
+
+        global resend_ongoing
+        if raid_status.get(chat_id) and resend_ongoing:
+            resend_ongoing = False
+            await asyncio.sleep(12)
+            try:
+                await bot.delete_message(
+                    chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
+                )
             except Exception as e:
-                pass
-            await asyncio.sleep(1)
+                return
+            file_type = resend_message[chat_id]["file_type"]
+            file = resend_message[chat_id]["file"]
+            caption = resend_message[chat_id]["text"]
+            if file_type == "":
+                bot_message = await message.answer(
+                    resend_message[chat_id]["text"], reply_markup=emoji_keyboard
+                )
+            elif file_type == ".jpg":
+                bot_message = await message.answer_photo(
+                    file, caption=caption, reply_markup=emoji_keyboard
+                )
+            elif file_type == ".mp4":
+                bot_message = await message.answer_video(
+                    file, caption=caption, reply_markup=emoji_keyboard
+                )
+            elif file_type == ".gif":
+                bot_message = await message.answer_animation(
+                    file, caption=caption, reply_markup=emoji_keyboard
+                )
+            resend_message[chat_id]["message_id"] = bot_message.message_id
+            resend_ongoing = True
+
+            if raid_tweet.get(chat_id, True):
+                await asyncio.sleep(8)
+                custom_text = await get_custom_text(chat_id)
+                if custom_text != "":
+                    custom_text += "\n\n"
+                updated_caption = (
+                    "<tg-emoji emoji-id='5258203794772085854'></tg-emoji> <b>Raid Tweet</b>\n\n" + custom_text + percentages[chat_id]
+                )
+                file_type2 = await get_file_type(chat_id, "raid")
+                file_path = os.path.join(
+                    MEDIA_DIR_RAID,
+                    str(chat_id) + (".mp4" if file_type2 == ".gif" else file_type2),
+                )
+                file = file if file_type2 == "" else FSInputFile(file_path)
+
+                try:
+                    if file_type == "" and file_type2 == "":
+                        await bot_message.edit_text(
+                            updated_caption, reply_markup=emoji_keyboard
+                        )
+                        resend_message[chat_id]["file_type"] = file_type2
+                    elif file_type2 == "":
+                        await bot_message.edit_caption(
+                            caption=updated_caption, reply_markup=emoji_keyboard
+                        )
+                        resend_message[chat_id]["file_type"] = file_type
+                    else:
+                        media_class = {
+                            ".jpg": InputMediaPhoto,
+                            ".mp4": InputMediaVideo,
+                            ".gif": InputMediaAnimation,
+                        }.get(file_type2)
+                        await bot_message.edit_media(
+                            media=media_class(media=file, caption=updated_caption),
+                            reply_markup=emoji_keyboard,
+                        )
+                        resend_message[chat_id]["file_type"] = file_type2
+                    resend_message[chat_id]["text"] = updated_caption
+                    resend_message[chat_id]["file"] = file
+                    raid_tweet[chat_id] = False
+                except Exception as e:
+                    pass
+                await asyncio.sleep(1)
 
 
 @dp.callback_query(lambda c: c.data.startswith("target_"))
