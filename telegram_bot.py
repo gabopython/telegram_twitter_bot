@@ -3,6 +3,7 @@ from utils import *
 from config import BOT_TOKEN, BOT_USERNAME
 from db import *
 from xrpl_bot import get_token_info
+from xrp_payments import send_xrp
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, CommandObject
@@ -284,7 +285,35 @@ async def cancel_order(callback: types.CallbackQuery):
         "Select Trend Duration",
         reply_markup=keyboard_duration.as_markup()
     )
- 
+
+
+@router.callback_query(F.data.startswith("payment_done_"))
+async def payment_done(callback: types.CallbackQuery):
+    await callback.message.delete()
+    payment_amount = await add_or_update_payment(sender_address[callback.from_user.id])
+    amount = int(callback.data.split("_")[2])
+    if payment_amount == None:
+        await callback.message.answer(f"❌ No payment found from your address. Please try again.")
+    elif payment_amount == amount:
+        await callback.message.answer(f"✅ Payment of {amount} XRP confirmed successfully!")
+        await update_payment_to_zero(sender_address[callback.from_user.id])
+    elif payment_amount < amount:
+        msg = await callback.message.answer(f"❌ Payment of {amount} XRP insufficient. Please try again.")
+        await asyncio.sleep(2)
+        await callback.message.answer(
+            "Select Trend Duration",
+            reply_markup=keyboard_duration.as_markup()
+        )
+        await callback.answer()
+        try:
+            await asyncio.sleep(2)
+            await msg.delete()
+        except Exception:
+            pass
+    else:
+        await callback.message.answer(f"⚠️ Payment of {payment_amount} XRP received, which is more than the required {amount} XRP. ")
+        await asyncio.to_thread(send_xrp, sender_address[callback.from_user.id], payment_amount)
+        await update_payment_to_zero(sender_address[callback.from_user.id])
 
 
 @dp.message(ReplyStates.waiting_for_reply)
@@ -777,32 +806,37 @@ async def handle_message(message: Message):
                     pass 
         elif last_message == 'Reply with Y for Yes or N for No':
             if message.text.strip().lower() == 'y':
-                global keyboard_duration
-                keyboard_duration = InlineKeyboardBuilder()
-
-                keyboard_duration.row(
-                    InlineKeyboardButton(text="24 Hrs [300 XRP] (20% off)", callback_data="trend_24h_300")
-                )
-                keyboard_duration.row(
-                    InlineKeyboardButton(text="12 Hrs [180 XRP] (10% off)", callback_data="trend_12h_180")
-                )
-                keyboard_duration.row(
-                    InlineKeyboardButton(text="6 Hrs [100 XRP]", callback_data="trend_6h_100")
-                )
-                keyboard_duration.row(
-                    InlineKeyboardButton(text="❌ Close", callback_data="close")
-                )
-
-                await message.answer(
-                    "Select Trend Duration",
-                    reply_markup=keyboard_duration.as_markup()
-                )
-                last_bot_message[user_id] = ''
+                await message.answer("pls send your address")
+                last_bot_message[user_id] = 'pls send your address'
             elif message.text.strip().lower() == 'n':
                 await message.answer("Send your Token's Contract/Issuer Address to set up a trending slot.")
                 last_bot_message[user_id] = 'Send your Token\'s Contract/Issuer Address to set up a trending slot.'
             # else:
             #     await message.answer("❌ Invalid response. Please reply with Y for Yes or N for No.")
+        elif last_message == 'pls send your address':
+            sender_address[user_id] = message.text.strip()
+            global keyboard_duration
+            keyboard_duration = InlineKeyboardBuilder()
+
+            keyboard_duration.row(
+                InlineKeyboardButton(text="24 Hrs [15 XRP] (20% off)", callback_data="trend_24h_15")
+            )
+            keyboard_duration.row(
+                InlineKeyboardButton(text="12 Hrs [10 XRP] (10% off)", callback_data="trend_12h_10")
+            )
+            keyboard_duration.row(
+                InlineKeyboardButton(text="6 Hrs [5 XRP]", callback_data="trend_6h_5")
+            )
+            keyboard_duration.row(
+                InlineKeyboardButton(text="❌ Close", callback_data="close")
+            )
+
+            await message.answer(
+                "Select Trend Duration",
+                reply_markup=keyboard_duration.as_markup()
+            )
+            last_bot_message[user_id] = ''
+
     else:
         if not message_text:
             return

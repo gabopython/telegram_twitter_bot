@@ -1,4 +1,6 @@
 import aiosqlite
+from xrp_payments import get_payment_info
+import asyncio
 
 
 DB_NAME = "bot.db"
@@ -70,6 +72,15 @@ async def init_db():
             bookmarked BOOLEAN DEFAULT 0,
             smashed BOOLEAN DEFAULT 0,
             PRIMARY KEY (user_id, tweet_id)
+            )
+        """
+        )
+        await db.execute(
+            """
+            CREATE TABLE IF NOT EXISTS payments (
+                sender_address TEXT PRIMARY KEY,
+                hash TEXT,
+                amount_drops INTEGER
             )
         """
         )
@@ -530,3 +541,64 @@ async def add_user_smashed(user_id: int, tweet_id: str):
             (user_id, tweet_id),
         )
         await db.commit()
+
+async def add_or_update_payment(sender_address: str):
+    payment_info = await asyncio.to_thread(get_payment_info, sender_address)
+    if payment_info is None:
+        return None
+    amount = int(payment_info["amount"])
+    hash_ = payment_info.get("hash")
+
+    async with aiosqlite.connect(DB_NAME) as db:
+        # Check existing payment for this sender
+        async with db.execute(
+            "SELECT hash, amount_drops FROM payments WHERE sender_address = ?", (sender_address,)
+        ) as cursor:
+            row = await cursor.fetchone()
+
+        # No existing row -> insert
+        if not row:
+            await db.execute(
+                """
+                INSERT INTO payments (sender_address, hash, amount_drops)
+                VALUES (?, ?, ?)
+                """,
+                (sender_address, hash_, amount),
+            )
+            await db.commit()
+            return amount
+
+        existing_hash, existing_amount = row
+
+        # Only increase amount_drops if the hash changed
+        if existing_hash != hash_:
+            await db.execute(
+                """
+                UPDATE payments
+                SET amount_drops = amount_drops + ?, hash = ?
+                WHERE sender_address = ?
+                """,
+                (amount, hash_, sender_address),
+            )
+            await db.commit()
+            async with db.execute(
+                "SELECT amount_drops FROM payments WHERE sender_address = ?", (sender_address,)
+            ) as cursor:
+                row = await cursor.fetchone()
+                return row[0] if row else None
+
+        # Hash is the same -> do nothing, return current amount_drops
+        return existing_amount
+
+async def update_payment_to_zero(sender_address: str) -> bool:
+    """
+    Set amount_drops to 0 for the given sender_address.
+    Returns True if a row was updated, False otherwise.
+    """
+    async with aiosqlite.connect(DB_NAME) as db:
+        cursor = await db.execute(
+            "UPDATE payments SET amount_drops = 0 WHERE sender_address = ?",
+            (sender_address,),
+        )
+        await db.commit()
+        return cursor.rowcount > 0
