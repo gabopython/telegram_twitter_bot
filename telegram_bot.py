@@ -298,18 +298,14 @@ async def payment_done(callback: types.CallbackQuery):
         await callback.message.answer(f"✅ Payment of {amount} XRP confirmed successfully!")
         await update_payment_to_zero(sender_address[callback.from_user.id])
     elif payment_amount < amount:
-        msg = await callback.message.answer(f"❌ Payment of {amount} XRP insufficient. Please try again.")
-        await asyncio.sleep(2)
-        await callback.message.answer(
-            "Select Trend Duration",
-            reply_markup=keyboard_duration.as_markup()
+        keyboard = InlineKeyboardBuilder()
+        keyboard.row(
+            InlineKeyboardButton(text="✅ Payment Done", callback_data=f"payment_done_{amount}")
         )
-        await callback.answer()
-        try:
-            await asyncio.sleep(2)
-            await msg.delete()
-        except Exception:
-            pass
+        await callback.message.answer(
+            f"We have received {payment_amount} XRP. Please send the remaining {amount - payment_amount} XRP",
+            reply_markup=keyboard.as_markup()
+        )
     else:
         await callback.message.answer(f"⚠️ Payment of {payment_amount} XRP received, which is more than the required {amount} XRP. ")
         await asyncio.to_thread(send_xrp, sender_address[callback.from_user.id], payment_amount)
