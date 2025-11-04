@@ -65,21 +65,23 @@ def get_emoji(percentage):
         return "🟨"  # Yellow square emoji for < 100%
     else:
         return "🟦"  # Blue square emoji for >= 100%
+    
+
+trending_url = f"https://t.me/{BOT_USERNAME}?start=trending"    
+
+
+trending_buttons_default = [
+    InlineKeyboardButton(text="⃝", url=trending_url)
+    for i in range(5)
+]
 
 def trending_buttons(spot: int = None, ticker: str = None, url: str = None):
     """Create inline keyboard for 'raid' message"""
-    trending_url = f"https://t.me/{BOT_USERNAME}?start=trending"    
-
-
-    trending_buttons = [
-        InlineKeyboardButton(text="⃝", url=trending_url)
-        for i in range(5)
-    ]
 
     if spot:
-        trending_buttons[spot - 1] = InlineKeyboardButton(
+        trending_buttons_default[spot - 1] = InlineKeyboardButton(
             text=ticker,
             url=url
         )
 
-    return trending_buttons
+    return trending_buttons_default
