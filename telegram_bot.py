@@ -4,6 +4,7 @@ from config import BOT_TOKEN, BOT_USERNAME
 from db import *
 from xrpl_bot import get_token_info
 from xrp_payments import send_xrp
+from spots import SpotManager
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, CommandObject
@@ -37,6 +38,7 @@ dp = Dispatcher()
 router = Router()
 resend_message = {}
 resend_ongoing = True
+spot_manager = SpotManager()
 
 
 class ReplyStates(StatesGroup):
@@ -289,15 +291,36 @@ async def cancel_order(callback: types.CallbackQuery):
 
 @router.callback_query(F.data.startswith("payment_done_"))
 async def payment_done(callback: types.CallbackQuery):
+    
+    user_id = callback.from_user.id
+
     await callback.message.delete()
-    payment_amount = await add_or_update_payment(sender_address[callback.from_user.id])
+    payment_amount = await add_or_update_payment(sender_address[user_id])
     amount = int(callback.data.split("_")[2])
     if payment_amount == None:
         await callback.message.answer(f"❌ No payment found from your address. Please try again.")
-    elif payment_amount == amount:
-        await callback.message.answer(f"✅ Payment of {amount} XRP confirmed successfully!")
-        await update_payment_to_zero(sender_address[callback.from_user.id])
-    elif payment_amount < amount:
+    elif payment_amount >= amount:
+        if payment_amount == amount:
+            await callback.message.answer(f"✅ Payment of {amount} XRP confirmed successfully!")
+        else:
+            await callback.message.answer(f"⚠️ Payment of {payment_amount} XRP received, which is more than the required {amount} XRP. ")
+            await asyncio.to_thread(send_xrp, sender_address[callback.from_user.id], payment_amount-amount)
+        await update_payment_to_zero(sender_address[user_id])
+        
+        spot = await spot_manager.take_spot(ticker_name[user_id], duration_hours=amount/100)
+        print(f"Spot taken:    {spot}", url_ledger[user_id],'\n\nmesages   ', raid_messages)
+        modify_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons(spot['id'], ticker_name[user_id], url_ledger[user_id])])
+        for chat_id, message_id in list(raid_messages.items()):
+            try:
+                await bot.edit_message_reply_markup(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    reply_markup=modify_keyboard
+                )
+            except Exception as e:
+                raid_messages.pop(chat_id, None)
+
+    else:
         keyboard = InlineKeyboardBuilder()
         keyboard.row(
             InlineKeyboardButton(text="✅ Payment Done", callback_data=f"payment_done_{amount}")
@@ -306,10 +329,6 @@ async def payment_done(callback: types.CallbackQuery):
             f"We have received {payment_amount} XRP. Please send the remaining {amount - payment_amount} XRP",
             reply_markup=keyboard.as_markup()
         )
-    else:
-        await callback.message.answer(f"⚠️ Payment of {payment_amount} XRP received, which is more than the required {amount} XRP. ")
-        await asyncio.to_thread(send_xrp, sender_address[callback.from_user.id], payment_amount)
-        await update_payment_to_zero(sender_address[callback.from_user.id])
 
 
 @dp.message(ReplyStates.waiting_for_reply)
@@ -784,7 +803,9 @@ async def handle_message(message: Message):
             address = message.text.strip()
             try:
                 token_info = await asyncio.to_thread(get_token_info, address)
-                await message.answer(token_info)
+                ticker_name[user_id] = token_info[1]
+                url_ledger[user_id] = token_info[2]
+                await message.answer(token_info[0])
                 last_bot_message[user_id] = 'Reply with Y for Yes or N for No'
                 last_msg_id = message.message_id - 1
                 try:
@@ -1280,8 +1301,8 @@ async def handle_start_raid(message: Message, user_id: int):
         bookmarks_percentage = calculate_percentage(
             bookmarks, bookmarks_target[chat_id]
         )
-        reply_url = await create_start_link(bot, payload=chat_id)
-        trending_url = f"https://t.me/{BOT_USERNAME}?start=trending"
+        reply_url = await create_start_link(bot, payload=chat_id)   
+        global emoji_buttons     
         emoji_buttons = [
             InlineKeyboardButton(text="💬", url=reply_url),
             InlineKeyboardButton(text="🔁", callback_data="retweet"),
@@ -1289,16 +1310,9 @@ async def handle_start_raid(message: Message, user_id: int):
             InlineKeyboardButton(text="🏷️", callback_data="bookmark"),
             InlineKeyboardButton(text="👊", callback_data="smash"),
         ]
-        trending_buttons = [
-            InlineKeyboardButton(text="⃝", url=trending_url),
-            InlineKeyboardButton(text="⃝", url=trending_url),
-            InlineKeyboardButton(text="⃝", url=trending_url),
-            InlineKeyboardButton(text="⃝", url=trending_url),
-            InlineKeyboardButton(text="⃝", url=trending_url),
-        ]
         global emoji_keyboard
         emoji_keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[emoji_buttons, trending_buttons]
+            inline_keyboard=[emoji_buttons, trending_buttons()]
         )
 
         percentages[chat_id] = (
@@ -1415,6 +1429,7 @@ async def handle_start_raid(message: Message, user_id: int):
             bot_message = await message.answer(
                 raid_message, reply_markup=emoji_keyboard
             )
+        raid_messages[message.chat.id] = bot_message.message_id
         resend_message[chat_id] = {
             "message_id": bot_message.message_id,
             "text": raid_message,

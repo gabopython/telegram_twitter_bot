@@ -33,6 +33,8 @@ def get_token_info(issuer):
             token += f"Market Cap: {dexs_data['pairs'][0]['fdv']} USD\n\n"
         except Exception as e:
             token += f"Failed to get market cap: {e}\n"
-    token += 'https://firstledger.net/token/' + issuer + '/' + symbol + '\n\n'+"Is this the token you’d like to promote?\nReply with Y for Yes or N for No"
-    return token
+    url = 'https://firstledger.net/token/' + issuer + '/' + symbol
+    token += url + '\n\n'+"Is this the token you’d like to promote?\nReply with Y for Yes or N for No"
+    
+    return token, symbol_text, url
 
