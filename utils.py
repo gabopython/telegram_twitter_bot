@@ -75,7 +75,7 @@ trending_buttons_default = [
     for i in range(5)
 ]
 
-def trending_buttons(spot: int = None, ticker: str = None, url: str = None):
+def trending_buttons(spot: int = None, ticker: str = "⃝", url: str = trending_url):
     """Create inline keyboard for 'raid' message"""
 
     if spot:
