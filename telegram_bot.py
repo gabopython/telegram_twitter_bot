@@ -308,7 +308,7 @@ async def payment_done(callback: types.CallbackQuery):
         await update_payment_to_zero(sender_address[user_id])
         
         spot = await spot_manager.take_spot(ticker_name[user_id], duration_hours=amount/100)
-        await callback.message.answer(f"✅ You have been assigned to trending spot {spot['id']} until {spot['expires_at'].strftime('%H:%M:%S')}.")
+        await callback.message.answer(f"You have been assigned to trending spot {spot['id']} until {spot['expires_at'].strftime('%H:%M:%S')}.")
         modify_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons(spot['id'], ticker_name[user_id][:4], url_ledger[user_id])])
         for chat_id, message_id in list(raid_messages.items()):
             try:
