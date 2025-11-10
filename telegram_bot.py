@@ -303,8 +303,8 @@ async def payment_done(callback: types.CallbackQuery):
         if payment_amount == amount:
             await callback.message.answer(f"✅ Payment of {amount} XRP confirmed successfully!")
         else:
-            await callback.message.answer(f"⚠️ Payment of {payment_amount} XRP received, which is more than the required {amount} XRP. ")
-            await asyncio.to_thread(send_xrp, sender_address[callback.from_user.id], payment_amount-amount)
+            hash = await asyncio.to_thread(send_xrp, sender_address[callback.from_user.id], payment_amount-amount)
+            await callback.message.answer(f"⚠️ Payment of {payment_amount} XRP received, which is more than the amount required {amount} XRP. We have processed a refund for the excess amount of {payment_amount - amount} XRP. Hash: {hash}")
         await update_payment_to_zero(sender_address[user_id])
         
         spot = await spot_manager.take_spot(ticker_name[user_id], duration_hours=amount/100)
@@ -320,7 +320,10 @@ async def payment_done(callback: types.CallbackQuery):
             except Exception as e:
                 raid_messages.pop(chat_id, None)
         await asyncio.sleep(amount * 36)
-        modify_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons(spot['id'])])
+        await asyncio.sleep(2)
+        continue_spot = await spot_manager.status()
+        if continue_spot is None:
+            modify_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons(spot['id'])])
         for chat_id, message_id in list(raid_messages.items()):
             try:
                 await bot.edit_message_reply_markup(
@@ -330,7 +333,7 @@ async def payment_done(callback: types.CallbackQuery):
                 )
             except Exception as e:
                 raid_messages.pop(chat_id, None)
-        await spot_manager.status()
+                print(f"Error updating message: {e}")
 
     else:
         keyboard = InlineKeyboardBuilder()
@@ -835,14 +838,14 @@ async def handle_message(message: Message):
                     pass 
         elif last_message == 'Reply with Y for Yes or N for No':
             if message.text.strip().lower() == 'y':
-                await message.answer("pls send your address")
-                last_bot_message[user_id] = 'pls send your address'
+                await message.answer("Please share the wallet address from which you are making the payment:")
+                last_bot_message[user_id] = 'Please share the wallet address from which you are making the payment:'
             elif message.text.strip().lower() == 'n':
                 await message.answer("Send your Token's Contract/Issuer Address to set up a trending slot.")
                 last_bot_message[user_id] = 'Send your Token\'s Contract/Issuer Address to set up a trending slot.'
             # else:
             #     await message.answer("❌ Invalid response. Please reply with Y for Yes or N for No.")
-        elif last_message == 'pls send your address':
+        elif last_message == 'Please share the wallet address from which you are making the payment:':
             sender_address[user_id] = message.text.strip()
             global keyboard_duration
             keyboard_duration = InlineKeyboardBuilder()
@@ -985,13 +988,18 @@ async def handle_message(message: Message):
                     chat_id=chat_id, message_id=resend_message[chat_id]["message_id"]
                 )
             except Exception as e:
+                print(e)
+                print("Failed to delete message")
                 return
             file_type = resend_message[chat_id]["file_type"]
             file = resend_message[chat_id]["file"]
             caption = resend_message[chat_id]["text"]
+            emoji_keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[emoji_buttons, trending_buttons_default]
+            )
             if file_type == "":
                 bot_message = await message.answer(
-                    resend_message[chat_id]["text"], reply_markup=emoji_keyboard
+                    caption, reply_markup=emoji_keyboard
                 )
             elif file_type == ".jpg":
                 bot_message = await message.answer_photo(
@@ -1005,6 +1013,8 @@ async def handle_message(message: Message):
                 bot_message = await message.answer_animation(
                     file, caption=caption, reply_markup=emoji_keyboard
                 )
+            
+            raid_messages[message.chat.id] = bot_message.message_id
             resend_message[chat_id]["message_id"] = bot_message.message_id
             resend_ongoing = True
 
@@ -1322,9 +1332,8 @@ async def handle_start_raid(message: Message, user_id: int):
             InlineKeyboardButton(text="🏷️", callback_data="bookmark"),
             InlineKeyboardButton(text="👊", callback_data="smash"),
         ]
-        global emoji_keyboard
         emoji_keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[emoji_buttons, trending_buttons()]
+            inline_keyboard=[emoji_buttons, trending_buttons_default]
         )
 
         percentages[chat_id] = (

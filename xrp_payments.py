@@ -99,11 +99,7 @@ def send_xrp(destination: str, amount: float):
     result = submit_and_wait(signed_tx, client)
 
     # Return simplified result
-    # return {
-    #     "tx_hash": result.result.get("hash"),
-    #     "status": result.result.get("meta", {}).get("TransactionResult"),
-    #     "full_response": result.result,
-    # }
+    return result.result.get("hash")
 
 if __name__ == "__main__":
     send_xrp(   "rDo9REgtLV4cAXg1r3XJytxUAWvrAgrTmY", 5)

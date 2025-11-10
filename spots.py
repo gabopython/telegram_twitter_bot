@@ -147,7 +147,7 @@ class SpotManager:
             await self._save_spot(earliest_spot)
         return None
 
-    async def status(self):
+    async def status(self, spot_id: int = None):
         """Show current status of spots and queue."""
         await self._clear_expired()
         spots = await self._get_spots()
@@ -157,6 +157,8 @@ class SpotManager:
         for spot in spots:
             if spot["taken"]:
                 print(f"Spot {spot['id']}: TAKEN by {spot['user_id']}")
+                if spot_id and spot["id"] == spot_id:
+                    return spot_id                    
             else:
                 print(f"Spot {spot['id']}: AVAILABLE")
 
@@ -166,7 +168,6 @@ class SpotManager:
                 print(f"{i}. {user} (wants {dur}h)")
         else:
             print("\n📋 Queue is empty.")
-
 
 # ------------------ EXAMPLE ------------------ #
 async def main():
