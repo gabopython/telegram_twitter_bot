@@ -93,15 +93,15 @@ class SpotManager:
                 spot.update({"taken": False, "user_id": None, "expires_at": None})
                 await self._save_spot(spot)
 
-        await self._assign_from_queue()
+        return await self._assign_from_queue()
 
     async def _assign_from_queue(self):
         """Assign waiting users if there are free spots."""
         queue = await self._get_queue()
         if queue:
             user_id, duration, spot = queue.popleft()
-            await self.take_spot(user_id, duration, spot)
             await self._save_queue(queue)
+            return await self.take_spot(user_id, duration, spot)
 
     # ------------------ PUBLIC METHODS ------------------ #
     async def take_spot(self, user_id: str, duration_hours: float, spot_id: int = None):
@@ -142,14 +142,16 @@ class SpotManager:
 
             queue.append((user_id, duration_hours, earliest_spot["id"]))
             await self._save_queue(queue)
-            print(f"🕓 All spots taken. {user_id} will be queued in spot {earliest_spot['id']}, {earliest_spot['expires_at']}.")
+            time_assigned = earliest_spot["expires_at"].strftime('%H:%M:%S')
             earliest_spot["expires_at"]+= timedelta(hours=duration_hours)
             await self._save_spot(earliest_spot)
-        return None
+            return f"🕓 All spots taken. {user_id} will be queued in spot {earliest_spot['id']}, {time_assigned}."
 
     async def status(self, spot_id: int = None):
         """Show current status of spots and queue."""
-        await self._clear_expired()
+        s = await self._clear_expired()
+        if s is not None:
+            return s
         spots = await self._get_spots()
         queue = await self._get_queue()
 
@@ -158,7 +160,7 @@ class SpotManager:
             if spot["taken"]:
                 print(f"Spot {spot['id']}: TAKEN by {spot['user_id']}")
                 if spot_id and spot["id"] == spot_id:
-                    return spot_id                    
+                    return False               
             else:
                 print(f"Spot {spot['id']}: AVAILABLE")
 

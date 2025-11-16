@@ -245,7 +245,7 @@ async def save_reply(message: Message, state: FSMContext):
 
     
 # --- Close Button ---
-@router.callback_query(F.data == "close")
+@router.callback_query(F.data.in_({"close", "cancel"}))
 async def close_callback(callback: types.CallbackQuery):
     await callback.message.delete()
     await callback.message.answer("Send your Token's Contract/Issuer Address to set up a trending slot.")
@@ -307,9 +307,13 @@ async def payment_done(callback: types.CallbackQuery):
             await callback.message.answer(f"⚠️ Payment of {payment_amount} XRP received, which is more than the amount required {amount} XRP. We have processed a refund for the excess amount of {payment_amount - amount} XRP. Hash: {hash}")
         await update_payment_to_zero(sender_address[user_id])
         
-        spot = await spot_manager.take_spot(ticker_name[user_id], duration_hours=amount/100)
+        spot = await spot_manager.take_spot(ticker_name[user_id][:4], duration_hours=amount/100)
+        if isinstance(spot, str):
+            await callback.message.answer(spot)
+            return
+        
         await callback.message.answer(f"You have been assigned to trending spot {spot['id']} until {spot['expires_at'].strftime('%H:%M:%S')}.")
-        modify_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons(spot['id'], ticker_name[user_id][:4], url_ledger[user_id])])
+        modify_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons(spot['id'], spot['user_id'], url_ledger[spot['user_id']])])
         for chat_id, message_id in list(raid_messages.items()):
             try:
                 await bot.edit_message_reply_markup(
@@ -319,21 +323,51 @@ async def payment_done(callback: types.CallbackQuery):
                 )
             except Exception as e:
                 raid_messages.pop(chat_id, None)
-        await asyncio.sleep(amount * 36)
+        expires = (spot['expires_at'] - datetime.now()).total_seconds()
+        print(f"Spot {spot['id']} for {ticker_name[user_id]} will expire in {expires} seconds.")
+        await asyncio.sleep(expires)
         await asyncio.sleep(2)
-        continue_spot = await spot_manager.status()
+        continue_spot = await spot_manager.status(spot_id=spot['id'])
         if continue_spot is None:
             modify_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons(spot['id'])])
-        for chat_id, message_id in list(raid_messages.items()):
-            try:
-                await bot.edit_message_reply_markup(
-                    chat_id=chat_id,
-                    message_id=message_id,
-                    reply_markup=modify_keyboard
-                )
-            except Exception as e:
-                raid_messages.pop(chat_id, None)
-                print(f"Error updating message: {e}")
+            for chat_id, message_id in list(raid_messages.items()):
+                try:
+                    await bot.edit_message_reply_markup(
+                        chat_id=chat_id,
+                        message_id=message_id,
+                        reply_markup=modify_keyboard
+                    )
+                except Exception as e:
+                    raid_messages.pop(chat_id, None)
+                    print(f"Error updating message: {e}")
+        elif continue_spot:
+            modify_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons(continue_spot['id'], continue_spot['user_id'], url_ledger[continue_spot['user_id']])])
+            for chat_id, message_id in list(raid_messages.items()):
+                try:
+                    await bot.edit_message_reply_markup(
+                        chat_id=chat_id,
+                        message_id=message_id,
+                        reply_markup=modify_keyboard
+                    )
+                except Exception as e:
+                    raid_messages.pop(chat_id, None)
+            expires = (continue_spot['expires_at'] - datetime.now()).total_seconds()
+            print(f"Spot {continue_spot['id']} for {ticker_name[user_id]} will expire in {expires} seconds.")
+            await asyncio.sleep(expires)
+            await asyncio.sleep(2)
+            continue_spot2 = await spot_manager.status(spot_id=continue_spot['id'])
+            if continue_spot2 is None:
+                modify_keyboard = InlineKeyboardMarkup(inline_keyboard=[emoji_buttons, trending_buttons(continue_spot['id'])])
+                for chat_id, message_id in list(raid_messages.items()):
+                    try:
+                        await bot.edit_message_reply_markup(
+                            chat_id=chat_id,
+                            message_id=message_id,
+                            reply_markup=modify_keyboard
+                        )
+                    except Exception as e:
+                        raid_messages.pop(chat_id, None)
+                        print(f"Error updating message: {e}")
 
     else:
         keyboard = InlineKeyboardBuilder()
@@ -819,7 +853,7 @@ async def handle_message(message: Message):
             try:
                 token_info = await asyncio.to_thread(get_token_info, address)
                 ticker_name[user_id] = token_info[1]
-                url_ledger[user_id] = token_info[2]
+                url_ledger[ticker_name[user_id][:4]] = token_info[2]
                 await message.answer(token_info[0])
                 last_bot_message[user_id] = 'Reply with Y for Yes or N for No'
                 last_msg_id = message.message_id - 1
@@ -838,7 +872,11 @@ async def handle_message(message: Message):
                     pass 
         elif last_message == 'Reply with Y for Yes or N for No':
             if message.text.strip().lower() == 'y':
-                await message.answer("Please share the wallet address from which you are making the payment:")
+                keyboard_cancel = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Cancel", callback_data="cancel")]])
+                await message.answer(
+                    "Please share the wallet address from which you are making the payment:",
+                    reply_markup=keyboard_cancel
+                )
                 last_bot_message[user_id] = 'Please share the wallet address from which you are making the payment:'
             elif message.text.strip().lower() == 'n':
                 await message.answer("Send your Token's Contract/Issuer Address to set up a trending slot.")

@@ -20,19 +20,20 @@ def search_on_dexscreener(symbol):
     return res
 
 def get_token_info(issuer):
+
+    dexs_data = search_on_dexscreener(issuer)
+    try:
+        token = f"Market Cap: {dexs_data['pairs'][0]['marketCap']} USD\n\n"
+    except Exception as e:
+        token = f"Failed to get market cap: {e}\n"
+
     symbol = get_issued_token(issuer)
-    if symbol and all(c in "0123456789abcdefABCDEF" for c in symbol) and len(symbol) % 2 == 0:
-        try:
-            symbol_text = bytes.fromhex(symbol).decode("utf-8")
-            token = f"Ticker: {symbol_text}\n\n"
-        except Exception as e:
-            token = f"Failed to decode symbol: {e}\n"
-    if symbol:
-        dexs_data = search_on_dexscreener(symbol)
-        try:
-            token += f"Market Cap: {dexs_data['pairs'][0]['fdv']} USD\n\n"
-        except Exception as e:
-            token += f"Failed to get market cap: {e}\n"
+    if len(symbol) == 40:
+        symbol_text = bytes.fromhex(symbol).decode("utf-8")
+    else:    
+        symbol_text = symbol   
+    token += f"Ticker: {symbol_text}\n\n"
+
     url = 'https://firstledger.net/token/' + issuer + '/' + symbol
     token += url + '\n\n'+"Is this the token you’d like to promote?\nReply with Y for Yes or N for No"
     
