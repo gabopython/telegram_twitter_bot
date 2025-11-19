@@ -123,8 +123,3 @@ async def oauth_callback(oauth_token: str, oauth_verifier: str):
             status_code=500
         )
 
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy"}

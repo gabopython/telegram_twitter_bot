@@ -18,13 +18,6 @@ async def run_fastapi():
 
 
 async def main():
-    """Main entry point - runs both FastAPI and Telegram bot"""
-    print("=" * 50)
-    print("Starting X Bot Application")
-    print("=" * 50)
-    print(f"FastAPI: http://{fastapi_host}:{fastapi_port}")
-    print(f"Callback URL: {callback_url}")
-    print("=" * 50)
     
     # Set bot instance for FastAPI
     bot = get_bot()
