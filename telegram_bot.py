@@ -5,6 +5,8 @@ from db import *
 from xrpl_bot import get_token_info
 from xrp_payments import send_xrp
 from spots import SpotManager
+from x_client import x_client
+from storage import storage
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, CommandObject
@@ -50,6 +52,163 @@ commands = [
     BotCommand(command="/stop", description="Stop the ongoing raid"),
     BotCommand(command="/trending", description="Set up a trending slot"),
 ]
+
+
+def extract_tweet_id(url: str) -> str:
+    """Extract tweet ID from X/Twitter URL"""
+    patterns = [
+        r'x\.com/[^/]+/status/(\d+)',
+        r'twitter\.com/[^/]+/status/(\d+)',
+        r'^(\d+)$'  # Direct ID
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    
+    return None
+
+
+
+
+@dp.message(Command("login"))
+async def cmd_login(message: Message):
+    """Handle /login command"""
+    user_id = message.from_user.id
+    
+    # Check if already authenticated
+    if storage.is_user_authenticated(user_id):
+        await message.answer(
+            "✅ You're already logged in!\n\n"
+            "Use /logout to disconnect, or /like to like tweets."
+        )
+        return
+    
+    try:
+        # Get authorization URL
+        auth_url, oauth_token = x_client.get_authorization_url()
+        
+        # Store OAuth session
+        storage.save_oauth_session(oauth_token, user_id)
+        
+        await message.answer(
+            f"🔐 To connect your X account, please click the link below:\n\n"
+            f"{auth_url}\n\n"
+            f"After authorizing, you'll be redirected back and logged in automatically."
+        )
+        
+    except Exception as e:
+        await message.answer(
+            f"❌ Error initiating login: {str(e)}\n\n"
+            "Please try again later."
+        )
+
+
+@dp.message(Command("logout"))
+async def cmd_logout(message: Message):
+    """Handle /logout command"""
+    user_id = message.from_user.id
+    
+    if not storage.is_user_authenticated(user_id):
+        await message.answer("You're not logged in.")
+        return
+    
+    storage.remove_user_tokens(user_id)
+    await message.answer("✅ Successfully logged out from X.")
+
+
+@dp.message(Command("status"))
+async def cmd_status(message: Message):
+    """Handle /status command"""
+    user_id = message.from_user.id
+    
+    if storage.is_user_authenticated(user_id):
+        tokens = storage.get_user_tokens(user_id)
+        user_info = x_client.get_user_info(
+            tokens['access_token'],
+            tokens['access_token_secret']
+        )
+        
+        if user_info:
+            await message.answer(
+                f"✅ Connected to X\n\n"
+                f"Username: @{user_info['username']}\n"
+                f"Name: {user_info['name']}"
+            )
+        else:
+            await message.answer("✅ Connected (unable to fetch user info)")
+    else:
+        await message.answer(
+            "❌ Not connected to X\n\n"
+            "Use /login to connect your account."
+        )
+
+
+@dp.message(Command("like"))
+async def cmd_like(message: Message):
+    """Handle /like command"""
+    user_id = message.from_user.id
+    
+    # Check authentication
+    if not storage.is_user_authenticated(user_id):
+        await message.answer(
+            "❌ You need to login first!\n\n"
+            "Use /login to connect your X account."
+        )
+        return
+    
+    # Extract tweet URL/ID from message
+    text = message.text.strip()
+    parts = text.split(maxsplit=1)
+    
+    if len(parts) < 2:
+        await message.answer(
+            "❌ Please provide a tweet URL or ID.\n\n"
+            "Usage: /like tweet_url\n"
+            "Example: /like https://x.com/username/status/1234567890"
+        )
+        return
+    
+    tweet_input = parts[1].strip()
+    tweet_id = extract_tweet_id(tweet_input)
+    
+    if not tweet_id:
+        await message.answer(
+            "❌ Invalid tweet URL or ID.\n\n"
+            "Please provide a valid X/Twitter post URL or ID."
+        )
+        return
+    
+    # Get user tokens
+    tokens = storage.get_user_tokens(user_id)
+    
+    # Like the tweet
+    status_msg = await message.answer("⏳ Liking tweet...")
+    
+    try:
+        success = x_client.like_tweet(
+            tokens['access_token'],
+            tokens['access_token_secret'],
+            tweet_id
+        )
+        
+        if success:
+            await status_msg.edit_text(
+                f"✅ Successfully liked the tweet!\n\n"
+                f"Tweet ID: {tweet_id}"
+            )
+        else:
+            await status_msg.edit_text(
+                "❌ Failed to like the tweet.\n\n"
+                "The tweet might not exist, or you may have already liked it."
+            )
+    except Exception as e:
+        await status_msg.edit_text(
+            f"❌ Error: {str(e)}\n\n"
+            "Please try again or check if the tweet URL is correct."
+        )
+
 
 
 @dp.message(Command("stop"))
@@ -121,32 +280,32 @@ async def stop_command(message: Message):
         await message.answer("❌ <b>There is no ongoing raid in this group</b>")
 
 
-@dp.message(Command("login"))
-async def login_handler(message: Message):
-    if message.chat.type in ["group", "supergroup"]:
-        login_url = f"https://t.me/{BOT_USERNAME}?start=login"
+# @dp.message(Command("login"))
+# async def login_handler(message: Message):
+#     if message.chat.type in ["group", "supergroup"]:
+#         login_url = f"https://t.me/{BOT_USERNAME}?start=login"
 
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[[InlineKeyboardButton(text="In Private", url=login_url)]]
-        )
+#         keyboard = InlineKeyboardMarkup(
+#             inline_keyboard=[[InlineKeyboardButton(text="In Private", url=login_url)]]
+#         )
 
-        await message.answer(
-            " Please continue in private to log in. 👇", reply_markup=keyboard
-        )
-    else:
-        login_keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text="Login to X",
-                        url="https://x.com/i/flow/login",
-                    )
-                ]
-            ]
-        )
-        await message.answer(
-            "Let's proceed with logging in to X.", reply_markup=login_keyboard
-        )
+#         await message.answer(
+#             " Please continue in private to log in. 👇", reply_markup=keyboard
+#         )
+#     else:
+#         login_keyboard = InlineKeyboardMarkup(
+#             inline_keyboard=[
+#                 [
+#                     InlineKeyboardButton(
+#                         text="Login to X",
+#                         url="https://x.com/i/flow/login",
+#                     )
+#                 ]
+#             ]
+#         )
+#         await message.answer(
+#             "Let's proceed with logging in to X.", reply_markup=login_keyboard
+#         )
 
 
 @dp.message(Command("trending"))
@@ -1983,13 +2142,27 @@ async def process_callback(callback: CallbackQuery):
         )
 
 
-async def main():
-    print("🚀 Bot is up and running! Waiting for updates...")
+# async def main():
+#     print("🚀 Bot is up and running! Waiting for updates...")
+#     dp.include_router(router)
+#     # await init_db()
+#     await bot.set_my_commands(commands)
+#     await dp.start_polling(bot)
+
+
+# if __name__ == "__main__":
+#     asyncio.run(main())
+
+
+async def start_bot():
+    """Start the bot"""
+    print("Starting Telegram bot...")
     dp.include_router(router)
     # await init_db()
     await bot.set_my_commands(commands)
     await dp.start_polling(bot)
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+def get_bot():
+    """Get bot instance"""
+    return bot
