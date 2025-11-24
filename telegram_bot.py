@@ -73,9 +73,10 @@ def extract_tweet_id(url: str) -> str:
 
 
 @dp.message(Command("login"))
-async def cmd_login(message: Message):
+async def cmd_login(message: Message, user_id: int = None):
     """Handle /login command"""
-    user_id = message.from_user.id
+    if user_id is None:
+        user_id = message.from_user.id
     
     # Check if already authenticated
     if storage.is_user_authenticated(user_id):
@@ -106,9 +107,10 @@ async def cmd_login(message: Message):
 
 
 @dp.message(Command("logout"))
-async def cmd_logout(message: Message):
+async def cmd_logout(message: Message, user_id: int = None):
     """Handle /logout command"""
-    user_id = message.from_user.id
+    if user_id is None:
+        user_id = message.from_user.id
     
     if not storage.is_user_authenticated(user_id):
         await message.answer("You're not logged in.")
@@ -117,6 +119,50 @@ async def cmd_logout(message: Message):
     storage.remove_user_tokens(user_id)
     await message.answer("✅ Successfully logged out from X.")
 
+
+
+def get_profile_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Generate keyboard based on X connection status"""
+    
+    if storage.is_user_authenticated(user_id):
+        button = InlineKeyboardButton(
+            text="Unlink X",
+            callback_data="unlink_x"
+        )
+    else:
+        button = InlineKeyboardButton(
+            text="Connect X",
+            callback_data="connect_x"
+        )
+    
+    return InlineKeyboardMarkup(inline_keyboard=[[button]])
+
+
+def get_profile_text(username: str, user_id: int) -> str:
+    """Generate profile message text based on X connection status"""
+    
+    base_text = f"<b>Your Profile</b>\nWelcome back, {username}!\n\n——————————————————\n\n"
+    
+    if storage.is_user_authenticated(user_id):
+        status_text = "Connected Twitter · 🆃"
+    else:
+        status_text = "No Twitter account connected"
+    
+    return base_text + status_text
+
+
+@dp.message(Command("profile"))
+async def cmd_profile(message: Message):
+    """Handle /profile command"""
+    username = message.from_user.first_name or "User"
+    user_id = message.from_user.id
+    text = get_profile_text(username, user_id)
+    keyboard = get_profile_keyboard(user_id)
+    
+    await message.answer(
+        text=text,
+        reply_markup=keyboard
+    )
 
 @dp.message(Command("status"))
 async def cmd_status(message: Message):
@@ -208,6 +254,25 @@ async def cmd_like(message: Message):
             f"❌ Error: {str(e)}\n\n"
             "Please try again or check if the tweet URL is correct."
         )
+
+@dp.callback_query(F.data == "connect_x")
+async def connect_x_callback(callback: CallbackQuery):
+    """Handle Connect X button press - executes login command"""
+    user_id = callback.from_user.id
+    await callback.answer()
+    
+    # Execute the login command
+    await cmd_login(callback.message, user_id=user_id)
+
+
+@dp.callback_query(F.data == 'unlink_x')
+async def unlink_x_callback(callback: CallbackQuery):
+    """Handle Unlink X button press - executes logout command"""
+    user_id = callback.from_user.id
+    await callback.answer()
+    
+    # Execute the login command
+    await cmd_logout(callback.message, user_id=user_id)
 
 
 
@@ -2142,16 +2207,16 @@ async def process_callback(callback: CallbackQuery):
         )
 
 
-async def main():
-    print("🚀 Bot is up and running! Waiting for updates...")
-    dp.include_router(router)
-    # await init_db()
-    await bot.set_my_commands(commands)
-    await dp.start_polling(bot)
+# async def main():
+#     print("🚀 Bot is up and running! Waiting for updates...")
+#     dp.include_router(router)
+#     # await init_db()
+#     await bot.set_my_commands(commands)
+#     await dp.start_polling(bot)
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+# if __name__ == "__main__":
+#     asyncio.run(main())
 
 
 async def start_bot():
