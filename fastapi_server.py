@@ -1,11 +1,8 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-import asyncio
-import uvicorn
-
-from telegram_bot import get_bot
 from x_client import x_client
 from storage import storage
+import asyncio
 
 
 
@@ -126,25 +123,3 @@ async def oauth_callback(oauth_token: str, oauth_verifier: str):
             status_code=500
         )
 
-
-
-async def main():
-    bot = get_bot()
-    set_bot_instance(bot)
-
-    config = uvicorn.Config(
-        app,
-        host='0.0.0.0',
-        port=8000,
-        log_level="info"
-    )
-
-    server = uvicorn.Server(config)
-
-    # Await inside an async function → OK
-    await server.serve()
-
-
-if __name__ == "__main__":
-    # Run the async main()
-    asyncio.run(main())
