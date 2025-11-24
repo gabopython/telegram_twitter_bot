@@ -2156,27 +2156,13 @@ async def process_callback(callback: CallbackQuery):
         )
 
 
-# async def main():
-#     print("🚀 Bot is up and running! Waiting for updates...")
-#     dp.include_router(router)
-#     # await init_db()
-#     await bot.set_my_commands(commands)
-#     await dp.start_polling(bot)
-
-
-# if __name__ == "__main__":
-#     asyncio.run(main())
-
-
-async def start_bot():
-    """Start the bot"""
-    print("Starting Telegram bot...")
+async def main():
+    print("🚀 Bot is up and running! Waiting for updates...")
     dp.include_router(router)
     # await init_db()
     await bot.set_my_commands(commands)
     await dp.start_polling(bot)
 
 
-def get_bot():
-    """Get bot instance"""
-    return bot
+if __name__ == "__main__":
+    asyncio.run(main())
