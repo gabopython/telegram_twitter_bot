@@ -1,12 +1,11 @@
 import x_bot
 from utils import *
-from config import BOT_TOKEN, BOT_USERNAME
+from config import BOT_TOKEN, BOT_USERNAME, BASE_SERVER_URL, INTERNAL_API_KEY
 from db import *
 from xrpl_bot import get_token_info
 from xrp_payments import send_xrp
 from spots import SpotManager
-from x_client import x_client
-from storage import storage
+import twitter_client
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, CommandObject
@@ -33,6 +32,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 import logging
 import os
+import aiohttp
 
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -41,6 +41,8 @@ router = Router()
 resend_message = {}
 resend_ongoing = True
 spot_manager = SpotManager()
+logging.basicConfig(level=logging.INFO)
+local_token_storage = {}
 
 
 class ReplyStates(StatesGroup):
@@ -70,61 +72,96 @@ def extract_tweet_id(url: str) -> str:
     return None
 
 
-
+@dp.message(Command("start"))
+async def cmd_start(message: types.Message):
+    await message.answer("Hello! Use /login to connect your X (Twitter) account.")
 
 @dp.message(Command("login"))
-async def cmd_login(message: Message, user_id: int = None):
-    """Handle /login command"""
-    if user_id is None:
-        user_id = message.from_user.id
+async def cmd_login(message: types.Message):
+    user_id = str(message.from_user.id)
     
-    # Check if already authenticated
-    if storage.is_user_authenticated(user_id):
-        await message.answer(
-            "✅ You're already logged in!\n\n"
-            "Use /logout to disconnect, or /like to like tweets."
-        )
-        return
-    
-    try:
-        # Get authorization URL
-        auth_url, oauth_token = x_client.get_authorization_url()
-        
-        # Store OAuth session
-        storage.save_oauth_session(oauth_token, user_id)
-        
-        await message.answer(
-            f"🔐 To connect your X account, please click the link below:\n\n"
-            f"{auth_url}\n\n"
-            f"After authorizing, you'll be redirected back and logged in automatically."
-        )
-        
-    except Exception as e:
-        await message.answer(
-            f"❌ Error initiating login: {str(e)}\n\n"
-            "Please try again later."
-        )
+    async with aiohttp.ClientSession() as session:
+        # 1. Ask Cloud Server for an auth URL unique to this user ID
+        params = {"state": user_id, "api_key": INTERNAL_API_KEY}
+        async with session.get(f"{BASE_SERVER_URL}/generate_url", params=params) as resp:
+            if resp.status != 200:
+                await message.answer("Error connecting to auth server.")
+                return
+            data = await resp.json()
+            auth_url = data['url']
 
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Connect X Account", url=auth_url)]
+    ])
+    
+    await message.answer("Click below to login. I will check for success...", reply_markup=keyboard)
+    
+    # 2. Start Polling the server to see if user finished
+    await poll_for_login(message, user_id)
+
+async def poll_for_login(message: types.Message, user_id: str):
+    """Checks the server every 3 seconds to see if the token arrived."""
+    retries = 20  # Stop after 60 seconds
+    
+    async with aiohttp.ClientSession() as session:
+        for _ in range(retries):
+            await asyncio.sleep(3) # Wait 3 seconds
+            
+            params = {"state": user_id, "api_key": INTERNAL_API_KEY}
+            async with session.get(f"{BASE_SERVER_URL}/get_session", params=params) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get("status") == "ready":
+                        # Token found! Save locally
+                        local_token_storage[user_id] = data['token']
+                        await message.answer("✅ Login Successful! You can now use /post.")
+                        return
+    
+    await message.answer("❌ Login timed out. Please try again.")
 
 @dp.message(Command("logout"))
-async def cmd_logout(message: Message, user_id: int = None):
-    """Handle /logout command"""
-    if user_id is None:
-        user_id = message.from_user.id
-    
-    if not storage.is_user_authenticated(user_id):
-        await message.answer("You're not logged in.")
-        return
-    
-    storage.remove_user_tokens(user_id)
-    await message.answer("✅ Successfully logged out from X.")
+async def cmd_logout(message: types.Message):
+    user_id = str(message.from_user.id)
+    if user_id in local_token_storage:
+        del local_token_storage[user_id]
+        await message.answer("Logged out locally.")
+    else:
+        await message.answer("You are not logged in.")
 
+@dp.message(Command("post"))
+async def cmd_post(message: types.Message):
+    user_id = str(message.from_user.id)
+    token_data = local_token_storage.get(user_id)
+    
+    if not token_data:
+        await message.answer("Please /login first.")
+        return
+
+    # Extract the text after /post
+    text_to_tweet = message.text.replace("/post", "").strip()
+    if not text_to_tweet:
+        await message.answer("Usage: /post Hello World")
+        return
+
+    # Call our isolated script
+    success, result = twitter_client.post_tweet(token_data, text_to_tweet)
+    
+    if success:
+        await message.answer(f"Tweet posted! ID: {result}")
+    else:
+        await message.answer(f"Error posting tweet: {result}")
+
+async def main():
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
 
 
 def get_profile_keyboard(user_id: int) -> InlineKeyboardMarkup:
     """Generate keyboard based on X connection status"""
     
-    if storage.is_user_authenticated(user_id):
+    token_data = local_token_storage.get(user_id)
+    
+    if token_data:
         button = InlineKeyboardButton(
             text="Unlink X",
             callback_data="unlink_x"
@@ -141,9 +178,11 @@ def get_profile_keyboard(user_id: int) -> InlineKeyboardMarkup:
 def get_profile_text(username: str, user_id: int) -> str:
     """Generate profile message text based on X connection status"""
     
+    token_data = local_token_storage.get(user_id)
+    
     base_text = f"<b>Your Profile</b>\nWelcome back, {username}!\n\n——————————————————\n\n"
     
-    if storage.is_user_authenticated(user_id):
+    if token_data:
         status_text = "Connected Twitter · 🆃"
     else:
         status_text = "No Twitter account connected"
@@ -164,96 +203,6 @@ async def cmd_profile(message: Message):
         reply_markup=keyboard
     )
 
-@dp.message(Command("status"))
-async def cmd_status(message: Message):
-    """Handle /status command"""
-    user_id = message.from_user.id
-    
-    if storage.is_user_authenticated(user_id):
-        tokens = storage.get_user_tokens(user_id)
-        user_info = x_client.get_user_info(
-            tokens['access_token'],
-            tokens['access_token_secret']
-        )
-        
-        if user_info:
-            await message.answer(
-                f"✅ Connected to X\n\n"
-                f"Username: @{user_info['username']}\n"
-                f"Name: {user_info['name']}"
-            )
-        else:
-            await message.answer("✅ Connected (unable to fetch user info)")
-    else:
-        await message.answer(
-            "❌ Not connected to X\n\n"
-            "Use /login to connect your account."
-        )
-
-
-@dp.message(Command("like"))
-async def cmd_like(message: Message):
-    """Handle /like command"""
-    user_id = message.from_user.id
-    
-    # Check authentication
-    if not storage.is_user_authenticated(user_id):
-        await message.answer(
-            "❌ You need to login first!\n\n"
-            "Use /login to connect your X account."
-        )
-        return
-    
-    # Extract tweet URL/ID from message
-    text = message.text.strip()
-    parts = text.split(maxsplit=1)
-    
-    if len(parts) < 2:
-        await message.answer(
-            "❌ Please provide a tweet URL or ID.\n\n"
-            "Usage: /like tweet_url\n"
-            "Example: /like https://x.com/username/status/1234567890"
-        )
-        return
-    
-    tweet_input = parts[1].strip()
-    tweet_id = extract_tweet_id(tweet_input)
-    
-    if not tweet_id:
-        await message.answer(
-            "❌ Invalid tweet URL or ID.\n\n"
-            "Please provide a valid X/Twitter post URL or ID."
-        )
-        return
-    
-    # Get user tokens
-    tokens = storage.get_user_tokens(user_id)
-    
-    # Like the tweet
-    status_msg = await message.answer("⏳ Liking tweet...")
-    
-    try:
-        success = x_client.like_tweet(
-            tokens['access_token'],
-            tokens['access_token_secret'],
-            tweet_id
-        )
-        
-        if success:
-            await status_msg.edit_text(
-                f"✅ Successfully liked the tweet!\n\n"
-                f"Tweet ID: {tweet_id}"
-            )
-        else:
-            await status_msg.edit_text(
-                "❌ Failed to like the tweet.\n\n"
-                "The tweet might not exist, or you may have already liked it."
-            )
-    except Exception as e:
-        await status_msg.edit_text(
-            f"❌ Error: {str(e)}\n\n"
-            "Please try again or check if the tweet URL is correct."
-        )
 
 @dp.callback_query(F.data == "connect_x")
 async def connect_x_callback(callback: CallbackQuery):
